@@ -42,25 +42,6 @@ data class AiConversation(
         ): Message
     }
 
-//    @Serializable
-//    data class AiMessage(
-//        val role: String,
-//        val content: String,
-//        val name: String? = null,
-//        val tool_calls: List<ToolCall>? = null,
-//    ) {
-//        @Serializable
-//        data class ToolCall(
-//            val function: Function,
-//        ) {
-//            @Serializable
-//            data class Function(
-//                val name: String,
-//                val arguments: Map<String, String>? = null,
-//            )
-//        }
-//    }
-
     fun add(message: Message): AiConversation = copy(
         messages = messages + message
     )

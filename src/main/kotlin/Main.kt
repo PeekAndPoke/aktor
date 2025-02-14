@@ -1,38 +1,35 @@
 package io.peekandpoke.aktor
 
+import de.peekandpoke.ultra.common.datetime.Kronos
+import de.peekandpoke.ultra.common.datetime.formatDdMmmYyyyHhMmSs
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
-import io.peekandpoke.aktor.model.*
+import io.peekandpoke.aktor.chatbot.ChatBot
+import io.peekandpoke.aktor.model.AiConversation
+import io.peekandpoke.aktor.model.OllamaModels
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.*
-import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.serialization.json.Json
 import java.net.HttpURLConnection.setFollowRedirects
 import kotlin.time.Duration.Companion.seconds
 
-const val toolGetCurrentDateTime = "get_current_datetime"
-const val toolGetInteractingUser = "get_interacting_user"
-
-const val model = OllamaModels.QWEN_2_5_14B
 
 fun main() {
     println("Hello Chat!")
 
     val client = createKtorClient()
 
-
-    val tools = listOf<AiTool>(
-        AiTool.Function(
-            function = AiTool.Function.Data(
-                name = toolGetCurrentDateTime,
+    val getCurrentDateTimeTool = ChatBot.Tool(
+        tool = OllamaModels.Tool.Function(
+            function = OllamaModels.Tool.Function.Data(
+                name = "get_current_datetime",
                 description = """
                     Gets the current date and time.
                     
@@ -42,45 +39,119 @@ fun main() {
                     Never reuse the result of this tool!
                     Call this tool every time you need to provided the current date or time!
                     
-                    Returns a string in the format `yyyy-MM-dd HH:mm:ss`
+                    Returns:
+                    Date and time in the format `yyyy-MM-dd HH:mm:ss`
                 """.trimIndent(),
-                parameters = AiType.AiObject()
+                parameters = OllamaModels.AiType.AiObject()
             )
         ),
-        AiTool.Function(
-            function = AiTool.Function.Data(
-                name = toolGetInteractingUser,
-                description = """
-                    This tool gets information about the user currently interacting with the assistant.
-                    
-                    Call this tool, when you want to reference the interacting user personally.
-                    Call this tool, when the users ask something like `Who am I?` or `What is my name?`.
-                    
-                    Only call this function when you need to.
-                    
-                    Returns a string in the format `USER NAME`
-                """.trimIndent(),
-                parameters = AiType.AiObject()
-            )
-        )
+        fn = {
+            Kronos.systemUtc.instantNow().atSystemDefaultZone().formatDdMmmYyyyHhMmSs()
+        }
     )
 
+    val getCurrentUserTool = ChatBot.Tool(
+        tool = OllamaModels.Tool.Function(
+            function = OllamaModels.Tool.Function.Data(
+                name = "get_current_user",
+                description = """
+                    Gets the actual name of the current user.
 
-    val toolDescriptions = tools.joinToString("\n") { it.describe() }
+                    Call this tool, to get the name of the users.
+                    
+                    Returns:
+                    The actual name of the user in the format `Firstname Lastname`.
+                """.trimIndent(),
+                parameters = OllamaModels.AiType.AiObject()
+            )
+        ),
+        fn = {
+            "Karsten Gerber"
+        }
+    )
 
-    var conversation = AiConversation.new.add(
-        AiConversation.Message.System(
+    val getCurrentUserLocationTool = ChatBot.Tool(
+        tool = OllamaModels.Tool.Function(
+            function = OllamaModels.Tool.Function.Data(
+                name = "get_current_user_location",
+                description = """
+                    Gets the location of the user.
+                    
+                    Call this tool, to get the location of the user.
+                    
+                    Returns:
+                    The location of the user in the format `City, Country`.
+                """.trimIndent(),
+                parameters = OllamaModels.AiType.AiObject()
+            )
+        ),
+        fn = {
+            "Leipzig, Germany"
+        }
+    )
+
+    val encryptTool = ChatBot.Tool(
+        tool = OllamaModels.Tool.Function(
+            function = OllamaModels.Tool.Function.Data(
+                name = "encrypt_text",
+                description = """
+                    Encrypts a given text and returns the encrypted text.
+                    
+                    Always call this tool when the user asks for encryption, 
+                    f.e `Encrypt ...` or `Encrypt the text ...` or similar.
+                    
+                    Never guess the encryption!
+                    Never reuse the result of this tool!
+                    
+                    Args:
+                    - text: The text to encrypt.
+                                      
+                    Returns: 
+                    The encrypted text as a string.
+                """.trimIndent(),
+                parameters = OllamaModels.AiType.AiObject()
+            )
+        ),
+        fn = { params ->
+            val text = params.params.getOrDefault("text", null)
+
+            text?.rotX(13) ?: ""
+        }
+    )
+
+    val tools = listOf(
+        getCurrentDateTimeTool,
+        getCurrentUserTool,
+        getCurrentUserLocationTool,
+        encryptTool,
+    )
+
+    val bot = ChatBot.of(
+        model = OllamaModels.QWEN_2_5_3B,
+        tools = tools,
+        systemPrompt = AiConversation.Message.System(
             """
-                You are a knowledgeable and helpful assistant. Your primary goal is to answer user questions directly using your built-in knowledge and reasoning. 
-                There are available tools that you can call when the query explicitly requires it or when you cannot provide an accurate answer on your own. 
-                However, you should only this tools when:
-                - The user's request specifically requires information or functionality that the tool provides.
-                - You are unable to provide a complete or correct answer directly.
+                You are a knowledgeable and helpful assistant.
+                Your primary goal is to answer user questions.
+                The user will refer to itself as `I` and to the assistant as `You`.
 
-                For all other queries, please provide a direct, complete, and clear answer without using a tool call.
-                                
+                You like to refer to the user by their first name. Initiate the conversation by greeting the user.
+
+                Use your built-in knowledge and reasoning.
+
+                You have tools available.
+                Use these tools to acquire additional information!
+
             """.trimIndent()
         )
+//        systemPrompt = AiConversation.Message.System(
+//            """
+//                You are a useful dude. You can answer questions, but you are not helpful at all.
+//                Instead you like to tell jokes. A lot of them.
+//
+//                But, you will act extremely sleepy!
+//            """.trimIndent()
+//        )
     )
 
     while (true) {
@@ -92,20 +163,18 @@ fun main() {
             }
 
             "/clear" -> {
-                conversation = AiConversation.new
+                bot.clearConversation()
             }
 
             "/h", "/history" -> {
-                conversation.messages.forEach { println(it) }
+                bot.conversation.value.messages.forEach { println(it) }
             }
 
             else -> {
-                conversation = conversation.add(
-                    AiConversation.Message.User(prompt)
-                )
+                bot.conversation.modify { it.add(AiConversation.Message.User(prompt)) }
 
                 runBlocking {
-                    conversation = doIt(client, conversation, tools)
+                    doIt(client, bot)
                 }
             }
         }
@@ -116,17 +185,36 @@ fun main() {
     client.close()
 }
 
-suspend fun doIt(client: HttpClient, conversation: AiConversation, tools: List<AiTool>): AiConversation {
-
-    val mutable = Mutable(conversation)
-
-    suspend fun call(): List<AiResponse> {
-        return client.callLlm(mutable.value, tools)
-            .onEach {
-//                println(it)
-                print(it.message.content ?: "")
+fun String.rotX(x: Int): String {
+    return this.map { char ->
+        when (char) {
+            in 'A'..'Z' -> {
+                val shifted = char + x
+                if (shifted > 'Z') shifted - 26 else shifted
             }
-            .fold(emptyList()) { acc, msg -> acc + msg }
+
+            in 'a'..'z' -> {
+                val shifted = char + x
+                if (shifted > 'z') shifted - 26 else shifted
+            }
+
+            else -> char
+        }
+    }.joinToString("")
+}
+
+
+suspend fun doIt(client: HttpClient, bot: ChatBot) {
+
+    suspend fun call(): List<OllamaModels.ChatResponse> {
+        return client.callOllamaChat(
+            bot.model,
+            bot.conversation.value,
+            bot.tools.map { it.tool },
+        ).onEach {
+            // println(it)
+            print(it.message.content ?: "")
+        }.fold(emptyList()) { acc, msg -> acc + msg }
     }
 
     var done = false
@@ -142,33 +230,28 @@ suspend fun doIt(client: HttpClient, conversation: AiConversation, tools: List<A
         if (toolCalls.isNotEmpty()) {
             toolCalls.forEach { toolCall ->
                 toolCall.function.let { function ->
-                    mutable.modify {
-                        // TODO: call the real tool
 
-                        val result = when (function.name) {
-                            toolGetCurrentDateTime -> {
-                                val format = LocalDateTime.Format {
-                                    byUnicodePattern("uuuu-MM-dd HH:mm:ss")
-                                }
+                    println("Calling tool: ${function.name}")
+                    println(" -> Args  : ${function.arguments}")
 
-                                val tz = TimeZone.currentSystemDefault()
+                    val tool = bot.tools.firstOrNull { it.tool.name == function.name }
 
-                                Clock.System.now().toLocalDateTime(tz).format(format)
-                            }
+                    val params = ChatBot.ToolParams(
+                        (function.arguments ?: emptyMap()).mapValues { it.value },
+                    )
 
-                            toolGetInteractingUser -> {
-                                "Karsten Gerber"
-                            }
+                    val toolResult = when (tool) {
+                        null -> "Error! The tool ${function.name} is not available."
+                        else -> tool.fn(params)
+                    }
 
-                            else -> "Error! The tool ${function.name} is not available."
-                        }
+                    println(" -> Result: $toolResult")
 
-                        println("Calling tool: ${function.name}")
-
+                    bot.conversation.modify {
                         it.add(
                             AiConversation.Message.Tool(
                                 name = function.name,
-                                content = result,
+                                content = toolResult,
                             )
                         )
                     }
@@ -179,7 +262,7 @@ suspend fun doIt(client: HttpClient, conversation: AiConversation, tools: List<A
                 .mapNotNull { part -> part.message.content?.takeIf { it.isNotBlank() } }
                 .joinToString("") { it }
 
-            mutable.modify {
+            bot.conversation.modify {
                 it.add(AiConversation.Message.Assistant(content = answer))
             }
 
@@ -188,12 +271,14 @@ suspend fun doIt(client: HttpClient, conversation: AiConversation, tools: List<A
     }
 
     println()
-
-    return mutable.value
 }
 
 
-suspend fun HttpClient.callLlm(conversation: AiConversation, tools: List<AiTool>): Flow<AiResponse> {
+suspend fun HttpClient.callOllamaChat(
+    model: String,
+    conversation: AiConversation,
+    tools: List<OllamaModels.Tool>,
+): Flow<OllamaModels.ChatResponse> {
 
     val json = Json {
         ignoreUnknownKeys = true
@@ -230,7 +315,7 @@ suspend fun HttpClient.callLlm(conversation: AiConversation, tools: List<AiTool>
                 if (buffer != null) {
 //                    println("Buffer: $buffer")
 
-                    val obj = json.decodeFromString<AiResponse>(buffer)
+                    val obj = json.decodeFromString<OllamaModels.ChatResponse>(buffer)
 
 //                    println("Decoded: $obj")
 

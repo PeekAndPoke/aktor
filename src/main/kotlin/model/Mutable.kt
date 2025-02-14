@@ -3,6 +3,10 @@ package io.peekandpoke.aktor.model
 class Mutable<T>(
     subject: T,
 ) {
+    companion object {
+        fun <T> T.mutable() = Mutable(this)
+    }
+
     private val initialValue = subject
 
     var value = subject

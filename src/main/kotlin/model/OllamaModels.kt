@@ -1,6 +1,8 @@
 package io.peekandpoke.aktor.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 @Suppress("PropertyName")
 object OllamaModels {
@@ -23,7 +25,7 @@ object OllamaModels {
         val stream: Boolean = true,
         val keep_alive: String = "10m",
         val options: Options = Options.DEFAULT,
-        val tools: List<AiTool>? = null,
+        val tools: List<Tool>? = null,
     ) {
         @Serializable
         data class Options(
@@ -34,5 +36,85 @@ object OllamaModels {
                 val DEFAULT = Options()
             }
         }
+    }
+
+    @Serializable
+    @JsonClassDiscriminator("type")
+    sealed interface Tool {
+
+        // https://github.com/ollama/ollama/blob/main/docs/api.md#chat-request-with-tools
+
+        @Serializable
+        @SerialName("function")
+        data class Function(
+            val function: Data,
+        ): Tool {
+            @Serializable
+            data class Data(
+                val name: String,
+                val description: String,
+                val parameters: AiType,
+            )
+
+            override val name: String = function.name
+
+            override fun describe(): String {
+                return "${function.name}() - ${function.description}"
+            }
+        }
+
+        val name: String
+
+        fun describe(): String
+    }
+
+    @Suppress("PropertyName")
+    @Serializable
+    data class ChatResponse(
+        val model: String,
+        val created_at: String,
+        val message: Message,
+        val done: Boolean,
+        val done_reason: String? = null,
+        val total_duration: Long? = null,
+        val load_duration: Long? = null,
+        val prompt_eval_count: Long? = null,
+        val prompt_eval_duration: Long? = null,
+        val eval_count: Long? = null,
+        val eval_duration: Long? = null,
+    ) {
+        @Serializable
+        data class Message(
+            val role: String,
+            val content: String? = null,
+            val tool_calls: List<ToolCall>? = null,
+        )
+
+        @Serializable
+        data class ToolCall(
+            val function: Function,
+        ) {
+            @Serializable
+            data class Function(
+                val name: String,
+                val arguments: Map<String, String>? = null,
+            )
+        }
+    }
+
+    @Serializable
+    @JsonClassDiscriminator("type")
+    sealed interface AiType {
+
+        @Serializable
+        @SerialName("object")
+        data class AiObject(
+            val properties: List<AiType>? = null,
+            val required: List<String>? = null,
+        ) : AiType
+
+        @Serializable
+        @SerialName("string")
+        data class AiString(val description: String) : AiType
     }
 }
