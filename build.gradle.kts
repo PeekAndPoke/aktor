@@ -21,6 +21,11 @@ dependencies {
     implementation(Deps.ktor_client_core)
     implementation(Deps.ktor_client_okhttp)
     implementation(Deps.ktor_client_cio)
+    implementation("io.ktor:ktor-client-content-negotiation:${Deps.ktor_version}")
+    implementation("io.ktor:ktor-serialization-jackson:${Deps.ktor_version}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
+
 
     implementation(Deps.kotlinx_serialization_core)
     implementation(Deps.kotlinx_serialization_json)

@@ -1,0 +1,1 @@
+implementation("io.ktor:ktor-serialization-jackson:2.3.4")
