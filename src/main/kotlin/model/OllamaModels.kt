@@ -8,7 +8,8 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 object OllamaModels {
     const val DEEPSEEK_R1_7B = "deepseek-r1:7B"
 
-    const val LLAMA_3_2 = "llama3.2"
+    const val LLAMA_3_2_1B = "llama3.2:1b"
+    const val LLAMA_3_2_3B = "llama3.2:3b"
 
     const val MISTRAL_SMALL_22B = "mistral-small:22b"
     const val MISTRAL_SMALL_24B = "mistral-small:24b"
@@ -16,6 +17,10 @@ object OllamaModels {
     const val QWEN_2_5_3B = "qwen2.5:3b"
     const val QWEN_2_5_7B = "qwen2.5:7b"
     const val QWEN_2_5_14B = "qwen2.5:14b"
+
+    const val SMOLLM2_135M = "smollm2:135m"
+    const val SMOLLM2_360M = "smollm2:360m"
+    const val SMOLLM2_1_7B = "smollm2:1.7b"
 
     // https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-chat-completion
     @Serializable
@@ -109,7 +114,7 @@ object OllamaModels {
         @Serializable
         @SerialName("object")
         data class AiObject(
-            val properties: List<AiType>? = null,
+            val properties: Map<String, AiType>? = null,
             val required: List<String>? = null,
         ) : AiType
 
