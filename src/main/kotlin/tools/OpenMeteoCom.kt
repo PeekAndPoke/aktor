@@ -1,5 +1,6 @@
 package io.peekandpoke.aktor.tools
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.peekandpoke.ultra.common.datetime.MpTimezone
 import de.peekandpoke.ultra.common.datetime.MpZonedDateTime
 import de.peekandpoke.ultra.common.remote.buildUri
@@ -10,7 +11,6 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.jackson.*
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.model.OllamaModels
 import java.net.HttpURLConnection.setFollowRedirects
 import kotlin.time.Duration.Companion.seconds
 
@@ -73,31 +73,34 @@ class OpenMeteoCom(
             99 to "Thunderstorm with heavy hail"
         )
 
+        val jsonPrinter = ObjectMapper().writerWithDefaultPrettyPrinter()
+
         fun tool(): Llm.Tool {
             val instance = OpenMeteoCom()
 
-            return Llm.Tool(
-                tool = OllamaModels.Tool.Function(
-                    function = OllamaModels.Tool.Function.Data(
-                        name = "get_weather_info_OpenMeteoCom",
-                        description = """
-                            Gets weather information about a location.
-                            
-                            Returns: 
-                            JSON.
-                        """.trimIndent(),
-                        parameters = OllamaModels.AiType.AiObject(
-                            properties = mapOf(
-                                "latitude" to OllamaModels.AiType.AiString("The latitude of the location"),
-                                "longitude" to OllamaModels.AiType.AiString("The longitude of the location"),
-                            ),
-                            required = listOf("latitude", "longitude"),
-                        ),
+            return Llm.Tool.Function(
+                name = "get_weather_info_OpenMeteoCom",
+                description = """
+                    Gets weather information about a location.
+                    
+                    Returns: 
+                    JSON.
+                """.trimIndent(),
+                parameters = listOf(
+                    Llm.Tool.StringParam(
+                        name = "lat",
+                        description = "The latitude of the location",
+                        required = true
+                    ),
+                    Llm.Tool.StringParam(
+                        name = "lng",
+                        description = "The longitude of the location",
+                        required = true
                     ),
                 ),
                 fn = { params ->
-                    val lat = params.params.getValue("latitude").toDouble()
-                    val lng = params.params.getValue("longitude").toDouble()
+                    val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
+                    val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
 
                     instance.get(lat = lat, lng = lng)
                 }
@@ -132,7 +135,7 @@ class OpenMeteoCom(
         val url = buildUri("https://api.open-meteo.com/v1/forecast") {
             set("latitude", lat.toString())
             set("longitude", lng.toString())
-            set("hourly", "weather_code")
+            set("hourly", "temperature_2m,weather_code")
             set("format", "json")
             set("timeformat", "unixtime")
             set("forecast_days", "1")
@@ -144,14 +147,24 @@ class OpenMeteoCom(
 
         val times = ((body["hourly"] as Map<String, Any?>)["time"] as List<Long>)
         val codes = ((body["hourly"] as Map<String, Any?>)["weather_code"] as List<Int>)
+        val temperatures = ((body["hourly"] as Map<String, Any?>)["temperature_2m"] as List<Double>)
 
-        val timeToCode = times.zip(codes)
-            .map { (time, code) ->
-                MpZonedDateTime.fromEpochSeconds(time, timezone = MpTimezone.UTC) to weatherCodes[code]
-            }.map { (time, code) ->
-                "${time.format("HH:mm")} - ${code ?: "unknown"}"
-            }.joinToString("\n")
+        val result = times.mapIndexed { index, timestamp ->
 
-        return timeToCode
+            val time = MpZonedDateTime.fromEpochSeconds(timestamp, timezone = MpTimezone.UTC)
+            val weatherCode = weatherCodes[codes[index]]
+            val temperature = temperatures[index]
+
+            mapOf(
+                "date" to time.format("yyyy-MM-dd"),
+                "time" to time.format("HH:mm"),
+                "weather" to (weatherCode ?: "unknown"),
+                "temperature" to temperature,
+            )
+        }
+
+        return jsonPrinter.writeValueAsString(
+            result
+        )
     }
 }

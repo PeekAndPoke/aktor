@@ -25,7 +25,8 @@ data class AiConversation(
         @Serializable
         @SerialName("assistant")
         data class Assistant(
-            val content: String,
+            val content: String?,
+            val toolCalls: List<ToolCall>? = null,
         ): Message
 
         @Serializable
@@ -39,7 +40,15 @@ data class AiConversation(
         data class Tool(
             val name: String,
             val content: String,
+            val toolCallId: String?,
         ): Message
+
+        @Serializable
+        data class ToolCall(
+            val id: String,
+            val name: String,
+            val arguments: String?,
+        )
     }
 
     fun add(message: Message): AiConversation = copy(

@@ -11,11 +11,20 @@ import java.io.File
 fun main() {
 
     val config = ConfigFactory.parseFile(File("./config/keys.conf"))
-    val bot = ExampleBot.createOllamaBot(config = config, model = OllamaModels.QWEN_2_5_3B)
+
+//    val bot = ExampleBot.createOllamaBot(
+//        config = config,
+//        model = OllamaModels.QWEN_2_5_3B,
+//    )
+
+    val bot = ExampleBot.createOpenAiBot(
+        config = config,
+        model = "gpt-4o-mini"
+    )
 
     println("Chatting with model: ${bot.llm.model}")
     println("Available tools:")
-    bot.llm.tools.forEach { println("- ${it.tool.describe().split("\n").first()}") }
+    bot.llm.tools.forEach { println("- ${it.describe().split("\n").first()}") }
     println("Have fun!")
     println()
 
@@ -41,7 +50,7 @@ fun main() {
 
                         when (update) {
                             is Llm.Update.Response -> {
-                                update.response.message.content?.takeIf { it.isNotBlank() }?.let {
+                                update.content?.takeIf { it.isNotBlank() }?.let {
                                     print(it)
                                 }
                             }

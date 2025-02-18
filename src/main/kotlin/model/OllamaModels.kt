@@ -58,7 +58,7 @@ object OllamaModels {
             data class Data(
                 val name: String,
                 val description: String,
-                val parameters: AiType,
+                val parameters: Type,
             )
 
             override val name: String = function.name
@@ -109,17 +109,24 @@ object OllamaModels {
 
     @Serializable
     @JsonClassDiscriminator("type")
-    sealed interface AiType {
+    sealed interface Type
 
-        @Serializable
-        @SerialName("object")
-        data class AiObject(
-            val properties: Map<String, AiType>? = null,
-            val required: List<String>? = null,
-        ) : AiType
+    @Serializable
+    @SerialName("object")
+    data class ObjectType(
+        val properties: Map<String, Type>? = null,
+        val required: List<String>? = null,
+    ) : Type
 
-        @Serializable
-        @SerialName("string")
-        data class AiString(val description: String) : AiType
-    }
+    @Serializable
+    @SerialName("string")
+    data class StringType(val description: String) : Type
+
+    @Serializable
+    @SerialName("integer")
+    data class IntegerType(val description: String) : Type
+
+    @Serializable
+    @SerialName("boolean")
+    data class BooleanType(val description: String) : Type
 }

@@ -2,6 +2,7 @@ package io.peekandpoke.aktor.llm
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -30,6 +31,10 @@ class OllamaLlm(
                     requestTimeout = 180.seconds.inWholeMilliseconds
                     setFollowRedirects(true)
                 }
+
+                defaultRequest {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                }
             }
         }
     }
@@ -40,14 +45,35 @@ class OllamaLlm(
 
     override fun chat(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
 
+        val toolsMapped = tools.map { tool ->
+            when (tool) {
+                is Llm.Tool.Function -> OllamaModels.Tool.Function(
+                    function = OllamaModels.Tool.Function.Data(
+                        name = tool.name,
+                        description = tool.description,
+                        parameters = OllamaModels.ObjectType(
+                            properties = tool.parameters.associate { p ->
+                                p.name to when (p) {
+                                    is Llm.Tool.StringParam -> OllamaModels.StringType(description = p.description)
+                                    is Llm.Tool.IntegerParam -> OllamaModels.StringType(description = p.description)
+                                    is Llm.Tool.BooleanParam -> OllamaModels.BooleanType(description = p.description)
+                                }
+                            },
+                            required = tool.parameters.filter { p -> p.required }.map { p -> p.name }
+                        ),
+                    )
+                )
+            }
+        }
+
         return flow {
             suspend fun call(): List<OllamaModels.ChatResponse> {
-                return httpClient.chat(
-                    conversation.value,
-                    tools.map { it.tool },
-                ).onEach {
-                    emit(Llm.Update.Response(it))
-                }.fold(emptyList()) { acc, msg -> acc + msg }
+                return httpClient.chat(conversation = conversation.value, tools = toolsMapped)
+                    .onEach {
+                        emit(Llm.Update.Response(it.message.content))
+                    }.fold(emptyList()) { acc, msg ->
+                        acc + msg
+                    }
             }
 
             var done = false
@@ -68,15 +94,15 @@ class OllamaLlm(
                                 )
                             )
 
-                            val tool = tools.firstOrNull { it.tool.name == function.name }
+                            val tool = tools.firstOrNull { it.name == function.name }
 
-                            val params = Llm.Tool.Params(function.arguments ?: emptyMap())
+                            val params = Llm.Tool.CallParams(function.arguments ?: emptyMap())
 
                             val toolResult = when (tool) {
                                 null -> "Error! The tool ${function.name} is not available."
                                 else -> try {
-                                    tool.fn(params)
-                                } catch(t: Throwable) {
+                                    tool.call(params)
+                                } catch (t: Throwable) {
                                     "Error! Calling the tool ${function.name} failed: ${t.message}."
                                 }
                             }
@@ -89,7 +115,11 @@ class OllamaLlm(
 
                             conversation.modify {
                                 it.add(
-                                    AiConversation.Message.Tool(name = function.name, content = toolResult)
+                                    AiConversation.Message.Tool(
+                                        name = function.name,
+                                        content = toolResult,
+                                        toolCallId = null,
+                                    )
                                 )
                             }
                         }
