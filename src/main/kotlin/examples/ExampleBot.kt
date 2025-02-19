@@ -4,8 +4,8 @@ import com.typesafe.config.Config
 import de.peekandpoke.ultra.common.datetime.Kronos
 import io.peekandpoke.aktor.chatbot.ChatBot
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.llm.OllamaLlm
-import io.peekandpoke.aktor.llm.OpenAiLlm
+import io.peekandpoke.aktor.llm.ollama.OllamaLlm
+import io.peekandpoke.aktor.llm.openai.OpenAiLlm
 import io.peekandpoke.aktor.model.AiConversation
 import io.peekandpoke.aktor.tools.IpInfoIo
 import io.peekandpoke.aktor.tools.OpenMeteoCom

@@ -3,8 +3,10 @@ package io.peekandpoke.aktor
 import com.typesafe.config.ConfigFactory
 import io.peekandpoke.aktor.examples.ExampleBot
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.model.OllamaModels
+import io.peekandpoke.aktor.llm.ollama.OllamaModels
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import java.io.File
 
 
@@ -12,15 +14,15 @@ fun main() {
 
     val config = ConfigFactory.parseFile(File("./config/keys.conf"))
 
-//    val bot = ExampleBot.createOllamaBot(
-//        config = config,
-//        model = OllamaModels.QWEN_2_5_3B,
-//    )
-
-    val bot = ExampleBot.createOpenAiBot(
+    val bot = ExampleBot.createOllamaBot(
         config = config,
-        model = "gpt-4o-mini"
+        model = OllamaModels.LLAMA_3_2_3B,
     )
+
+//    val bot = ExampleBot.createOpenAiBot(
+//        config = config,
+//        model = "gpt-4o-mini"
+//    )
 
     println("Chatting with model: ${bot.llm.model}")
     println("Available tools:")

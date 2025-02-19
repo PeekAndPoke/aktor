@@ -11,9 +11,9 @@ interface Llm {
             override val name: String,
             val description: String,
             val parameters: List<Param>,
-            val fn: suspend (CallParams) -> String,
+            val fn: suspend (AiConversation.Message.ToolCall.Args) -> String,
         ) : Tool {
-            override suspend fun call(params: CallParams): String {
+            override suspend fun call(params: AiConversation.Message.ToolCall.Args): String {
                 return fn(params)
             }
 
@@ -46,37 +46,10 @@ interface Llm {
             override val required: Boolean,
         ) : Param
 
-        class CallParams(
-            val params: Map<String, Any?>,
-        ) {
-            fun getString(name: String): String? = when(val x = params[name]) {
-                null -> null
-                is String -> x
-                else -> x.toString()
-            }
-
-            fun getDouble(name: String): Double? = when(val x = params[name]) {
-                null -> null
-                is Number -> x.toDouble()
-                else -> x.toString().toDoubleOrNull()
-            }
-
-            fun getInt(name: String): Int? = when(val x = params[name]) {
-                null -> null
-                is Number -> x.toInt()
-                else -> x.toString().toIntOrNull()
-            }
-
-            fun getBoolean(name: String): Boolean? = when(val x = params[name]) {
-                null -> null
-                is Boolean -> x
-                else -> x.toString().toBooleanStrictOrNull()
-            }
-        }
 
         val name: String
 
-        suspend fun call(params: CallParams): String
+        suspend fun call(params: AiConversation.Message.ToolCall.Args): String
 
         fun describe(): String
     }
