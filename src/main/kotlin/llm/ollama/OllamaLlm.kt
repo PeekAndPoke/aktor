@@ -40,7 +40,7 @@ class OllamaLlm(
         httpClient.close()
     }
 
-    override fun chat(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
+    override fun chat(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
         return flow {
             suspend fun call(): List<OllamaModels.ChatResponse> {
                 return httpClient.chat(
@@ -92,6 +92,7 @@ class OllamaLlm(
         val json = Json {
             ignoreUnknownKeys = true
             explicitNulls = false
+            coerceInputValues = true
             prettyPrint = true
         }
 
@@ -128,7 +129,12 @@ class OllamaLlm(
                     if (buffer != null) {
 //                    println("Buffer: $buffer")
 
-                        val obj = json.decodeFromString<OllamaModels.ChatResponse>(buffer)
+                        val obj = try {
+                            json.decodeFromString<OllamaModels.ChatResponse>(buffer)
+                        } catch (t: Throwable) {
+                            println("Error decoding: $buffer")
+                            throw t
+                        }
 
 //                    println("Decoded: $obj")
 

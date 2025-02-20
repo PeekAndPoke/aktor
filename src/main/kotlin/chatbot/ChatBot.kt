@@ -9,13 +9,16 @@ import kotlinx.coroutines.flow.Flow
 class ChatBot(
     val llm: Llm,
     val conversation: Mutable<AiConversation> = AiConversation.new.mutable(),
+    val streaming: Boolean,
 ) {
     companion object {
         fun of(
             llm: Llm,
+            streaming: Boolean,
             systemPrompt: AiConversation.Message.System? = null,
         ) = ChatBot(
             llm = llm,
+            streaming = streaming,
             conversation = AiConversation.new
                 .add(systemPrompt ?: AiConversation.Message.System("You are a helpful assistant."))
                 .mutable()
@@ -29,6 +32,6 @@ class ChatBot(
     fun chat(prompt: String): Flow<Llm.Update> {
         conversation.modify { it.add(AiConversation.Message.User(prompt)) }
 
-        return llm.chat(conversation)
+        return llm.chat(conversation, streaming = streaming)
     }
 }

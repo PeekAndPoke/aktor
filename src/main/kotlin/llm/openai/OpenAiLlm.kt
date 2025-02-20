@@ -1,19 +1,23 @@
 package io.peekandpoke.aktor.llm.openai
 
-import com.aallam.openai.api.chat.*
-import com.aallam.openai.api.core.Parameters
+import com.aallam.openai.api.chat.ChatCompletion
+import com.aallam.openai.api.chat.ChatCompletionChunk
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ToolCall
 import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
+import de.peekandpoke.ultra.common.model.Tuple2
+import de.peekandpoke.ultra.common.model.tuple
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.model.AiConversation
 import io.peekandpoke.aktor.model.Mutable
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 
 class OpenAiLlm(
     override val model: String,
@@ -30,12 +34,146 @@ class OpenAiLlm(
         }
     }
 
+    private val mapper = OpenAiMapper()
+
     override fun close() {
         client.close()
     }
 
-    override fun chat(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
+    override fun chat(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
+        return if (streaming) {
+            chatStreaming(conversation)
+        } else {
+            chatNonStreaming(conversation)
+        }
+    }
 
+    private fun chatStreaming(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
+        val modelId = ModelId(model)
+
+        return flow {
+            suspend fun call(): Flow<ChatCompletionChunk> {
+                // https://github.com/aallam/openai-kotlin/blob/main/guides/GettingStarted.md#chat
+                val request = ChatCompletionRequest(
+                    model = modelId,
+                    messages = mapper { conversation.value.messages.map() },
+                    tools = mapper { tools.map() },
+                )
+
+                return client.chatCompletions(request)
+            }
+
+            var done = false
+
+            while (!done) {
+                // Collect all chunks
+                val chunks = call()
+                    .onEach { chunk ->
+//                        println(chunk)
+                        val choice = chunk.choices.first()
+
+                        choice.delta?.content?.let { content ->
+                            emit(Llm.Update.Response(content))
+                        }
+                    }.fold(mutableMapOf<String, MutableList<ChatCompletionChunk>>()) { acc, chunk ->
+                        // collect all the chunks that belong together
+                        acc.also {
+                            acc.getOrPut(chunk.id) { mutableListOf() }.also { it.add(chunk) }
+                        }
+                    }.toMap()
+
+                // Combine all chunks
+                val (messages, toolCalls) = combineChunks(chunks)
+
+                // Add all collected messages to conversation
+                messages.forEach { msg -> conversation.modify { it.add(msg) } }
+
+                // Process tool calls
+                if (toolCalls.isNotEmpty()) {
+                    toolCalls.forEach { call -> processToolCall(conversation, call) }
+                } else {
+                    done = true
+                }
+            }
+
+            emit(Llm.Update.Stop)
+        }
+    }
+
+    private fun combineChunks(
+        chunks: Map<String, List<ChatCompletionChunk>>,
+    ): Tuple2<List<AiConversation.Message>, List<ToolCall>> {
+
+        val collectedMessages = mutableListOf<AiConversation.Message>()
+        val collectedToolCalls = mutableListOf<ToolCall>()
+
+        // finalize all chunks
+        chunks.forEach { (_, entries) ->
+            var collectedContent: String? = null
+            var collectedToolCall: ToolCall.Function? = null
+
+            entries.forEach { entry ->
+                val choice = entry.choices.first()
+
+                when (val content = choice.delta?.content) {
+                    null -> if (collectedContent != null) {
+                        collectedMessages.add(AiConversation.Message.Assistant(content = collectedContent))
+                        collectedContent = null
+                    }
+
+                    else -> {
+                        collectedContent = (collectedContent ?: "") + content
+                    }
+                }
+
+                when (val toolCalls = choice.delta?.toolCalls) {
+                    // Was the current tool call collection finished?
+                    null -> collectedToolCall?.let {
+                        collectedToolCalls.add(it)
+                        collectedToolCall = null
+                    }
+
+                    else -> {
+                        toolCalls.forEach { chunk ->
+                            val toolId = chunk.id
+                            val toolFn = chunk.function
+
+                            // Does a new tool call start here
+                            if (toolId != null && toolFn != null) {
+                                // Keep the already collected call
+                                collectedToolCall?.let {
+                                    collectedToolCalls.add(it)
+                                }
+
+                                // Start a new collection
+                                collectedToolCall = ToolCall.Function(id = toolId, function = toolFn)
+                            } else {
+
+                                collectedToolCall = collectedToolCall?.let {
+                                    it.copy(
+                                        function = it.function.copy(
+                                            nameOrNull = listOfNotNull(
+                                                it.function.nameOrNull,
+                                                chunk.function?.nameOrNull
+                                            ).joinToString(""),
+                                            argumentsOrNull = listOfNotNull(
+                                                it.function.argumentsOrNull,
+                                                chunk.function?.argumentsOrNull
+                                            ).joinToString("")
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return tuple(collectedMessages, collectedToolCalls)
+    }
+
+    private fun chatNonStreaming(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
         val modelId = ModelId(model)
 
         return flow {
@@ -43,8 +181,8 @@ class OpenAiLlm(
                 // https://github.com/aallam/openai-kotlin/blob/main/guides/GettingStarted.md#chat
                 val request = ChatCompletionRequest(
                     model = modelId,
-                    messages = conversation.value.mapMessages(),
-                    tools = tools.map(),
+                    messages = mapper { conversation.value.messages.map() },
+                    tools = mapper { tools.map() },
                 )
 
                 return client.chatCompletion(request)
@@ -148,82 +286,4 @@ class OpenAiLlm(
         }
     }
 
-    private fun List<Llm.Tool>.map(): List<Tool>? = map { tool ->
-        when (tool) {
-            is Llm.Tool.Function -> Tool(
-                type = ToolType.Function,
-                function = FunctionTool(
-                    name = tool.name,
-                    description = tool.description,
-                    parameters = Parameters.buildJsonObject {
-                        put("type", "object")
-                        putJsonObject("properties") {
-                            tool.parameters.forEach { p ->
-                                when (p) {
-                                    is Llm.Tool.StringParam -> putJsonObject(p.name) {
-                                        put("type", "string")
-                                        put("description", p.description)
-                                    }
-
-                                    is Llm.Tool.IntegerParam -> putJsonObject(p.name) {
-                                        put("type", "integer")
-                                        put("description", p.description)
-                                    }
-
-                                    is Llm.Tool.BooleanParam -> putJsonObject(p.name) {
-                                        put("type", "boolean")
-                                        put("description", p.description)
-                                    }
-                                }
-                            }
-                        }
-                        putJsonArray("required") {
-                            tool.parameters.filter { it.required }.forEach { p ->
-                                add(p.name)
-                            }
-                        }
-                    }
-                ),
-            )
-        }
-    }.takeIf { it.isNotEmpty() }
-
-    private fun AiConversation.mapMessages() = messages.map { msg ->
-        when (msg) {
-            is AiConversation.Message.System -> ChatMessage(
-                role = ChatRole.System,
-                content = msg.content,
-            )
-
-            is AiConversation.Message.User -> ChatMessage(
-                role = ChatRole.User,
-                content = msg.content,
-            )
-
-            is AiConversation.Message.Assistant -> ChatMessage(
-                role = ChatRole.Assistant,
-                content = msg.content,
-                toolCalls = msg.toolCalls?.map { call -> call.map() }?.takeIf { it.isNotEmpty() },
-            )
-
-            is AiConversation.Message.Tool -> {
-                ChatMessage(
-                    role = ChatRole.Tool,
-                    name = msg.name,
-                    content = msg.content,
-                    toolCallId = msg.toolCall?.id?.let { ToolId(it) },
-                )
-            }
-        }
-    }
-
-    private fun AiConversation.Message.ToolCall.map(): ToolCall {
-        return ToolCall.Function(
-            id = ToolId(id),
-            function = FunctionCall(
-                nameOrNull = name,
-                argumentsOrNull = args.print(),
-            ),
-        )
-    }
 }

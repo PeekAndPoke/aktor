@@ -25,7 +25,7 @@ class IpInfoIo(
                     Gets detailed information about the user current location.
                     
                     Returns: 
-                    JSON.
+                    JSON
                 """.trimIndent(),
                 parameters = emptyList(),
                 fn = { _ ->

@@ -68,6 +68,7 @@ interface Llm {
 
     fun chat(
         conversation: Mutable<AiConversation>,
+        streaming: Boolean,
     ): Flow<Update>
 
     val model: String

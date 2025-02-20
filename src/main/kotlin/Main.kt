@@ -3,7 +3,6 @@ package io.peekandpoke.aktor
 import com.typesafe.config.ConfigFactory
 import io.peekandpoke.aktor.examples.ExampleBot
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.llm.ollama.OllamaModels
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -12,17 +11,24 @@ import java.io.File
 
 fun main() {
 
+    val result = Json.parseToJsonElement("""{"lat": 10, "lng": null}""").jsonObject
+    println(result)
+
+    val result2 = Json.parseToJsonElement("""{}""").jsonObject
+    println(result2)
+
     val config = ConfigFactory.parseFile(File("./config/keys.conf"))
 
-    val bot = ExampleBot.createOllamaBot(
-        config = config,
-        model = OllamaModels.LLAMA_3_2_3B,
-    )
-
-//    val bot = ExampleBot.createOpenAiBot(
+//    val bot = ExampleBot.createOllamaBot(
 //        config = config,
-//        model = "gpt-4o-mini"
+//        model = OllamaModels.QWEN_2_5_3B,
 //    )
+
+    val bot = ExampleBot.createOpenAiBot(
+        config = config,
+        model = "gpt-4o-mini",
+        streaming = true,
+    )
 
     println("Chatting with model: ${bot.llm.model}")
     println("Available tools:")
@@ -31,7 +37,7 @@ fun main() {
     println()
 
     while (true) {
-        print("Enter a prompt: ")
+        print("You: ")
 
         when (val prompt = readln()) {
             "/bye" -> {
@@ -52,7 +58,7 @@ fun main() {
 
                         when (update) {
                             is Llm.Update.Response -> {
-                                update.content?.takeIf { it.isNotBlank() }?.let {
+                                update.content?.let {
                                     print(it)
                                 }
                             }
@@ -65,6 +71,8 @@ fun main() {
                                 println(update.message)
                             }
                         }
+
+                        System.out.flush()
                     }
                 }
             }

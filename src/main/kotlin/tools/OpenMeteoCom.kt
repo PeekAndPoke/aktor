@@ -84,7 +84,7 @@ class OpenMeteoCom(
                     Gets weather information about a location.
                     
                     Returns: 
-                    JSON.
+                    JSON
                 """.trimIndent(),
                 parameters = listOf(
                     Llm.Tool.StringParam(
