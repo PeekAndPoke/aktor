@@ -1,12 +1,13 @@
 package io.peekandpoke.aktor.llm.openai
 
-import com.aallam.openai.api.chat.*
-import com.aallam.openai.api.completion.Choice
+import com.aallam.openai.api.chat.ChatCompletion
+import com.aallam.openai.api.chat.ChatCompletionChunk
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ToolCall
 import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
-import de.peekandpoke.ultra.common.model.tuple
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.model.AiConversation
 import io.peekandpoke.aktor.model.Mutable
@@ -32,6 +33,7 @@ class OpenAiLlm(
     }
 
     private val mapper = OpenAiMapper()
+    private val merger = OpenAiChunkMerger()
 
     override fun close() {
         client.close()
@@ -49,7 +51,7 @@ class OpenAiLlm(
         val modelId = ModelId(model)
 
         return flow {
-            suspend fun call(): Flow<ChatCompletionChunk> {
+            fun call(): Flow<ChatCompletionChunk> {
                 // https://github.com/aallam/openai-kotlin/blob/main/guides/GettingStarted.md#chat
                 val request = ChatCompletionRequest(
                     model = modelId,
@@ -72,30 +74,17 @@ class OpenAiLlm(
                         choice.delta?.content?.let { content ->
                             emit(Llm.Update.Response(content))
                         }
-                    }.fold(mutableMapOf<String, MutableList<ChatCompletionChunk>>()) { acc, chunk ->
-                        // collect all the chunks that belong together
-                        acc.also {
-                            acc.getOrPut(chunk.id) { mutableListOf() }.also { it.add(chunk) }
-                        }
-                    }.toMap()
+                    }.fold(emptyList<ChatCompletionChunk>()) { acc, chunk -> acc.plus(chunk) }
 
                 // Combine all chunks
-                val completions = combineChunks(chunks)
+                val merged = merger { chunks.merge() }
 
                 // Add all collected messages to conversation
-                completions.forEach { c ->
-                    c.choices.first().message.content?.let { content ->
-                        conversation.modify {
-                            it.add(AiConversation.Message.Assistant(content = content))
-                        }
-                    }
-                }
+                merged.messages.forEach { msg -> conversation.modify { it.add(msg) } }
 
-                val toolCalls = completions.flatMap { it.choices.first().message.toolCalls ?: emptyList() }
-
-                // Process tool calls
-                if (toolCalls.isNotEmpty()) {
-                    toolCalls.forEach { call -> processToolCall(conversation, call) }
+                // process tool calls
+                if (merged.toolCalls.isNotEmpty()) {
+                    merged.toolCalls.forEach { toolCall -> processToolCall(conversation, toolCall) }
                 } else {
                     done = true
                 }
@@ -103,94 +92,6 @@ class OpenAiLlm(
 
             emit(Llm.Update.Stop)
         }
-    }
-
-    private fun combineChunks(
-        chunks: Map<String, List<ChatCompletionChunk>>,
-    ): List<ChatCompletion> {
-
-
-        // finalize all chunks
-        val completions = chunks.map { (id, entries) ->
-            val modelId = entries.first().model
-            val created = entries.first().created.toLong()
-            val collectedToolCalls = mutableListOf<ToolCall>()
-
-            var currentContent: String? = null
-            var currentToolCall: ToolCall.Function? = null
-
-            entries.forEach { entry ->
-                val choice = entry.choices.first()
-
-                choice.delta?.content?.let { content ->
-                    currentContent = (currentContent ?: "") + content
-                }
-
-                when (val toolCalls = choice.delta?.toolCalls) {
-                    // Was the current tool call collection finished?
-                    null -> currentToolCall?.let {
-                        collectedToolCalls.add(it)
-                        currentToolCall = null
-                    }
-
-                    else -> {
-                        toolCalls.forEach { chunk ->
-                            val toolId = chunk.id
-                            val toolFn = chunk.function
-
-                            // Does a new tool call start here
-                            if (toolId != null && toolFn != null) {
-                                // Keep the already collected call
-                                currentToolCall?.let {
-                                    collectedToolCalls.add(it)
-                                }
-
-                                // Start a new collection
-                                currentToolCall = ToolCall.Function(id = toolId, function = toolFn)
-                            } else {
-
-                                currentToolCall = currentToolCall?.let {
-                                    it.copy(
-                                        function = it.function.copy(
-                                            nameOrNull = listOfNotNull(
-                                                it.function.nameOrNull,
-                                                chunk.function?.nameOrNull
-                                            ).joinToString(""),
-                                            argumentsOrNull = listOfNotNull(
-                                                it.function.argumentsOrNull,
-                                                chunk.function?.argumentsOrNull
-                                            ).joinToString("")
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            ChatCompletion(
-                id = id,
-                created = created,
-                model = modelId,
-                choices = listOf(
-                    ChatChoice(
-                        index = 0,
-                        message = ChatMessage(
-                            role = ChatRole.Assistant,
-                            content = currentContent,
-                            name = null,
-                            functionCall = null,
-                            toolCalls = collectedToolCalls,
-                            toolCallId = null,
-
-                        )
-                    )
-                )
-            )
-        }
-
-        return completions
     }
 
     private fun chatNonStreaming(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
