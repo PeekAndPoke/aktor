@@ -195,7 +195,6 @@ class OllamaLlm(
             conversation.modify {
                 it.add(
                     AiConversation.Message.Tool(
-                        name = fnName,
                         content = toolResult,
                         toolCall = AiConversation.Message.ToolCall(id = fnName, name = fnName, args = fnArgs),
                     )
@@ -204,6 +203,7 @@ class OllamaLlm(
         }
     }
 
+    @JvmName("mapLlmTools")
     private fun List<Llm.Tool>.map() = map { tool ->
         when (tool) {
             is Llm.Tool.Function -> OllamaModels.Tool.Function(
@@ -225,28 +225,25 @@ class OllamaLlm(
         }
     }
 
-
     private fun AiConversation.mapMessages() = messages.map { msg ->
         when (msg) {
-            is AiConversation.Message.System -> OllamaModels.Message.System(
-                content = msg.content
-            )
+            is AiConversation.Message.System ->
+                OllamaModels.Message.System(content = msg.content)
 
-            is AiConversation.Message.User -> OllamaModels.Message.User(
-                content = msg.content
-            )
+            is AiConversation.Message.User ->
+                OllamaModels.Message.User(content = msg.content)
 
-            is AiConversation.Message.Assistant -> OllamaModels.Message.Assistant(
-                content = msg.content.orEmpty(),
-                tool_calls = msg.toolCalls?.map { call -> call.map() }?.takeIf { it.isNotEmpty() },
-            )
+            is AiConversation.Message.Assistant ->
+                OllamaModels.Message.Assistant(content = msg.content.orEmpty(), tool_calls = msg.toolCalls?.map())
 
-            is AiConversation.Message.Tool -> OllamaModels.Message.Tool(
-                name = msg.name,
-                content = msg.content,
-            )
+            is AiConversation.Message.Tool ->
+                OllamaModels.Message.Tool(name = msg.toolCall.name, content = msg.content)
         }
     }
+
+    @JvmName("mapToolCalls")
+    private fun List<AiConversation.Message.ToolCall>.map(): List<OllamaModels.Message.ToolCall>? =
+        map { call -> call.map() }.takeIf { it.isNotEmpty() }
 
     private fun AiConversation.Message.ToolCall.map(): OllamaModels.Message.ToolCall {
         return OllamaModels.Message.ToolCall(

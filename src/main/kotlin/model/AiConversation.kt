@@ -38,9 +38,8 @@ data class AiConversation(
         @Serializable
         @SerialName("tool")
         data class Tool(
-            val name: String,
             val content: String,
-            val toolCall: ToolCall? = null,
+            val toolCall: ToolCall,
         ): Message
 
         @Serializable

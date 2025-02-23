@@ -54,36 +54,26 @@ class OpenAiMapper {
     }.takeIf { it.isNotEmpty() }
 
     @JvmName("mapMessages")
-    fun List<AiConversation.Message>.map(): List<ChatMessage> = map { msg ->
+    fun List<AiConversation.Message>.map(): List<ChatMessage> = mapNotNull { msg ->
         when (msg) {
-            is AiConversation.Message.System -> ChatMessage(
-                role = ChatRole.System,
-                content = msg.content,
-            )
+            is AiConversation.Message.System ->
+                ChatMessage.System(content = msg.content)
 
-            is AiConversation.Message.User -> ChatMessage(
-                role = ChatRole.User,
-                content = msg.content,
-            )
+            is AiConversation.Message.User ->
+                ChatMessage.User(content = msg.content)
 
-            is AiConversation.Message.Assistant -> ChatMessage(
-                role = ChatRole.Assistant,
-                content = msg.content,
-                toolCalls = msg.toolCalls?.map { call -> call.map() }?.takeIf { it.isNotEmpty() },
-            )
+            is AiConversation.Message.Assistant ->
+                ChatMessage.Assistant(content = msg.content, toolCalls = msg.toolCalls?.map())
 
-            is AiConversation.Message.Tool -> {
-                ChatMessage(
-                    role = ChatRole.Tool,
-                    name = msg.name,
-                    content = msg.content,
-                    toolCallId = msg.toolCall?.id?.let { ToolId(it) },
-                )
-            }
+            is AiConversation.Message.Tool ->
+                ChatMessage.Tool(content = msg.content, toolCallId = ToolId(msg.toolCall.id))
         }
     }
 
-    fun AiConversation.Message.ToolCall.map(): ToolCall {
+    private fun List<AiConversation.Message.ToolCall>.map(): List<ToolCall>? =
+        map { call -> call.map() }.takeIf { it.isNotEmpty() }
+
+    private fun AiConversation.Message.ToolCall.map(): ToolCall {
         return ToolCall.Function(
             id = ToolId(id),
             function = FunctionCall(

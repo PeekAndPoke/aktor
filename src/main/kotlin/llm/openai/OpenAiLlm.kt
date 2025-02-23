@@ -197,7 +197,6 @@ class OpenAiLlm(
                 conversation.modify {
                     it.add(
                         AiConversation.Message.Tool(
-                            name = fnName,
                             content = toolResult,
                             toolCall = AiConversation.Message.ToolCall(id = fnCallId.id, name = fnName, args = fnArgs),
                         )

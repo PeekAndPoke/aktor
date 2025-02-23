@@ -6,6 +6,7 @@ import io.peekandpoke.aktor.chatbot.ChatBot
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.llm.ollama.OllamaLlm
 import io.peekandpoke.aktor.llm.openai.OpenAiLlm
+import io.peekandpoke.aktor.tools.ExchangeRateApiCom
 import io.peekandpoke.aktor.tools.IpInfoIo
 import io.peekandpoke.aktor.tools.OpenMeteoCom
 
@@ -24,13 +25,15 @@ object ExampleBot {
         }
     )
 
-    val getCurrentUserTool = Llm.Tool.Function(
-        name = "get_current_user",
+    val getUsersNameTool = Llm.Tool.Function(
+        name = "get_users_name",
         description = """
-            Gets the actual name of the current user.
+            Gets the of the Human interacting with the assistant.
+            
+            This is NOT the name of the bot.
             
             Returns:
-            The actual name of the user in the format `Firstname Lastname`.
+            the users name like `Firstname Lastname`
         """.trimIndent(),
         parameters = emptyList(),
         fn = {
@@ -82,7 +85,7 @@ object ExampleBot {
             OpenMeteoCom.tool(),
             // sample tools
             getCurrentDateTimeTool,
-            getCurrentUserTool,
+            getUsersNameTool,
 //            getCurrentUserLocationTool,
             encryptTool,
         )
@@ -98,9 +101,10 @@ object ExampleBot {
         val tools = listOf(
             IpInfoIo.tool(config.getString("keys.IP_INFO_TOKEN")),
             OpenMeteoCom.tool(),
+            ExchangeRateApiCom.tool(),
             //
             getCurrentDateTimeTool,
-            getCurrentUserTool,
+            getUsersNameTool,
             encryptTool,
         )
 

@@ -3,6 +3,7 @@ package io.peekandpoke.aktor
 import com.typesafe.config.ConfigFactory
 import io.peekandpoke.aktor.examples.ExampleBot
 import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llm.ollama.OllamaModels
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -21,7 +22,8 @@ fun main() {
 
 //    val bot = ExampleBot.createOllamaBot(
 //        config = config,
-//        model = OllamaModels.QWEN_2_5_3B,
+//        model = OllamaModels.LLAMA_3_2_3B,
+//        streaming = false,
 //    )
 
     val bot = ExampleBot.createOpenAiBot(
