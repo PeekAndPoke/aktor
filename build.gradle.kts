@@ -9,6 +9,7 @@ group = "io.peekandpoke"
 version = "1.0-SNAPSHOT"
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -24,24 +25,26 @@ dependencies {
 
     implementation(kotlin("reflect"))
 
-    implementation(Deps.ultra_common_mp)
+    implementation(Deps.ultra_common)
 
     implementation(Deps.ktor_client_core)
     implementation(Deps.ktor_client_okhttp)
     implementation(Deps.ktor_client_cio)
-    implementation("io.ktor:ktor-client-content-negotiation:${Deps.ktor_version}")
-    implementation("io.ktor:ktor-client-plugins:${Deps.ktor_version}")
-    implementation("io.ktor:ktor-client-logging:${Deps.ktor_version}")
-    implementation("io.ktor:ktor-serialization-jackson:${Deps.ktor_version}")
+    implementation(Deps.ktor_client_content_negotiation)
+    implementation(Deps.ktor_client_plugins)
+    implementation(Deps.ktor_client_logging)
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
+    implementation(Deps.ktor_serialization_kotlinx_json)
+    implementation(Deps.ktor_serialization_jackson)
+
+    implementation(Deps.jackson_databind)
+    implementation(Deps.jackson_module_kotlin)
 
     implementation(Deps.kotlinx_serialization_core)
     implementation(Deps.kotlinx_serialization_json)
 
     implementation("com.typesafe:config:1.4.3")
-    implementation("com.aallam.openai:openai-client:3.8.2")
+    implementation("com.aallam.openai:openai-client:4.0.1")
 
     implementation(Deps.slf4j_api)
 }

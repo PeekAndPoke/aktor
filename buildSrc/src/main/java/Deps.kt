@@ -10,7 +10,7 @@ object Deps {
     }
 
     // Kotlin ////////////////////////////////////////////////////////////////////////////////////
-    const val kotlinVersion = "1.9.25"
+    const val kotlinVersion = "2.1.10"
     // ///////////////////////////////////////////////////////////////////////////////////////////
 
     // JVM ///////////////////////////////////////////////////////////////////////////////////////
@@ -20,7 +20,7 @@ object Deps {
     // Dokka /////////////////////////////////////////////////////////////////////////////////////
     // https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
     // Dokka gradle plugin org.jetbrains.dokka
-    const val dokkaVersion = "1.9.20" // kotlinVersion
+    const val dokkaVersion = "2.0.0" // kotlinVersion
     // ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Publishing ////////////////////////////////////////////////////////////////////////////////
@@ -31,12 +31,12 @@ object Deps {
     // KOTLIN - DEPS ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     // https://search.maven.org/search?q=g:io.peekandpoke.ultra%20AND%20a:commonmp
-    private const val ultra_version = "0.77.0"
-    const val ultra_common_mp = "io.peekandpoke.ultra:commonmp:$ultra_version"
+    private const val ultra_version = "0.80.0.1-kotlin2.1"
+    const val ultra_common = "io.peekandpoke.ultra:common:$ultra_version"
 
     // https://kotlinlang.org/docs/releases.html#release-details
     // https://github.com/Kotlin/kotlinx.coroutines/releases
-    private const val kotlinx_coroutines_version = "1.8.1"
+    private const val kotlinx_coroutines_version = "1.10.1"
     const val kotlinx_coroutines_core =
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
     const val kotlinx_coroutines_core_js =
@@ -44,7 +44,7 @@ object Deps {
 
     // https://kotlinlang.org/docs/releases.html#release-details
     // https://github.com/Kotlin/kotlinx.serialization/releases
-    private const val kotlinx_serialization_version = "1.6.3"
+    private const val kotlinx_serialization_version = "1.8.0"
     const val kotlinx_serialization_core =
         "org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinx_serialization_version"
     const val kotlinx_serialization_json =
@@ -52,20 +52,31 @@ object Deps {
 
     // https://kotlinlang.org/docs/releases.html
     // https://github.com/ktorio/ktor/releases
-    const val ktor_version = "2.3.12"
+    const val ktor_version = "3.1.1"
     const val ktor_client_core = "io.ktor:ktor-client-core:$ktor_version"
     const val ktor_client_cio = "io.ktor:ktor-client-cio:$ktor_version"
     const val ktor_client_okhttp = "io.ktor:ktor-client-okhttp:$ktor_version"
+    const val ktor_client_plugins = "io.ktor:ktor-client-plugins:$ktor_version"
+    const val ktor_client_logging = "io.ktor:ktor-client-logging:$ktor_version"
+    const val ktor_client_content_negotiation = "io.ktor:ktor-client-content-negotiation:$ktor_version"
 
+    const val ktor_serialization_kotlinx_json = "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
+    const val ktor_serialization_jackson = "io.ktor:ktor-serialization-jackson:$ktor_version"
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-datetime
-    private const val kotlinx_datetime_version = "0.6.1"
-    const val kotlinx_datetime_common = "org.jetbrains.kotlinx:kotlinx-datetime:$kotlinx_datetime_version"
+    private const val kotlinx_datetime_version = "0.6.2"
+    const val kotlinx_datetime = "org.jetbrains.kotlinx:kotlinx-datetime:$kotlinx_datetime_version"
+
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+    private const val jackson_version = "2.18.3"
+    const val jackson_annotations = "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
+    const val jackson_databind = "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
+    const val jackson_module_kotlin = "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
 
     // JAVA - DEPS /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-    private const val slf4j_version = "2.0.16"
+    private const val slf4j_version = "2.0.17"
     const val slf4j_api = "org.slf4j:slf4j-api:$slf4j_version"
 
     // // NPM dependencies /////////////////////////////////////////////////////////////////////////
@@ -85,7 +96,7 @@ object Deps {
         }
 
         // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-        const val logback_version = "1.5.16"
+        const val logback_version = "1.5.17"
         const val logback_classic = "ch.qos.logback:logback-classic:$logback_version"
 
         // https://mvnrepository.com/artifact/io.kotest/kotest-common
