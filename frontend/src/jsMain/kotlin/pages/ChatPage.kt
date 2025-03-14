@@ -1,21 +1,20 @@
 package de.peekandpoke.aktor.frontend.pages
 
 import de.peekandpoke.aktor.frontend.Api
+import de.peekandpoke.kraft.addons.marked.marked
 import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextArea
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
 import de.peekandpoke.kraft.components.comp
 import de.peekandpoke.kraft.components.onClick
-import de.peekandpoke.kraft.semanticui.noui
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.semanticui.*
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import io.peekandpoke.aktor.model.AiConversation
-import kotlinx.html.FlowContent
-import kotlinx.html.Tag
-import kotlinx.html.pre
+import kotlinx.css.*
+import kotlinx.html.*
 
 @Suppress("FunctionName")
 fun Tag.ChatPage() = comp {
@@ -33,6 +32,17 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
     val noDblClick = doubleClickProtection()
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    init {
+        launch {
+            loadChat()
+        }
+    }
+
+    private suspend fun loadChat() = noDblClick.runBlocking {
+        val response = Api.loadChat()
+        conversation = response
+    }
 
     private suspend fun sendChat(message: String) = noDblClick.runBlocking {
         val response = Api.sendMessage(message)
@@ -57,7 +67,10 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
                 UiTextArea(
                     value = input,
                     onChange = { input = it }
-                )
+                ) {
+                    name("message")
+                    disabled(noDblClick.cannotRun)
+                }
 
                 ui.fluid.givenNot(noDblClick.canRun) { loading }.button {
                     onClick {
@@ -65,10 +78,10 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
 
                         launch {
                             sendChat(message)
+                            input = ""
                         }
-
-                        input = ""
                     }
+
                     +"Send"
                 }
             }
@@ -76,36 +89,40 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
     }
 
     private fun FlowContent.renderConversation() {
-        ui.divided.list {
+        ui.grid {
             conversation.messages.forEach { message ->
-                noui.item {
+                noui.row {
                     when (message) {
                         is AiConversation.Message.System -> {
-                            ui.label { +"System" }
-                            ui.segment {
-                                +message.content
+                            ui.twelve.wide.left.floated.column {
+                                ui.orange.segment {
+                                    renderLeftIcon { orange.robot }
+                                    noui.content {
+                                        renderMarkdown(message.content)
+                                    }
+                                }
                             }
                         }
 
                         is AiConversation.Message.Assistant -> {
-                            ui.label { +"Assistant" }
-                            ui.segment {
-                                message.content?.let { content ->
-                                    +content
+
+                            ui.twelve.wide.left.floated.column {
+                                message.content?.takeIf { it.isNotBlank() }?.let { content ->
+                                    ui.green.segment {
+                                        renderLeftIcon { green.comment }
+                                        noui.content {
+                                            renderMarkdown(content)
+                                        }
+                                    }
                                 }
 
-                                message.toolCalls?.let { toolCalls ->
-                                    if (toolCalls.isNotEmpty()) {
-                                        ui.divider()
-                                        ui.header H4 { +"Tool Calls:" }
-
-                                        toolCalls.forEach { toolCall ->
-                                            ui.segment {
-                                                ui.header H5 { +"${toolCall.name} (ID: ${toolCall.id})" }
-                                                ui.label { +"Arguments:" }
-                                                pre {
-                                                    +toolCall.args.print()
-                                                }
+                                message.toolCalls?.takeIf { it.isNotEmpty() }?.forEach { toolCall ->
+                                    ui.violet.segment {
+                                        renderLeftIcon { violet.bolt }
+                                        b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
+                                        noui.content {
+                                            pre {
+                                                +toolCall.args.print()
                                             }
                                         }
                                     }
@@ -113,21 +130,58 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
                             }
                         }
 
-                        is AiConversation.Message.User -> {
-                            ui.blue.label { +"You" }
-                            ui.blue.segment {
-                                +message.content
+                        is AiConversation.Message.Tool -> {
+                            ui.twelve.wide.left.floated.column {
+                                ui.violet.segment {
+                                    renderLeftIcon { violet.bolt }
+                                    b { +"Tool Response: '${message.toolCall.name}' (${message.toolCall.id})" }
+                                    pre {
+                                        +message.content
+                                    }
+                                }
                             }
                         }
 
-                        is AiConversation.Message.Tool -> {
-                            ui.grey.label { +"Tool Response: ${message.toolCall.name}" }
-                            ui.grey.segment {
-                                +message.content
+                        is AiConversation.Message.User -> {
+                            ui.twelve.wide.right.floated.column {
+                                ui.blue.segment {
+                                    renderRightIcon { blue.user }
+                                    noui.content {
+                                        renderMarkdown(message.content)
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun DIV.renderMarkdown(content: String) {
+        val md = marked.parse(content)
+
+        unsafe { +md }
+    }
+
+    private fun DIV.renderLeftIcon(iconFn: SemanticIconFn) {
+
+        icon.circular.inverted.iconFn().then {
+            css {
+                position = Position.absolute
+                top = (-12).px
+                left = (-12).px
+            }
+        }
+    }
+
+    private fun DIV.renderRightIcon(iconFn: SemanticIconFn) {
+
+        icon.circular.inverted.iconFn().then {
+            css {
+                position = Position.absolute
+                top = (-12).px
+                right = (-12).px
             }
         }
     }

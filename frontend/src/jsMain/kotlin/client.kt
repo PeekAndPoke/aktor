@@ -24,6 +24,13 @@ class ChatClient(private val baseUrl: String = "http://localhost:8081") {
         }
     }
 
+    suspend fun loadChat(): AiConversation {
+        val uri = buildUri("/chat")
+        var url = "$baseUrl$uri"
+
+        return client.get(url).body()
+    }
+
     /**
      * Sends a message to the chat endpoint
      *
@@ -36,7 +43,7 @@ class ChatClient(private val baseUrl: String = "http://localhost:8081") {
         }
         var url = "$baseUrl$uri"
 
-        return client.get(url).body()
+        return client.put(url).body()
     }
 
     /**

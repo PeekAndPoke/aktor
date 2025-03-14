@@ -19,7 +19,7 @@ fun main(args: Array<String>) {
     server.start(wait = true)
 }
 
-
+@Suppress("unused")
 fun Application.module() {
 
     val config = ConfigFactory.parseFile(File("./config/keys.conf"))
@@ -60,7 +60,11 @@ fun Application.module() {
             call.respondText("pong")
         }
 
-        get("/chat/{message}") {
+        get("/chat") {
+            call.respond(bot.conversation.value)
+        }
+
+        put("/chat/{message}") {
             val message = call.parameters["message"] ?: "Hello, world!"
 
             bot.chat(message).collect { update ->
