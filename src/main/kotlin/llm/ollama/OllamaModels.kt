@@ -1,6 +1,5 @@
 package io.peekandpoke.aktor.llm.ollama
 
-import io.peekandpoke.aktor.model.AiConversation
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
@@ -8,6 +7,11 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @Suppress("PropertyName")
 object OllamaModels {
     const val DEEPSEEK_R1_7B = "deepseek-r1:7B"
+
+    const val GEMMA_3_1B = "gemma3:1b"
+    const val GEMMA_3_4B = "gemma3:4b"
+    const val GEMMA_3_12B = "gemma3:12b"
+    const val GEMMA_3_27B = "gemma3:27b"
 
     const val LLAMA_3_2_1B = "llama3.2:1b"
     const val LLAMA_3_2_3B = "llama3.2:3b"

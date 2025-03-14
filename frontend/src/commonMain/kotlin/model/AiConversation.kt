@@ -2,9 +2,9 @@ package io.peekandpoke.aktor.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
+@Serializable
 data class AiConversation(
     val messages: List<Message>,
 ) {
@@ -78,7 +78,7 @@ data class AiConversation(
                     }
                 }
 
-                fun print(): String = Json.encodeToString(params)
+                fun print(): String = Json.Default.encodeToString(params)
 
                 fun getString(name: String): String? = params[name]?.jsonPrimitive?.content
 
