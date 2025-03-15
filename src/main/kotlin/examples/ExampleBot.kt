@@ -97,8 +97,13 @@ object ExampleBot {
         return bot
     }
 
-    fun createOpenAiBot(config: Config, model: String, streaming: Boolean): ChatBot {
-        val tools = listOf(
+    fun createOpenAiBot(
+        config: Config,
+        model: String,
+        streaming: Boolean,
+        tools: List<Llm.Tool> = emptyList(),
+    ): ChatBot {
+        val allTools = listOf(
             IpInfoIo.tool(config.getString("keys.IP_INFO_TOKEN")),
             OpenMeteoCom.tool(),
             ExchangeRateApiCom.tool(),
@@ -106,11 +111,11 @@ object ExampleBot {
             getCurrentDateTimeTool,
             getUsersNameTool,
             encryptTool,
-        )
+        ).plus(tools)
 
         val token = config.getString("keys.OPEN_AI_TOKEN")
 
-        val llm = OpenAiLlm(model = model, tools = tools, authToken = token)
+        val llm = OpenAiLlm(model = model, tools = allTools, authToken = token)
         val bot = ChatBot.of(llm = llm, streaming = streaming)
 
         return bot

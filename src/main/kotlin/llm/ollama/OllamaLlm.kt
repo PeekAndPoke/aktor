@@ -214,7 +214,8 @@ class OllamaLlm(
                         properties = tool.parameters.associate { p ->
                             p.name to when (p) {
                                 is Llm.Tool.StringParam -> OllamaModels.StringType(description = p.description)
-                                is Llm.Tool.IntegerParam -> OllamaModels.StringType(description = p.description)
+                                is Llm.Tool.NumberParam -> OllamaModels.NumberType(description = p.description)
+                                is Llm.Tool.IntegerParam -> OllamaModels.IntegerType(description = p.description)
                                 is Llm.Tool.BooleanParam -> OllamaModels.BooleanType(description = p.description)
                             }
                         },

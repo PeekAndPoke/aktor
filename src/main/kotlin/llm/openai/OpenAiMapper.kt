@@ -30,6 +30,11 @@ class OpenAiMapper {
                                         put("description", p.description)
                                     }
 
+                                    is Llm.Tool.NumberParam -> putJsonObject(p.name) {
+                                        put("type", "number")
+                                        put("description", p.description)
+                                    }
+
                                     is Llm.Tool.IntegerParam -> putJsonObject(p.name) {
                                         put("type", "integer")
                                         put("description", p.description)

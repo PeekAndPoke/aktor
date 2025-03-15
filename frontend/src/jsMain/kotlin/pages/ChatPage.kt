@@ -4,10 +4,8 @@ import de.peekandpoke.aktor.frontend.Api
 import de.peekandpoke.kraft.addons.marked.marked
 import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextArea
-import de.peekandpoke.kraft.components.NoProps
-import de.peekandpoke.kraft.components.PureComponent
-import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.components.onClick
+import de.peekandpoke.kraft.addons.semanticui.forms.UiTextAreaComponent
+import de.peekandpoke.kraft.components.*
 import de.peekandpoke.kraft.semanticui.*
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
@@ -29,6 +27,8 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
 
     private var conversation by value(AiConversation.new)
 
+    val textAreaRef = ComponentRef.Tracker<UiTextAreaComponent>()
+
     val noDblClick = doubleClickProtection()
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +44,20 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
         conversation = response
     }
 
+    fun canSend() = noDblClick.canRun && input.isNotBlank()
+
+    private fun send() {
+        val message = input.trim()
+
+        if (canSend()) {
+            launch {
+                sendChat(message)
+                input = ""
+                textAreaRef { it.focus() }
+            }
+        }
+    }
+
     private suspend fun sendChat(message: String) = noDblClick.runBlocking {
         val response = Api.sendMessage(message)
 
@@ -56,34 +70,45 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
         ui.container {
             ui.header H1 { +"Chat" }
 
-            ui.divider()
-
             renderConversation()
 
-            ui.divider()
+            ui.hidden.divider()
 
-            ui.form {
+            renderInputs()
+        }
+    }
 
-                UiTextArea(
-                    value = input,
-                    onChange = { input = it }
-                ) {
-                    name("message")
-                    disabled(noDblClick.cannotRun)
-                }
+    private fun FlowContent.renderInputs() {
+        ui.form {
 
-                ui.fluid.givenNot(noDblClick.canRun) { loading }.button {
-                    onClick {
-                        val message = input.trim()
+            UiTextArea(value = input, onChange = { input = it }) {
+                name("message")
+                disabled(noDblClick.cannotRun)
 
-                        launch {
-                            sendChat(message)
-                            input = ""
+                customize {
+                    onKeyDown { event ->
+                        val noModifierKeys = event.ctrlKey.not() &&
+                                event.altKey.not() &&
+                                event.metaKey.not() &&
+                                event.shiftKey.not()
+
+                        if (event.key == "Enter" && noModifierKeys) {
+                            send()
                         }
                     }
-
-                    +"Send"
                 }
+            }.track(textAreaRef)
+
+            val canSend = canSend()
+
+            ui.fluid.givenNot(noDblClick.canRun) { loading }.button {
+                if (canSend) {
+                    onClick {
+                        send()
+                    }
+                }
+
+                +"Send"
             }
         }
     }
@@ -118,7 +143,7 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
 
                                 message.toolCalls?.takeIf { it.isNotEmpty() }?.forEach { toolCall ->
                                     ui.violet.segment {
-                                        renderLeftIcon { violet.bolt }
+                                        renderLeftIcon { violet.hammer }
                                         b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
                                         noui.content {
                                             pre {
@@ -133,7 +158,7 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
                         is AiConversation.Message.Tool -> {
                             ui.twelve.wide.left.floated.column {
                                 ui.violet.segment {
-                                    renderLeftIcon { violet.bolt }
+                                    renderLeftIcon { violet.hammer }
                                     b { +"Tool Response: '${message.toolCall.name}' (${message.toolCall.id})" }
                                     pre {
                                         +message.content

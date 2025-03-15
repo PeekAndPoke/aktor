@@ -31,7 +31,7 @@ object Deps {
 
     object KotlinLibs {
         private const val ultra_version = "0.83.6"
-        private const val kraft_version = "0.62.1"
+        private const val kraft_version = "0.62.2"
 
         object Ultra {
             // https://search.maven.org/search?q=g:io.peekandpoke.ultra%20AND%20a:commonmp
@@ -95,6 +95,7 @@ object Deps {
         // https://github.com/Kotlin/kotlinx.coroutines/releases
         private const val coroutines_version = "1.10.1"
         const val coroutines_core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+        const val coroutines_reactor = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutines_version"
 
         // https://github.com/Kotlin/kotlinx.serialization/releases
         private const val serialization_version = "1.8.0"
@@ -102,6 +103,9 @@ object Deps {
             "org.jetbrains.kotlinx:kotlinx-serialization-core:$serialization_version"
         const val serialization_json =
             "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version"
+
+        const val atomicfu_version = "0.23.2"
+        const val atomicfu = "org.jetbrains.kotlinx:atomicfu:$atomicfu_version"
 
         // https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven/org/jetbrains/kotlinx/kotlinx-html/
         private const val html_version = "0.12.0"
@@ -185,6 +189,7 @@ object Deps {
 
             const val content_negotiation = "io.ktor:ktor-client-content-negotiation:$ktor_version"
 
+            const val sse = "io.ktor:ktor-client-sse:$ktor_version"
             const val plugins = "io.ktor:ktor-client-plugins:$ktor_version"
             const val logging = "io.ktor:ktor-client-logging:$ktor_version"
             const val websockets = "io.ktor:ktor-client-websockets:$ktor_version"

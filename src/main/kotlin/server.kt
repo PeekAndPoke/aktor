@@ -8,8 +8,11 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sse.*
 import io.peekandpoke.aktor.examples.ExampleBot
 import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.mcpclient.McpClient
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -22,13 +25,24 @@ fun main(args: Array<String>) {
 @Suppress("unused")
 fun Application.module() {
 
-    val config = ConfigFactory.parseFile(File("./config/keys.conf"))
+    val bot = runBlocking {
+        val mcpClient = McpClient(
+            name = "Play",
+            version = "1.0.0",
+            toolNamespace = "playground",
+        ).connect()
 
-    val bot = ExampleBot.createOpenAiBot(
-        config = config,
-        model = "gpt-4o-mini",
-        streaming = true,
-    )
+        val mcpTools = mcpClient.listToolsBound() ?: emptyList()
+
+        val config = ConfigFactory.parseFile(File("./config/keys.conf"))
+
+        ExampleBot.createOpenAiBot(
+            config = config,
+            model = "gpt-4o-mini",
+            streaming = true,
+            tools = mcpTools,
+        )
+    }
 
     // Install CORS feature
     install(CORS) {
@@ -43,6 +57,7 @@ fun Application.module() {
         allowHost("localhost:25867", schemes = listOf("http", "https"))
     }
 
+    install(SSE)
 
     install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
         json(Json {

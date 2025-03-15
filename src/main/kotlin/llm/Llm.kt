@@ -28,7 +28,7 @@ interface Llm {
             val required: Boolean
         }
 
-        data class StringParam(
+        data class BooleanParam(
             override val name: String,
             override val description: String,
             override val required: Boolean,
@@ -40,12 +40,17 @@ interface Llm {
             override val required: Boolean,
         ) : Param
 
-        data class BooleanParam(
+        data class NumberParam(
             override val name: String,
             override val description: String,
             override val required: Boolean,
         ) : Param
 
+        data class StringParam(
+            override val name: String,
+            override val description: String,
+            override val required: Boolean,
+        ) : Param
 
         val name: String
 

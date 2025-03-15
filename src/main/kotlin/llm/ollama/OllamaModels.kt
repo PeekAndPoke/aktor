@@ -171,6 +171,10 @@ object OllamaModels {
     data class StringType(val description: String) : Type
 
     @Serializable
+    @SerialName("number")
+    data class NumberType(val description: String) : Type
+
+    @Serializable
     @SerialName("integer")
     data class IntegerType(val description: String) : Type
 
