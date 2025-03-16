@@ -41,8 +41,6 @@ class CustomSSEClientTransport(
         }
     }
 
-    val postClient: HttpClient = HttpClient()
-
     private val scope by lazy {
         CoroutineScope(session.coroutineContext + SupervisorJob())
     }
@@ -112,7 +110,7 @@ class CustomSSEClientTransport(
                 }
             }
 
-            error("SSE session closed unexpectedly")
+            println("[MCPClient] session closed")
         }
 
         endpoint.await()
@@ -125,7 +123,7 @@ class CustomSSEClientTransport(
         }
 
         try {
-            val response = postClient.post(endpoint.getCompleted()) {
+            val response = client.post(endpoint.getCompleted()) {
                 headers.append(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(McpJson.encodeToString(message))
             }

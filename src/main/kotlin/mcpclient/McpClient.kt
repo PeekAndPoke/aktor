@@ -20,7 +20,10 @@ class McpClient(
     val toolNamespace: String,
     private val transport: Transport = CustomSSEClientTransport(
         client = HttpClient {
-            install(SSE)
+            install(SSE) {
+                reconnectionTime = 1.seconds
+                maxReconnectionAttempts = Int.MAX_VALUE
+            }
         },
         baseUrl = "http://localhost:8000",
         connectUrl = "http://localhost:8000/sse",

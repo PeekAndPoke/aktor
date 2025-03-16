@@ -1,18 +1,18 @@
 package de.peekandpoke.aktor.frontend.pages
 
 import de.peekandpoke.aktor.frontend.Api
-import de.peekandpoke.kraft.addons.marked.marked
+import de.peekandpoke.aktor.frontend.common.AiConversationView
 import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextArea
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextAreaComponent
 import de.peekandpoke.kraft.components.*
-import de.peekandpoke.kraft.semanticui.*
+import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import io.peekandpoke.aktor.model.AiConversation
-import kotlinx.css.*
-import kotlinx.html.*
+import kotlinx.html.FlowContent
+import kotlinx.html.Tag
 
 @Suppress("FunctionName")
 fun Tag.ChatPage() = comp {
@@ -114,100 +114,6 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
     }
 
     private fun FlowContent.renderConversation() {
-        ui.grid {
-            conversation.messages.forEach { message ->
-                noui.row {
-                    when (message) {
-                        is AiConversation.Message.System -> {
-                            ui.twelve.wide.left.floated.column {
-                                ui.orange.segment {
-                                    renderLeftIcon { orange.robot }
-                                    noui.content {
-                                        renderMarkdown(message.content)
-                                    }
-                                }
-                            }
-                        }
-
-                        is AiConversation.Message.Assistant -> {
-
-                            ui.twelve.wide.left.floated.column {
-                                message.content?.takeIf { it.isNotBlank() }?.let { content ->
-                                    ui.green.segment {
-                                        renderLeftIcon { green.comment }
-                                        noui.content {
-                                            renderMarkdown(content)
-                                        }
-                                    }
-                                }
-
-                                message.toolCalls?.takeIf { it.isNotEmpty() }?.forEach { toolCall ->
-                                    ui.violet.segment {
-                                        renderLeftIcon { violet.hammer }
-                                        b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
-                                        noui.content {
-                                            pre {
-                                                +toolCall.args.print()
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        is AiConversation.Message.Tool -> {
-                            ui.twelve.wide.left.floated.column {
-                                ui.violet.segment {
-                                    renderLeftIcon { violet.hammer }
-                                    b { +"Tool Response: '${message.toolCall.name}' (${message.toolCall.id})" }
-                                    pre {
-                                        +message.content
-                                    }
-                                }
-                            }
-                        }
-
-                        is AiConversation.Message.User -> {
-                            ui.twelve.wide.right.floated.column {
-                                ui.blue.segment {
-                                    renderRightIcon { blue.user }
-                                    noui.content {
-                                        renderMarkdown(message.content)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun DIV.renderMarkdown(content: String) {
-        val md = marked.parse(content)
-
-        unsafe { +md }
-    }
-
-    private fun DIV.renderLeftIcon(iconFn: SemanticIconFn) {
-
-        icon.circular.inverted.iconFn().then {
-            css {
-                position = Position.absolute
-                top = (-12).px
-                left = (-12).px
-            }
-        }
-    }
-
-    private fun DIV.renderRightIcon(iconFn: SemanticIconFn) {
-
-        icon.circular.inverted.iconFn().then {
-            css {
-                position = Position.absolute
-                top = (-12).px
-                right = (-12).px
-            }
-        }
+        AiConversationView(conversation)
     }
 }

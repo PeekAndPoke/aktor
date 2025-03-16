@@ -340,6 +340,11 @@ object Deps {
         const val diff_utils = "com.github.wumpz:diffutils:$diff_utils_version"
     }
 
+    object IDE {
+        const val jetbrains_annotations_version = "26.0.2"
+        const val jetbrains_annotations = "org.jetbrains:annotations:$jetbrains_annotations_version"
+    }
+
     // // NPM dependencies /////////////////////////////////////////////////////////////////////////
 
     object Npm {
