@@ -10,12 +10,13 @@ import io.modelcontextprotocol.kotlin.sdk.shared.Transport
 import kotlinx.atomicfu.AtomicBoolean
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
-import kotlin.properties.Delegates
 import kotlin.time.Duration
 
+typealias OnMcpMessage = suspend (JSONRPCMessage) -> Unit
 
 /**
  * Client transport for SSE: this will connect to a server using Server-Sent Events for receiving
@@ -41,89 +42,63 @@ class CustomSSEClientTransport(
         }
     }
 
-    private val scope by lazy {
-        CoroutineScope(session.coroutineContext + SupervisorJob())
+    private class State(
+        val initialized: AtomicBoolean = atomic(false),
+        val endpoint: CompletableDeferred<String> = CompletableDeferred<String>(),
+    ) {
+        var session: ClientSSESession? = null
+        var job: Job? = null
+
+        val scope by lazy {
+            CoroutineScope(session!!.coroutineContext + SupervisorJob())
+        }
+
+        fun cancel() {
+            endpoint.cancel()
+            session?.cancel()
+            job?.cancel()
+        }
     }
 
-    private val initialized: AtomicBoolean = atomic(false)
-    private var session: ClientSSESession by Delegates.notNull()
-    private val endpoint = CompletableDeferred<String>()
+    private var state = State()
+
+    var onDisconnect: (suspend () -> Unit)? = null
 
     override var onClose: (() -> Unit)? = null
     override var onError: ((Throwable) -> Unit)? = null
-    override var onMessage: (suspend ((JSONRPCMessage) -> Unit))? = null
-
-    private var job: Job? = null
+    override var onMessage: OnMcpMessage? = null
 
     override suspend fun start() {
-        if (!initialized.compareAndSet(false, true)) {
-            error(
-                "SSEClientTransport already started! " +
-                        "If using Client class, note that connect() calls start() automatically.",
-            )
+        if (!state.initialized.compareAndSet(false, true)) {
+            return
         }
 
-        session = connectUrl.let {
-            client.sseSession(
-                urlString = it,
+        println("[MCPClient] connecting to $connectUrl")
+
+        try {
+            state.session = client.sseSession(
+                urlString = connectUrl,
                 reconnectionTime = reconnectionTime,
                 block = requestBuilder,
             )
+
+            startLoop()
+
+        } catch (e: Exception) {
+            println("[MCPClient] connection failed: $e")
+            close()
+            onDisconnect?.invoke()
         }
-
-        job = scope.launch(CoroutineName("SseTransport#${hashCode()}")) {
-            session.incoming.collect { event ->
-                when (event.event) {
-                    "error" -> {
-                        val e = IllegalStateException("SSE error: ${event.data}")
-                        onError?.invoke(e)
-                        throw e
-                    }
-
-                    "open" -> {
-                        // The connection is open, but we need to wait for the endpoint to be received.
-                    }
-
-                    "endpoint" -> {
-                        try {
-                            val eventData = event.data ?: ""
-
-                            // check url correctness
-                            val maybeEndpoint = Url("${baseUrl.trimEnd('/')}/${eventData.trimStart('/')}")
-
-                            endpoint.complete(maybeEndpoint.toString())
-                        } catch (e: Exception) {
-                            onError?.invoke(e)
-                            close()
-                            error(e)
-                        }
-                    }
-
-                    else -> {
-                        try {
-                            val message = McpJson.decodeFromString<JSONRPCMessage>(event.data ?: "")
-                            onMessage?.invoke(message)
-                        } catch (e: Exception) {
-                            onError?.invoke(e)
-                        }
-                    }
-                }
-            }
-
-            println("[MCPClient] session closed")
-        }
-
-        endpoint.await()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun send(message: JSONRPCMessage) {
-        if (!endpoint.isCompleted) {
+        if (!state.endpoint.isCompleted) {
             error("Not connected")
         }
 
         try {
-            val response = client.post(endpoint.getCompleted()) {
+            val response = client.post(state.endpoint.getCompleted()) {
                 headers.append(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(McpJson.encodeToString(message))
             }
@@ -139,12 +114,59 @@ class CustomSSEClientTransport(
     }
 
     override suspend fun close() {
-        if (!initialized.value) {
-            error("SSEClientTransport is not initialized!")
+        state.cancel()
+        state = State()
+    }
+
+    private suspend fun startLoop() {
+
+        state.job = state.scope.launch(CoroutineName("SseTransport#${hashCode()}")) {
+            state.session!!.incoming
+                .onCompletion { cause ->
+                    println("[MCPClient] session closed: $cause")
+                    onDisconnect?.invoke()
+                }.collect { event ->
+                    when (event.event) {
+                        "error" -> {
+                            val e = IllegalStateException("SSE error: ${event.data}")
+                            onError?.invoke(e)
+                            throw e
+                        }
+
+                        "open" -> {
+                            // The connection is open, but we need to wait for the endpoint to be received.
+                        }
+
+                        "endpoint" -> {
+                            println("[MCPClient] endpoint received: ${event.data}")
+
+                            try {
+                                val eventData = event.data ?: ""
+                                // check url correctness
+                                val maybeEndpoint = Url("${baseUrl.trimEnd('/')}/${eventData.trimStart('/')}")
+
+                                state.endpoint.complete(maybeEndpoint.toString())
+                            } catch (e: Exception) {
+                                onError?.invoke(e)
+                                close()
+                                error(e)
+                            }
+                        }
+
+                        else -> {
+                            try {
+                                val message = McpJson.decodeFromString<JSONRPCMessage>(event.data ?: "")
+                                onMessage?.invoke(message)
+                            } catch (e: Exception) {
+                                onError?.invoke(e)
+                            }
+                        }
+                    }
+                }
+
+            println("[MCPClient] session closed")
         }
 
-        session.cancel()
-        onClose?.invoke()
-        job?.cancelAndJoin()
+        state.endpoint.await()
     }
 }

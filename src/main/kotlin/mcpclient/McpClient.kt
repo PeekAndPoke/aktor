@@ -7,8 +7,6 @@ import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.ListToolsResult
 import io.modelcontextprotocol.kotlin.sdk.TextContent
 import io.modelcontextprotocol.kotlin.sdk.client.Client
-import io.modelcontextprotocol.kotlin.sdk.shared.RequestOptions
-import io.modelcontextprotocol.kotlin.sdk.shared.Transport
 import io.peekandpoke.aktor.llm.Llm
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -18,19 +16,19 @@ class McpClient(
     val name: String,
     val version: String,
     val toolNamespace: String,
-    private val transport: Transport = CustomSSEClientTransport(
-        client = HttpClient {
+    val connector: McpConnector = SseMcpConnector(
+        baseUrl = "http://localhost:8000",
+        connectUri = "/sse",
+        httpClient = HttpClient {
             install(SSE) {
                 reconnectionTime = 1.seconds
                 maxReconnectionAttempts = Int.MAX_VALUE
             }
-        },
-        baseUrl = "http://localhost:8000",
-        connectUrl = "http://localhost:8000/sse",
+        }
     ),
 ) {
     companion object {
-        fun ListToolsResult.asLlmTools(client: Connected) = tools.map { tool ->
+        fun ListToolsResult.asLlmTools(client: McpClient) = tools.map { tool ->
 
             println("Tool: ${tool.name}")
             println("inputSchema: ${tool.inputSchema}")
@@ -61,7 +59,7 @@ class McpClient(
             }
 
             Llm.Tool.Function(
-                name = client.definition.toolNamespace + "_" + tool.name,
+                name = client.toolNamespace + "_" + tool.name,
                 description = tool.description ?: "",
                 parameters = parameters,
                 fn = { input ->
@@ -97,42 +95,35 @@ class McpClient(
         }
     }
 
-    class Connected(
-        val definition: McpClient,
-        val client: Client,
-    ) {
-        suspend fun listTools(): ListToolsResult? {
-            return client.listTools()
-        }
-
-        suspend fun listToolsBound(): List<Llm.Tool.Function>? {
-            return listTools()?.asLlmTools(this)
-        }
-
-        suspend fun callTool(name: String, args: Map<String, Any?>): CallToolResultBase? {
-            return client.callTool(
-                name = name,
-                arguments = args,
-                options = RequestOptions(
-                    timeout = 10.seconds
-                )
-            )
-        }
-    }
-
-    suspend fun connect(): Connected {
+    suspend fun connect(): McpClient = apply {
         // https://github.com/modelcontextprotocol/kotlin-sdk
 
         val client = Client(
             clientInfo = Implementation(name = name, version = version)
         )
 
-        // Connect to server
-        client.connect(transport)
+        connector.connect()
+    }
 
-        return Connected(
-            definition = this,
-            client = client,
-        )
+    suspend fun listTools(): ListToolsResult? {
+//        return client.listTools()
+        return null
+    }
+
+    suspend fun listToolsBound(): List<Llm.Tool.Function>? {
+//        return listTools()?.asLlmTools(this)
+        return null
+    }
+
+    suspend fun callTool(name: String, args: Map<String, Any?>): CallToolResultBase? {
+//        return client.callTool(
+//            name = name,
+//            arguments = args,
+//            options = RequestOptions(
+//                timeout = 10.seconds
+//            )
+//        )
+
+        return null
     }
 }

@@ -9,10 +9,10 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
+import io.peekandpoke.aktor.chatbot.ChatBot
 import io.peekandpoke.aktor.examples.ExampleBot
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.mcpclient.McpClient
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -25,23 +25,29 @@ fun main(args: Array<String>) {
 @Suppress("unused")
 fun Application.module() {
 
-    val bot = runBlocking {
+    var bot: ChatBot? = null
+
+    suspend fun getBot(): ChatBot {
+        bot?.let { return it }
+
         val mcpClient = McpClient(
             name = "Play",
             version = "1.0.0",
             toolNamespace = "playground",
         ).connect()
 
-        val mcpTools = mcpClient.listToolsBound() ?: emptyList()
+        val mcpTools = mcpClient?.listToolsBound() ?: emptyList()
 
         val config = ConfigFactory.parseFile(File("./config/keys.conf"))
 
-        ExampleBot.createOpenAiBot(
+        return ExampleBot.createOpenAiBot(
             config = config,
             model = "gpt-4o-mini",
             streaming = true,
             tools = mcpTools,
-        )
+        ).also {
+            bot = it
+        }
     }
 
     // Install CORS feature
@@ -76,11 +82,15 @@ fun Application.module() {
         }
 
         get("/chat") {
+            var bot = getBot()
+
             call.respond(bot.conversation.value)
         }
 
         put("/chat/{message}") {
             val message = call.parameters["message"] ?: "Hello, world!"
+
+            var bot = getBot()
 
             bot.chat(message).collect { update ->
                 when (update) {
