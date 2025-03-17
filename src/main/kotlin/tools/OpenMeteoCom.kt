@@ -1,6 +1,11 @@
 package io.peekandpoke.aktor.tools
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.openmeteo.api.Forecast
+import com.openmeteo.api.OpenMeteo
+import com.openmeteo.api.common.Response.ExperimentalGluedUnitTimeStepValues
+import com.openmeteo.api.common.time.Time
+import com.openmeteo.api.common.time.Timezone
+import com.openmeteo.api.common.units.TemperatureUnit
 import de.peekandpoke.ultra.common.datetime.MpTimezone
 import de.peekandpoke.ultra.common.datetime.MpZonedDateTime
 import de.peekandpoke.ultra.common.remote.buildUri
@@ -11,8 +16,13 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.jackson.*
 import io.peekandpoke.aktor.llm.Llm
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.net.HttpURLConnection.setFollowRedirects
+import java.text.SimpleDateFormat
 import kotlin.time.Duration.Companion.seconds
+
 
 /**
  * LLm Tool for https://open-meteo.com/
@@ -75,8 +85,6 @@ class OpenMeteoCom(
             99 to "Thunderstorm with heavy hail"
         )
 
-        val jsonPrinter = ObjectMapper().writerWithDefaultPrettyPrinter()
-
         fun createDefaultHttpClient(): HttpClient {
             return HttpClient(CIO) {
                 engine {
@@ -92,6 +100,8 @@ class OpenMeteoCom(
             }
         }
     }
+
+    private val jsonPrinter = Json { prettyPrint = true }
 
     fun asLlmTool(): Llm.Tool {
         return Llm.Tool.Function(
@@ -118,13 +128,51 @@ class OpenMeteoCom(
                 val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
                 val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
 
-                get(lat = lat, lng = lng)
+                get2(lat = lat, lng = lng)
             }
         )
     }
 
     override fun close() {
         httpClient.close()
+    }
+
+    @OptIn(ExperimentalGluedUnitTimeStepValues::class)
+    suspend fun get2(lat: Double, lng: Double): String {
+        val om = OpenMeteo(
+            latitude = lat.toFloat(),
+            longitude = lng.toFloat(),
+        )
+
+        val forecast = om.forecast {
+            daily = Forecast.Daily {
+                listOf(temperature2mMin, temperature2mMax)
+            }
+            temperatureUnit = TemperatureUnit.Celsius
+            timezone = Timezone.auto
+        }.getOrThrow()
+
+        val daily = forecast.daily.getValue(Forecast.Daily.temperature2mMax)
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+//        val timeFormat = SimpleDateFormat("HH:mm")
+
+        val result = daily.values.map { (t: Time, v) ->
+            buildJsonObject {
+                put("date", dateFormat.format(t))
+                put("max-temperature", v)
+            }
+        }
+
+//
+//        Forecast.Daily.run {
+//            forecast.daily.getValue(temperature2mMax).run {
+//                println("# $temperature2mMax ($unit)")
+//                values.forEach{ (t, v) -> println("> $t | $v") }
+//            }
+//        }
+
+        return jsonPrinter.encodeToString(result)
     }
 
     suspend fun get(lat: Double, lng: Double): String {
@@ -163,8 +211,6 @@ class OpenMeteoCom(
             )
         }
 
-        return jsonPrinter.writeValueAsString(
-            result
-        )
+        return jsonPrinter.encodeToString(result)
     }
 }

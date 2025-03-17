@@ -18,6 +18,7 @@ version = VERSION_NAME
 allprojects {
     repositories {
         mavenCentral()
+        maven { setUrl("https://jitpack.io") }
         mavenLocal()
     }
 }
@@ -59,8 +60,9 @@ kotlin {
         implementation("com.typesafe:config:1.4.3")
         implementation("com.aallam.openai:openai-client:4.0.1")
 
-        // https://mvnrepository.com/artifact/io.modelcontextprotocol.sdk/mcp
-        // implementation("io.modelcontextprotocol.sdk:mcp:0.7.0")
+        // https://github.com/open-meteo/open-meteo-api-kotlin/wiki/Installation
+        implementation("com.open-meteo:open-meteo-api-kotlin:0.7.1-beta.1")
+
         // https://mvnrepository.com/artifact/io.modelcontextprotocol/kotlin-sdk
         implementation("io.modelcontextprotocol:kotlin-sdk:0.3.0")
 
