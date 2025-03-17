@@ -4,6 +4,7 @@ import de.peekandpoke.ultra.common.remote.buildUri
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import io.peekandpoke.aktor.model.AiConversation
@@ -15,6 +16,11 @@ import kotlinx.serialization.json.Json
 class ChatClient(private val baseUrl: String = "http://localhost:8081") {
 
     private val client = HttpClient {
+        install(SSE) {
+            showCommentEvents()
+            showRetryEvents()
+        }
+
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
@@ -22,6 +28,13 @@ class ChatClient(private val baseUrl: String = "http://localhost:8081") {
                 ignoreUnknownKeys = true
             })
         }
+    }
+
+    suspend fun sse(): ClientSSESession {
+        val uri = buildUri("/sse")
+        var url = "$baseUrl$uri"
+
+        return client.sseSession(url)
     }
 
     suspend fun loadChat(): AiConversation {

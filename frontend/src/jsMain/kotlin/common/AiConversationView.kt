@@ -5,11 +5,15 @@ import de.peekandpoke.kraft.addons.styling.StyleSheets
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.semanticui.*
+import de.peekandpoke.kraft.components.key
+import de.peekandpoke.kraft.semanticui.noui
+import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
 import io.peekandpoke.aktor.model.AiConversation
-import kotlinx.css.*
-import kotlinx.html.*
+import kotlinx.html.HTMLTag
+import kotlinx.html.Tag
+import kotlinx.html.style
+import kotlinx.html.unsafe
 
 @Suppress("FunctionName")
 fun Tag.AiConversationView(
@@ -64,86 +68,22 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
             }
 
             conversation.messages.forEach { message ->
+                val isUser = message is AiConversation.Message.User
+
                 noui.row {
-                    when (message) {
-                        is AiConversation.Message.System -> {
-                            ui.fourteen.wide.left.floated.column {
-                                ui.orange.segment {
-                                    renderLeftIcon { orange.robot }
-                                    renderMarkdown(message.content)
-                                }
-                            }
+                    key = message.uuid
+
+                    if (isUser) {
+                        ui.fourteen.wide.right.floated.column {
+                            AiConversationMessageView(message)
                         }
 
-                        is AiConversation.Message.Assistant -> {
-
-                            ui.fourteen.wide.left.floated.column {
-                                message.content?.takeIf { it.isNotBlank() }?.let { content ->
-                                    ui.green.segment {
-                                        renderLeftIcon { green.comment }
-                                        renderMarkdown(content)
-                                    }
-                                }
-
-                                message.toolCalls?.takeIf { it.isNotEmpty() }?.forEach { toolCall ->
-                                    ui.violet.segment {
-                                        renderLeftIcon { violet.hammer }
-                                        b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
-                                        noui.content {
-                                            pre {
-                                                +toolCall.args.print()
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        is AiConversation.Message.Tool -> {
-                            ui.fourteen.wide.left.floated.column {
-                                ui.violet.segment {
-                                    renderLeftIcon { violet.hammer }
-                                    b { +"Tool Response: '${message.toolCall.name}' (${message.toolCall.id})" }
-                                    pre {
-                                        +message.content
-                                    }
-                                }
-                            }
-                        }
-
-                        is AiConversation.Message.User -> {
-                            ui.fourteen.wide.right.floated.column {
-                                ui.blue.segment {
-                                    renderRightIcon { blue.user }
-                                    renderMarkdown(message.content)
-                                }
-                            }
+                    } else {
+                        ui.fourteen.wide.left.floated.column {
+                            AiConversationMessageView(message)
                         }
                     }
                 }
-            }
-        }
-
-    }
-
-    private fun DIV.renderLeftIcon(iconFn: SemanticIconFn) {
-
-        icon.circular.inverted.iconFn().then {
-            css {
-                position = Position.absolute
-                top = (-12).px
-                left = (-12).px
-            }
-        }
-    }
-
-    private fun DIV.renderRightIcon(iconFn: SemanticIconFn) {
-
-        icon.circular.inverted.iconFn().then {
-            css {
-                position = Position.absolute
-                top = (-12).px
-                right = (-12).px
             }
         }
     }

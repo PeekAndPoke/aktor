@@ -72,7 +72,7 @@ class OllamaLlm(
                     emit(Llm.Update.Response(answer))
 
                     conversation.modify {
-                        it.add(AiConversation.Message.Assistant(content = answer))
+                        it.addOrUpdate(AiConversation.Message.Assistant(content = answer))
                     }
 
                     done = true
@@ -178,7 +178,7 @@ class OllamaLlm(
             )
 
             conversation.modify {
-                it.add(
+                it.addOrUpdate(
                     AiConversation.Message.Assistant(
                         content = null,
                         toolCalls = listOf(
@@ -193,7 +193,7 @@ class OllamaLlm(
             }
 
             conversation.modify {
-                it.add(
+                it.addOrUpdate(
                     AiConversation.Message.Tool(
                         content = toolResult,
                         toolCall = AiConversation.Message.ToolCall(id = fnName, name = fnName, args = fnArgs),

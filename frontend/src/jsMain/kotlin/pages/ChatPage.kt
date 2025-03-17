@@ -10,9 +10,13 @@ import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
+import io.ktor.client.plugins.sse.*
 import io.peekandpoke.aktor.model.AiConversation
+import io.peekandpoke.aktor.model.SseMessages
+import kotlinx.coroutines.cancel
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
+import kotlinx.serialization.json.Json
 
 @Suppress("FunctionName")
 fun Tag.ChatPage() = comp {
@@ -31,11 +35,45 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
 
     val noDblClick = doubleClickProtection()
 
+    var sseSession: ClientSSESession? = null
+
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     init {
-        launch {
-            loadChat()
+        lifecycle {
+            onMount {
+                console.log("mounting ChatPage ...")
+
+                launch {
+                    loadChat()
+                }
+
+                launch {
+                    sseSession = Api.sse()
+
+                    sseSession?.incoming?.collect { event ->
+                        console.log("SSE: received event: ${event.data}")
+
+                        val payload = try {
+                            Json.decodeFromString<SseMessages>(event.data ?: "")
+                        } catch (_: Exception) {
+                            return@collect
+                        }
+
+                        when (payload) {
+                            is SseMessages.AiConversationMessage -> {
+                                conversation = payload.data
+                            }
+                        }
+                    }
+                }
+
+                console.log("mounting ChatPage ... done!")
+            }
+            onUnmount {
+                sseSession?.cancel()
+                sseSession = null
+            }
         }
     }
 
@@ -80,6 +118,7 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
 
     private fun FlowContent.renderInputs() {
         ui.form {
+            key = "message-input"
 
             UiTextArea(value = input, onChange = { input = it }) {
                 name("message")

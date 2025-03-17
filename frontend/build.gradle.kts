@@ -45,6 +45,7 @@ kotlin {
                 implementation(Deps.KotlinX.serialization_core)
                 implementation(Deps.KotlinX.serialization_json)
 
+                implementation(Deps.KotlinLibs.uuid)
                 implementation(Deps.KotlinLibs.Kraft.core)
             }
         }

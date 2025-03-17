@@ -17,11 +17,11 @@ object ExampleBot {
             Gets the current date and time.
                             
             Returns:
-            Date and time in the format `yyyy-MM-dd HH:mm:ss`
+                Date and time in the format `EEEE yyyy-MM-dd HH:mm:ss` or `weekday date time`
         """.trimIndent(),
         parameters = emptyList(),
         fn = {
-            Kronos.systemUtc.instantNow().atSystemDefaultZone().format("yyyy-MM-dd HH:mm:ss")
+            Kronos.systemUtc.instantNow().atSystemDefaultZone().format("EEEE yyyy-MM-dd HH:mm:ss")
         }
     )
 
@@ -76,9 +76,14 @@ object ExampleBot {
         }
     )
 
-    fun createOllamaBot(config: Config, model: String, streaming: Boolean): ChatBot {
+    fun createOllamaBot(
+        config: Config,
+        model: String,
+        streaming: Boolean,
+        tools: List<Llm.Tool> = emptyList(),
+    ): ChatBot {
 
-        val tools = listOf(
+        val allTools = listOf(
             // Api tools
 //            IpApiCom.tool(),
             IpInfoIo.tool(config.getString("keys.IP_INFO_TOKEN")),
@@ -88,9 +93,9 @@ object ExampleBot {
             getUsersNameTool,
 //            getCurrentUserLocationTool,
             encryptTool,
-        )
+        ).plus(tools)
 
-        val llm = OllamaLlm(model = model, tools = tools)
+        val llm = OllamaLlm(model = model, tools = allTools)
 
         val bot = ChatBot.of(llm = llm, streaming = streaming)
 

@@ -10,13 +10,14 @@ import io.modelcontextprotocol.kotlin.sdk.shared.DEFAULT_REQUEST_TIMEOUT
 import io.modelcontextprotocol.kotlin.sdk.shared.RequestOptions
 import io.peekandpoke.aktor.mcpclient.McpConnector.Companion.JsonCodec
 import io.peekandpoke.aktor.mcpclient.McpConnector.Companion.toJson
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.future.await
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CompletableFuture
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private val LOGGER = LoggerFactory.getLogger("McpConnector")
@@ -48,11 +49,54 @@ interface McpConnector {
                 params = JsonCodec.encodeToJsonElement(this),
             )
         }
+
+        fun CallToolRequest.Companion.of(name: String, args: Map<String, Any?>): CallToolRequest {
+            val jsonArguments = args.mapValues { (_, value) ->
+                when (value) {
+                    is String -> JsonPrimitive(value)
+                    is Number -> JsonPrimitive(value)
+                    is Boolean -> JsonPrimitive(value)
+                    is JsonElement -> value
+                    null -> JsonNull
+                    else -> JsonPrimitive(value.toString())
+                }
+            }
+
+            return CallToolRequest(
+                name = name,
+                arguments = JsonObject(jsonArguments),
+            )
+        }
     }
 
     val isConnected: Boolean
 
-    suspend fun connect()
+    suspend fun connect(timeout: Duration = 10.seconds)
+
+    suspend fun close()
+
+    suspend fun <T : RequestResult> request(
+        request: Request,
+        options: RequestOptions? = null,
+    ): T
+
+    suspend fun listTools(
+        options: RequestOptions? = null,
+    ): ListToolsResult? {
+        return request(
+            ListToolsRequest()
+        )
+    }
+
+    suspend fun callTool(
+        name: String,
+        args: Map<String, Any?>,
+        options: RequestOptions? = null,
+    ): CallToolResultBase? {
+        val request = CallToolRequest.of(name, args)
+
+        return request(request = request, options = options)
+    }
 }
 
 typealias ProgressHandler = (Progress) -> Unit
@@ -69,19 +113,8 @@ class SseMcpConnector(
     },
 ) : McpConnector {
 
-    class RequestHandler(
-        val response: ResponseHandler,
-        val progress: ProgressHandler?,
-    )
-
-    private val handlers = mutableMapOf<RequestId, RequestHandler>()
-
-    override val isConnected: Boolean get() = state is Connected
-
-    private var state: State = NotConnected()
-
     sealed interface State {
-        val session: ClientSSESession?
+        suspend fun close()
     }
 
     abstract inner class SenderState() : State {
@@ -106,35 +139,81 @@ class SseMcpConnector(
     }
 
     private inner class NotConnected : State {
-        override val session: ClientSSESession? = null
+        override suspend fun close() {}
     }
 
-    private inner class Connecting(
-        override val session: ClientSSESession,
-    ) : State
+    private inner class Connecting() : State {
+        override suspend fun close() {}
+    }
+
+    private inner class Handshake(
+        val onConnected: CompletableFuture<Unit>,
+        val sseSessionJob: Job,
+    ) : State {
+        override suspend fun close() {
+            sseSessionJob.cancel()
+        }
+    }
 
     private inner class Connected(
-        override val session: ClientSSESession,
+        val sseSessionJob: Job,
         override val endpointUrl: String,
-    ) : SenderState()
+    ) : SenderState() {
+        override suspend fun close() {
+            sseSessionJob.cancel()
+        }
+    }
 
-    override suspend fun connect() {
+    class RequestHandler(
+        val response: ResponseHandler,
+        val progress: ProgressHandler?,
+    )
+
+    private val handlers = mutableMapOf<RequestId, RequestHandler>()
+
+    override val isConnected: Boolean get() = state is Connected
+
+    private var state: State = NotConnected()
+
+
+    override suspend fun connect(timeout: Duration) {
         if (state !is NotConnected) {
             return
         }
 
-        val session = httpClient.sseSession(baseUrl + connectUri)
+        val onConnected = CompletableFuture<Unit>()
 
-        state = Connecting(session)
+        try {
+            withTimeout(timeout) {
+                state = Connecting()
 
-        listen(session)
+                val session = httpClient.sseSession(baseUrl + connectUri)
+                val job = listen(session)
+
+                state = Handshake(onConnected, job)
+            }
+        } catch (e: TimeoutCancellationException) {
+            onConnected.completeExceptionally(e)
+            throw e
+        }
+
+        onConnected.await()
     }
 
-    suspend fun <T : RequestResult> request(
+    override suspend fun close() {
+        state.close()
+        state = NotConnected()
+    }
+
+    override suspend fun <T : RequestResult> request(
         request: Request,
-        options: RequestOptions? = null,
+        options: RequestOptions?,
     ): T {
-        LOGGER.trace("Sending request: ${request.method}")
+        if (!isConnected) {
+            LOGGER.error("Not connected. Trying to send request: ${request.method}")
+        }
+
+        LOGGER.info("Sending request: ${request.method}")
 
         val message = request.toJson()
         val messageId = message.id
@@ -169,7 +248,7 @@ class SseMcpConnector(
 
         try {
             withTimeout(timeout) {
-                LOGGER.trace("Sending request message with id: $messageId")
+                LOGGER.info("Sending request message with id: $messageId")
                 send(message)
             }
             return result.await()
@@ -200,52 +279,75 @@ class SseMcpConnector(
     }
 
     private suspend fun send(message: JSONRPCMessage) {
+        LOGGER.info("Sending: $message")
         (state as? Connected)?.send(message)
     }
 
-    private suspend fun listen(session: ClientSSESession) {
-        session.incoming
-            .onCompletion { cause ->
-                println("Session closed: $cause")
-                // TODO: what now?
-            }.collect { event ->
-                println("Received event: ${event.event}")
-                println(event.toString())
+    private suspend fun listen(session: ClientSSESession): Job {
+        val ctx = session.coroutineContext +
+                Dispatchers.IO +
+                SupervisorJob() +
+                CoroutineName("McpClient#${hashCode()}")
 
-                when (event.event) {
-                    "error" -> {
-                        val e = IllegalStateException("SSE error: ${event.data}")
-                        // TODO: What now?
-                        throw e
-                    }
+        val scope = CoroutineScope(ctx)
 
-                    "open" -> {
-                        // The connection is open, but we need to wait for the endpoint to be received.
-                    }
+        return scope.launch {
+            session.incoming
+                .onCompletion { cause ->
+                    println("Session closed: $cause")
+                    // TODO: what now?
+                }.collect { event ->
+                    LOGGER.info("Received: ${event.event}")
+                    LOGGER.info(event.toString())
 
-                    "endpoint" -> {
-                        println("[MCPClient] endpoint received: ${event.data}")
+                    when (event.event) {
+                        "error" -> {
+                            val e = IllegalStateException("SSE error: ${event.data}")
+                            // TODO: What now?
+                            throw e
+                        }
 
-                        val eventData = event.data ?: ""
-                        // check url correctness
-                        val endpoint = "${baseUrl.trimEnd('/')}/${eventData.trimStart('/')}"
+                        "open" -> {
+                            // The connection is open, but we need to wait for the endpoint to be received.
+                        }
 
-                        state = Connected(session, endpoint)
+                        "endpoint" -> {
+                            LOGGER.info("[MCPClient] endpoint received: ${event.data}")
 
-                        send(InitializedNotification())
-                    }
+                            val eventData = event.data ?: ""
+                            // check url correctness
+                            val endpoint = "${baseUrl.trimEnd('/')}/${eventData.trimStart('/')}"
 
-                    else -> {
-                        try {
-                            val message = JsonCodec.decodeFromString<JSONRPCMessage>(event.data ?: "")
-                            // TODO: what now?
-                        } catch (e: Exception) {
-                            // TODO: what now?
+                            when (val s = state) {
+                                is Handshake -> {
+                                    state = Connected(s.sseSessionJob, endpoint)
+
+                                    send(InitializedNotification())
+
+                                    s.onConnected.complete(Unit)
+                                }
+
+                                else -> {
+                                    // ignore
+                                }
+                            }
+                        }
+
+                        else -> {
+                            try {
+                                val message = JsonCodec.decodeFromString<JSONRPCMessage>(event.data ?: "")
+
+                                (message as? JSONRPCResponse)?.let { response ->
+                                    handlers[response.id]?.response?.invoke(response, null)
+                                }
+                            } catch (e: Exception) {
+                                // TODO: what now?
+                            }
                         }
                     }
                 }
-            }
 
-        LOGGER.info("Session closed")
+            LOGGER.info("Session closed")
+        }
     }
 }

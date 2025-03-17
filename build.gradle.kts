@@ -65,7 +65,8 @@ kotlin {
 
         Deps.JavaLibs.Jackson.fullImpl(this)
 
-        implementation(Deps.JavaLibs.slf4j_api)
+        implementation(Deps.JavaLibs.logback_classic)
+//        implementation(Deps.JavaLibs.slf4j_api)
 
         implementation(project(":frontend"))
 

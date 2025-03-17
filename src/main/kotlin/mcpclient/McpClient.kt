@@ -106,23 +106,15 @@ class McpClient(
     }
 
     suspend fun listTools(): ListToolsResult? {
-//        return client.listTools()
-        return null
+        return connector.listTools()
     }
 
     suspend fun listToolsBound(): List<Llm.Tool.Function>? {
-//        return listTools()?.asLlmTools(this)
-        return null
+        return listTools()?.asLlmTools(this)
     }
 
     suspend fun callTool(name: String, args: Map<String, Any?>): CallToolResultBase? {
-//        return client.callTool(
-//            name = name,
-//            arguments = args,
-//            options = RequestOptions(
-//                timeout = 10.seconds
-//            )
-//        )
+        return connector.callTool(name, args)
 
         return null
     }

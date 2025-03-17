@@ -16,13 +16,22 @@ class ChatBot(
             llm: Llm,
             streaming: Boolean,
             systemPrompt: AiConversation.Message.System? = null,
-        ) = ChatBot(
-            llm = llm,
-            streaming = streaming,
-            conversation = AiConversation.new
-                .add(systemPrompt ?: AiConversation.Message.System("You are a helpful assistant."))
-                .mutable()
-        )
+        ): ChatBot {
+            val prompt = systemPrompt ?: AiConversation.Message.System(
+                content = """
+                    You are a helpful assistant.
+                    
+                    Before answering questions about the present or the future: 
+                    - Always get the current date and time first,
+                    - Always get the current location of the user first.
+                """.trimIndent()
+            )
+            return ChatBot(
+                llm = llm,
+                streaming = streaming,
+                conversation = AiConversation.new.addOrUpdate(prompt).mutable()
+            )
+        }
     }
 
     fun clearConversation() {
@@ -30,7 +39,9 @@ class ChatBot(
     }
 
     fun chat(prompt: String): Flow<Llm.Update> {
-        conversation.modify { it.add(AiConversation.Message.User(prompt)) }
+        conversation.modify {
+            it.addOrUpdate(AiConversation.Message.User(content = prompt))
+        }
 
         return llm.chat(conversation, streaming = streaming)
     }
