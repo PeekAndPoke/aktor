@@ -13,27 +13,9 @@ import kotlin.time.Duration.Companion.seconds
  */
 class IpApiCom(
     private val httpClient: HttpClient = createDefaultHttpClient(),
-): AutoCloseable {
+) : AutoCloseable {
     companion object {
-        fun tool(ip: suspend () -> String? = { null }): Llm.Tool {
-            val instance = IpApiCom()
-
-            return Llm.Tool.Function(
-                name = "get_detailed_location_info_IpApiCom",
-                description = """
-                    Gets detailed information about the user current location.
-                    
-                    Returns: 
-                    JSON.
-                """.trimIndent(),
-                parameters = emptyList(),
-                fn = { _ ->
-                    instance.get(
-                        ip()
-                    )
-                }
-            )
-        }
+        val default = IpApiCom()
 
         fun createDefaultHttpClient(): HttpClient {
             return HttpClient(CIO) {
@@ -43,6 +25,24 @@ class IpApiCom(
                 }
             }
         }
+    }
+
+    fun asLlmTool(ip: suspend () -> String? = { null }): Llm.Tool {
+        return Llm.Tool.Function(
+            name = "get_detailed_location_info_IpApiCom",
+            description = """
+                Gets detailed information about the user current location.
+                
+                Returns: 
+                    JSON.
+            """.trimIndent(),
+            parameters = emptyList(),
+            fn = { _ ->
+                get(
+                    ip()
+                )
+            }
+        )
     }
 
     override fun close() {

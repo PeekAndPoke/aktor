@@ -1,6 +1,5 @@
 package io.peekandpoke.aktor
 
-import com.typesafe.config.ConfigFactory
 import io.ktor.client.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.plugins.sse.*
@@ -8,7 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.modelcontextprotocol.kotlin.sdk.*
-import io.peekandpoke.aktor.examples.ExampleBot
+import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.mcpclient.CustomSSEClientTransport
 import io.peekandpoke.aktor.mcpclient.McpClient
@@ -16,7 +15,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.encodeToJsonElement
-import java.io.File
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.seconds
 
@@ -167,7 +165,28 @@ private suspend fun sseTest() {
 
 suspend fun main() {
 
-//    sseTest()
+//    val crawl4aiClient = Crawl4aiClient(
+//        apiKey = "crawl4a-local-key",
+//    )
+//
+//    val health = crawl4aiClient.healthCheck()
+//
+//    println("Health check: $health")
+//
+//    val result = crawl4aiClient
+//        .crawlAsync(url="http://www.barleybrothers.de/")
+//        .await()
+//
+//    println(result.resultAsObj)
+//
+//    exitProcess(0)
+
+    //    sseTest()
+
+    val kontainer = blueprint.create()
+
+    val keys = kontainer.get(KeysConfig::class)
+    val exampleBots = kontainer.get(ExampleBots::class)
 
     val mcpClient = McpClient(
         name = "Play",
@@ -177,18 +196,14 @@ suspend fun main() {
 
     val mcpTools = mcpClient.listToolsBound() ?: emptyList()
 
-//    exitProcess(0)
-
-    val config = ConfigFactory.parseFile(File("./config/keys.conf"))
-
 //    val bot = ExampleBot.createOllamaBot(
 //        config = config,
 //        model = OllamaModels.QWEN_2_5_14B,
 //        streaming = false,
 //    )
 //
-    val bot = ExampleBot.createOpenAiBot(
-        config = config,
+    val bot = exampleBots.createOpenAiBot(
+        apiKey = keys.config.getString("keys.OPEN_AI_TOKEN"),
         model = "gpt-4o-mini",
         streaming = true,
         tools = mcpTools,

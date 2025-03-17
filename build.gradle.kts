@@ -42,6 +42,7 @@ kotlin {
 
         implementation(Deps.KotlinLibs.Ultra.common)
         implementation(Deps.KotlinLibs.Ultra.slumber)
+        implementation(Deps.KotlinLibs.Ultra.kontainer)
 
         Deps.Ktor.Server.full(this)
 
@@ -68,6 +69,7 @@ kotlin {
         implementation(Deps.JavaLibs.logback_classic)
 //        implementation(Deps.JavaLibs.slf4j_api)
 
+        implementation(project(":utils:crawl4ai"))
         implementation(project(":frontend"))
 
         Deps.Test {

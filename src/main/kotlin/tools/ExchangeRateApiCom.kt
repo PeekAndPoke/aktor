@@ -17,31 +17,7 @@ class ExchangeRateApiCom(
     private val httpClient: HttpClient = createDefaultHttpClient(),
 ) : AutoCloseable {
     companion object {
-        fun tool(ip: suspend () -> String? = { null }): Llm.Tool {
-            val instance = ExchangeRateApiCom()
-
-            return Llm.Tool.Function(
-                name = "get_exchange_rate_ExchangeRateApiCom",
-                description = """
-                    Gets exchange rate between two currencies.
-                    
-                    Returns: 
-                    JSON.
-                """.trimIndent(),
-                parameters = listOf(
-                    Llm.Tool.StringParam(name = "from", description = "Source currency code", required = true),
-                    Llm.Tool.StringParam(name = "to", description = "Target currency code", required = true),
-                ),
-                fn = { params ->
-                    val from = params.getString("from") ?: error("Missing parameter 'from'")
-                    val to = params.getString("to") ?: error("Missing parameter 'to'")
-
-                    val rate = instance.get(from = from.uppercase(), to = to.uppercase())
-
-                    rate?.toString() ?: "Error: no exchange rate found from $from to $to"
-                }
-            )
-        }
+        val default = ExchangeRateApiCom()
 
         fun createDefaultHttpClient(): HttpClient {
             return HttpClient(CIO) {
@@ -51,7 +27,7 @@ class ExchangeRateApiCom(
                 }
 
                 install(ContentNegotiation) {
-                    jackson {  }
+                    jackson { }
                 }
             }
         }
@@ -69,9 +45,32 @@ class ExchangeRateApiCom(
         val time_next_update_utc: String,
         val time_eol_unix: Int,
         val base_code: String,
-        val rates: Map<String, Double>
+        val rates: Map<String, Double>,
     )
 
+    fun asLlmTool(): Llm.Tool.Function {
+        return Llm.Tool.Function(
+            name = "get_exchange_rate_ExchangeRateApiCom",
+            description = """
+                    Gets exchange rate between two currencies.
+                    
+                    Returns: 
+                    JSON.
+                """.trimIndent(),
+            parameters = listOf(
+                Llm.Tool.StringParam(name = "from", description = "Source currency code", required = true),
+                Llm.Tool.StringParam(name = "to", description = "Target currency code", required = true),
+            ),
+            fn = { params ->
+                val from = params.getString("from") ?: error("Missing parameter 'from'")
+                val to = params.getString("to") ?: error("Missing parameter 'to'")
+
+                val rate = get(from = from.uppercase(), to = to.uppercase())
+
+                rate?.toString() ?: "Error: no exchange rate found from $from to $to"
+            }
+        )
+    }
 
     override fun close() {
         httpClient.close()

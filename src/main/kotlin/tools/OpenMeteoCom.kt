@@ -21,6 +21,8 @@ class OpenMeteoCom(
     private val httpClient: HttpClient = createDefaultHttpClient(),
 ) : AutoCloseable {
     companion object {
+        val default = OpenMeteoCom()
+
         /**
          * WMO Weather interpretation codes (WW)
          *
@@ -75,38 +77,6 @@ class OpenMeteoCom(
 
         val jsonPrinter = ObjectMapper().writerWithDefaultPrettyPrinter()
 
-        fun tool(): Llm.Tool {
-            val instance = OpenMeteoCom()
-
-            return Llm.Tool.Function(
-                name = "get_weather_info_OpenMeteoCom",
-                description = """
-                    Gets weather information about a location.
-                    
-                    Returns: 
-                    JSON
-                """.trimIndent(),
-                parameters = listOf(
-                    Llm.Tool.StringParam(
-                        name = "lat",
-                        description = "The latitude of the location",
-                        required = true
-                    ),
-                    Llm.Tool.StringParam(
-                        name = "lng",
-                        description = "The longitude of the location",
-                        required = true
-                    ),
-                ),
-                fn = { params ->
-                    val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
-                    val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
-
-                    instance.get(lat = lat, lng = lng)
-                }
-            )
-        }
-
         fun createDefaultHttpClient(): HttpClient {
             return HttpClient(CIO) {
                 engine {
@@ -121,6 +91,36 @@ class OpenMeteoCom(
                 }
             }
         }
+    }
+
+    fun asLlmTool(): Llm.Tool {
+        return Llm.Tool.Function(
+            name = "get_weather_info_OpenMeteoCom",
+            description = """
+                    Gets weather information about a location.
+                    
+                    Returns: 
+                    JSON
+                """.trimIndent(),
+            parameters = listOf(
+                Llm.Tool.StringParam(
+                    name = "lat",
+                    description = "The latitude of the location",
+                    required = true
+                ),
+                Llm.Tool.StringParam(
+                    name = "lng",
+                    description = "The longitude of the location",
+                    required = true
+                ),
+            ),
+            fn = { params ->
+                val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
+                val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
+
+                get(lat = lat, lng = lng)
+            }
+        )
     }
 
     override fun close() {

@@ -12,3 +12,5 @@ plugins {
 rootProject.name = "aktor"
 
 include(":frontend")
+
+include(":utils:crawl4ai")

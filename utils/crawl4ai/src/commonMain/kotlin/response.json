@@ -1,0 +1,57 @@
+{
+  "url": "http://www.barleybrothers.de/",
+  "html": "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\"><html><head>\n\t<title>",
+  "success": true,
+  "cleaned_html": "\n<table height=\"100%\" width=\"100%\">\n<tbody><tr>\n<td>\n<table>\n<tbody><tr>\n<td>",
+  "media": {
+    "images": [],
+    "videos": [],
+    "audios": []
+  },
+  "links": {
+    "internal": [],
+    "external": [
+      {
+        "href": "http://www.myspace.com/thebarleybrothers",
+        "text": "http://www.myspace.com/thebarleybrothers",
+        "title": ""
+      }
+    ]
+  },
+  "downloaded_files": null,
+  "screenshot": null,
+  "markdown": "| \n\n# THE BARLEY BROTHERS - Chaos Folk!\n\n!",
+  "markdown_v2": {
+    "raw_markdown": "| \n\n# THE BARLEY BROTHERS - Chaos Folk!\n\n![]",
+    "markdown_with_citations": "| \n\n# THE BARLEY BROTHERS - Chaos Folk!\n\n![]",
+    "references_markdown": "\n\n## References\n\n",
+    "fit_markdown": "",
+    "fit_html": ""
+  },
+  "fit_markdown": "",
+  "fit_html": "",
+  "extracted_content": null,
+  "metadata": {
+    "title": "The Barley Brothers - Chaos Folk!",
+    "description": null,
+    "keywords": "Irish Folk Band Dresden, Akkustisch Musik, Geige, Cajon, Gitarre, Akkordeon, Flöten, guter Gesang, richtig guter Gesang, engelsgleicher Gesang, große Ausstrahlung, überzeugend, wer das liest ist doof, Flowing Tide, The Clurricaun, Buckijit, The Cobblesstones, Friends Of Limerik, Stefan Johansson, Bühnenerfahren, Rocky Road, Galway Races, Step it out Mary, Tarry Trousers, Lyrics, Tabs, Chords, Live, CD, Performance, fetzig, Party, schnell, Musik, sanft, über zehn Jahre Bühnenerfahrung, Geburtstage, Hochzeiten, Folksfeste, Songs, gute Laune, Straßenmusik, Straßenmusikbesetzung, IrishFolk, irish Folk, irishfork, irish Fork, irisch, Irland, grüne Insel, schottisch, Schottland, Weltmusik, Celtic Traditional Folk, Irish Chaos Folk!",
+    "author": "The Barley Brothers are Martin Seidel, Karsten J. Gerber, Felix Lein"
+  },
+  "error_message": "",
+  "session_id": null,
+  "response_headers": {
+    "accept-ranges": "bytes",
+    "connection": "Upgrade, Keep-Alive",
+    "content-encoding": "gzip",
+    "content-length": "5834",
+    "content-type": "text/html",
+    "date": "Mon, 17 Mar 2025 19:04:13 GMT",
+    "etag": "\"46c1-4ba18dfc42dc0-gzip\"",
+    "keep-alive": "timeout=2, max=1000",
+    "last-modified": "Wed, 29 Feb 2012 11:45:03 GMT",
+    "server": "Apache",
+    "upgrade": "h2,h2c",
+    "vary": "Accept-Encoding,User-Agent"
+  },
+  "status_code": 200
+}

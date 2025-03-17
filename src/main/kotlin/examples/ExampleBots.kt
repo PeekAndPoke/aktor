@@ -1,6 +1,5 @@
 package io.peekandpoke.aktor.examples
 
-import com.typesafe.config.Config
 import de.peekandpoke.ultra.common.datetime.Kronos
 import io.peekandpoke.aktor.chatbot.ChatBot
 import io.peekandpoke.aktor.llm.Llm
@@ -9,8 +8,14 @@ import io.peekandpoke.aktor.llm.openai.OpenAiLlm
 import io.peekandpoke.aktor.tools.ExchangeRateApiCom
 import io.peekandpoke.aktor.tools.IpInfoIo
 import io.peekandpoke.aktor.tools.OpenMeteoCom
+import io.peekandpoke.aktor.tools.RausgegangenDe
 
-object ExampleBot {
+class ExampleBots(
+    exchangeRateApiCom: ExchangeRateApiCom,
+    ipInfoIo: IpInfoIo,
+    openMeteoCom: OpenMeteoCom,
+    rausgegangenDe: RausgegangenDe,
+) {
     val getCurrentDateTimeTool = Llm.Tool.Function(
         name = "get_current_datetime",
         description = """
@@ -41,20 +46,6 @@ object ExampleBot {
         }
     )
 
-    val getCurrentUserLocationTool = Llm.Tool.Function(
-        name = "get_current_user_location",
-        description = """
-            Gets the location of the user.
-            
-            Returns:
-            The location of the user in the format `City, Country`.
-        """.trimIndent(),
-        parameters = emptyList(),
-        fn = {
-            "Leipzig, Germany"
-        }
-    )
-
     val encryptTool = Llm.Tool.Function(
         name = "encrypt_text",
         description = """
@@ -76,24 +67,26 @@ object ExampleBot {
         }
     )
 
+    val builtInTools = listOf(
+        // Api tools
+//            IpApiCom.tool(),
+        exchangeRateApiCom.asLlmTool(),
+        ipInfoIo.asLlmTool(),
+        openMeteoCom.asLlmTool(),
+        rausgegangenDe.asLlmTool(),
+        // sample tools
+        getCurrentDateTimeTool,
+        getUsersNameTool,
+        encryptTool,
+    )
+
     fun createOllamaBot(
-        config: Config,
         model: String,
         streaming: Boolean,
         tools: List<Llm.Tool> = emptyList(),
     ): ChatBot {
 
-        val allTools = listOf(
-            // Api tools
-//            IpApiCom.tool(),
-            IpInfoIo.tool(config.getString("keys.IP_INFO_TOKEN")),
-            OpenMeteoCom.tool(),
-            // sample tools
-            getCurrentDateTimeTool,
-            getUsersNameTool,
-//            getCurrentUserLocationTool,
-            encryptTool,
-        ).plus(tools)
+        val allTools = builtInTools.plus(tools)
 
         val llm = OllamaLlm(model = model, tools = allTools)
 
@@ -103,44 +96,17 @@ object ExampleBot {
     }
 
     fun createOpenAiBot(
-        config: Config,
+        apiKey: String,
         model: String,
         streaming: Boolean,
         tools: List<Llm.Tool> = emptyList(),
     ): ChatBot {
-        val allTools = listOf(
-            IpInfoIo.tool(config.getString("keys.IP_INFO_TOKEN")),
-            OpenMeteoCom.tool(),
-            ExchangeRateApiCom.tool(),
-            //
-            getCurrentDateTimeTool,
-            getUsersNameTool,
-            encryptTool,
-        ).plus(tools)
+        val allTools = builtInTools.plus(tools)
 
-        val token = config.getString("keys.OPEN_AI_TOKEN")
-
-        val llm = OpenAiLlm(model = model, tools = allTools, authToken = token)
+        val llm = OpenAiLlm(model = model, tools = allTools, authToken = apiKey)
         val bot = ChatBot.of(llm = llm, streaming = streaming)
 
         return bot
     }
 
-    fun String.rotX(x: Int): String {
-        return this.map { char ->
-            when (char) {
-                in 'A'..'Z' -> {
-                    val shifted = char + x
-                    if (shifted > 'Z') shifted - 26 else shifted
-                }
-
-                in 'a'..'z' -> {
-                    val shifted = char + x
-                    if (shifted > 'z') shifted - 26 else shifted
-                }
-
-                else -> char
-            }
-        }.joinToString("")
-    }
 }

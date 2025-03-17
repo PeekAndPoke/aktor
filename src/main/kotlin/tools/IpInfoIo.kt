@@ -16,25 +16,6 @@ class IpInfoIo(
     private val httpClient: HttpClient = createDefaultHttpClient(),
 ): AutoCloseable {
     companion object {
-        fun tool(token: String, ip: suspend () -> String? = { null }): Llm.Tool {
-            val instance = IpInfoIo(token = token)
-
-            return Llm.Tool.Function(
-                name = "get_detailed_location_info_IpInfoIo",
-                description = """
-                    Gets detailed information about the user current location.
-                    
-                    Returns: 
-                    JSON
-                """.trimIndent(),
-                parameters = emptyList(),
-                fn = { _ ->
-                    instance.get(
-                        ip()
-                    )
-                }
-            )
-        }
 
         fun createDefaultHttpClient(): HttpClient {
             return HttpClient(CIO) {
@@ -44,6 +25,26 @@ class IpInfoIo(
                 }
             }
         }
+    }
+
+    fun asLlmTool(ip: suspend () -> String? = { null }): Llm.Tool {
+
+
+        return Llm.Tool.Function(
+            name = "get_detailed_location_info_IpInfoIo",
+            description = """
+                Gets detailed information about the user current location.
+                
+                Returns: 
+                JSON
+            """.trimIndent(),
+            parameters = emptyList(),
+            fn = { _ ->
+                get(
+                    ip()
+                )
+            }
+        )
     }
 
     override fun close() {

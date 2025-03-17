@@ -1,6 +1,5 @@
 package io.peekandpoke.aktor
 
-import com.typesafe.config.ConfigFactory
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -10,14 +9,13 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.peekandpoke.aktor.chatbot.ChatBot
-import io.peekandpoke.aktor.examples.ExampleBot
+import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.mcpclient.McpClient
 import io.peekandpoke.aktor.model.SseMessages
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
-import java.io.File
 
 fun main(args: Array<String>) {
     val server = EngineMain.createServer(args)
@@ -25,11 +23,16 @@ fun main(args: Array<String>) {
     server.start(wait = true)
 }
 
+val kontainer = blueprint.create()
+
 @Suppress("unused")
 fun Application.module() {
 
     var bot: ChatBot? = null
     var sseSession: ServerSSESession? = null
+
+    val keys = kontainer.get(KeysConfig::class)
+    val exampleBots = kontainer.get(ExampleBots::class)
 
     suspend fun getBot(): ChatBot {
         bot?.let { return it }
@@ -42,10 +45,8 @@ fun Application.module() {
 
         val mcpTools = mcpClient.listToolsBound() ?: emptyList()
 
-        val config = ConfigFactory.parseFile(File("./config/keys.conf"))
-
-        val created = ExampleBot.createOpenAiBot(
-            config = config,
+        val created = exampleBots.createOpenAiBot(
+            apiKey = keys.config.getString("keys.OPEN_AI_TOKEN"),
             model = "gpt-4o-mini",
             streaming = true,
             tools = mcpTools,
