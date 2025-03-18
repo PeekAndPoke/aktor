@@ -67,18 +67,15 @@ class ExampleBots(
         }
     )
 
-    val builtInTools = listOf(
-        // Api tools
-//            IpApiCom.tool(),
-        exchangeRateApiCom.asLlmTool(),
-        ipInfoIo.asLlmTool(),
-        openMeteoCom.asLlmTool(),
-        rausgegangenDe.asLlmTool(),
-        // sample tools
-        getCurrentDateTimeTool,
-        getUsersNameTool,
-        encryptTool,
-    )
+    val builtInTools = emptyList<Llm.Tool>()
+        .plus(exchangeRateApiCom.asLlmTool())
+        .plus(ipInfoIo.asLlmTool())
+        .plus(openMeteoCom.asLlmTools())
+        .plus(rausgegangenDe.asLlmTool())
+        // Example tools
+        .plus(getCurrentDateTimeTool)
+        .plus(getUsersNameTool)
+        .plus(encryptTool)
 
     fun createOllamaBot(
         model: String,

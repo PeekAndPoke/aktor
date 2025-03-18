@@ -2,23 +2,21 @@ package io.peekandpoke.aktor.tools
 
 import com.openmeteo.api.Forecast
 import com.openmeteo.api.OpenMeteo
+import com.openmeteo.api.common.Response
 import com.openmeteo.api.common.Response.ExperimentalGluedUnitTimeStepValues
+import com.openmeteo.api.common.time.Date
 import com.openmeteo.api.common.time.Time
 import com.openmeteo.api.common.time.Timezone
 import com.openmeteo.api.common.units.TemperatureUnit
+import de.peekandpoke.ultra.common.datetime.MpLocalDate
 import de.peekandpoke.ultra.common.datetime.MpTimezone
-import de.peekandpoke.ultra.common.datetime.MpZonedDateTime
-import de.peekandpoke.ultra.common.remote.buildUri
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
 import io.ktor.serialization.jackson.*
 import io.peekandpoke.aktor.llm.Llm
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import io.peekandpoke.aktor.utils.append
+import kotlinx.serialization.json.*
 import java.net.HttpURLConnection.setFollowRedirects
 import java.text.SimpleDateFormat
 import kotlin.time.Duration.Companion.seconds
@@ -32,6 +30,9 @@ class OpenMeteoCom(
 ) : AutoCloseable {
     companion object {
         val default = OpenMeteoCom()
+
+        private val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        private val timeFormat = SimpleDateFormat("HH:mm")
 
         /**
          * WMO Weather interpretation codes (WW)
@@ -101,15 +102,69 @@ class OpenMeteoCom(
         }
     }
 
+    @OptIn(ExperimentalGluedUnitTimeStepValues::class)
+    private class ResultBuilder(
+        initAction: JsonObjectBuilder.(time: Time) -> Unit,
+    ) {
+        companion object {
+            fun daily() = ResultBuilder { time ->
+                put("date", dateFormat.format(time))
+            }
+
+            fun hourly() = ResultBuilder { time ->
+                put("date", dateFormat.format(time))
+                put("time", timeFormat.format(time))
+            }
+        }
+
+        private val results = mutableMapOf<Time, JsonObject>()
+
+        fun get(time: Time) = results.getOrPut(time) {
+            buildJsonObject {
+                put("date", dateFormat.format(time))
+            }
+        }
+
+        fun append(time: Time, builderAction: JsonObjectBuilder.() -> Unit) {
+            results[time] = get(time).append(builderAction)
+        }
+
+        fun appendAll(
+            values: () -> Response.UnitTimeStepValues,
+            builderAction: JsonObjectBuilder.(value: Double?) -> Unit,
+        ): ResultBuilder = apply {
+
+            try {
+                values().values.forEach { (time, value) ->
+                    append(time) {
+                        builderAction(value)
+                    }
+                }
+            } catch (e: Exception) {
+                // TODO: real logging
+                println("Error while processing values: $e")
+                e.printStackTrace()
+            }
+        }
+
+        fun results(): List<JsonObject> = results.toList()
+            .sortedBy { (time, _) -> time }
+            .map { (_, value) -> value }
+    }
+
     private val jsonPrinter = Json { prettyPrint = true }
 
-    fun asLlmTool(): Llm.Tool {
+    fun asLlmTools(): List<Llm.Tool> {
+        return listOf(asDailyForecastTool(), asHourlyForecastTool())
+    }
+
+    fun asDailyForecastTool(): Llm.Tool {
         return Llm.Tool.Function(
-            name = "get_weather_info_OpenMeteoCom",
+            name = "weather-daily-forecast-OpenMeteoCom",
             description = """
-                    Gets weather information about a location.
-                    
-                    Returns: 
+                Get basic weather forcast for the next days and the given location.                                   
+                
+                Returns: 
                     JSON
                 """.trimIndent(),
             parameters = listOf(
@@ -128,7 +183,46 @@ class OpenMeteoCom(
                 val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
                 val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
 
-                get2(lat = lat, lng = lng)
+                getDailyForecast(lat = lat, lng = lng)
+            }
+        )
+    }
+
+    fun asHourlyForecastTool(): Llm.Tool {
+        return Llm.Tool.Function(
+            name = "weather-hourly-forecast-OpenMeteoCom",
+            description = """
+                Get detailed hourly weather forcast for the given date and location.                    
+                Prefer this tools, when the user ask about the weather for a specific date.
+                
+                Returns: 
+                    JSON
+            """.trimIndent(),
+            parameters = listOf(
+                Llm.Tool.StringParam(
+                    name = "lat",
+                    description = "The latitude of the location",
+                    required = true,
+                ),
+                Llm.Tool.StringParam(
+                    name = "lng",
+                    description = "The longitude of the location",
+                    required = true,
+                ),
+                Llm.Tool.StringParam(
+                    name = "date",
+                    description = "The date of the forecast",
+                    required = true,
+                )
+            ),
+            fn = { params ->
+                val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
+                val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
+                val date = params.getString("date")
+                    ?.let { MpLocalDate.tryParse(it) ?: error("Invalid date '$it'") }
+                    ?: error("Missing parameter 'date'")
+
+                getHourlyForecast(lat = lat, lng = lng, date = date)
             }
         )
     }
@@ -138,79 +232,89 @@ class OpenMeteoCom(
     }
 
     @OptIn(ExperimentalGluedUnitTimeStepValues::class)
-    suspend fun get2(lat: Double, lng: Double): String {
+    fun getDailyForecast(lat: Double, lng: Double): String {
         val om = OpenMeteo(
             latitude = lat.toFloat(),
             longitude = lng.toFloat(),
         )
 
+        val parameters = listOf(
+            Forecast.Daily.temperature2mMin,
+            Forecast.Daily.temperature2mMax,
+            Forecast.Daily.weathercode,
+            Forecast.Daily.rainSum,
+        )
+
         val forecast = om.forecast {
-            daily = Forecast.Daily {
-                listOf(temperature2mMin, temperature2mMax)
-            }
+            daily = Forecast.Daily { parameters }
             temperatureUnit = TemperatureUnit.Celsius
             timezone = Timezone.auto
         }.getOrThrow()
 
-        val daily = forecast.daily.getValue(Forecast.Daily.temperature2mMax)
+        val results = ResultBuilder.daily()
 
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
-//        val timeFormat = SimpleDateFormat("HH:mm")
-
-        val result = daily.values.map { (t: Time, v) ->
-            buildJsonObject {
-                put("date", dateFormat.format(t))
-                put("max-temperature", v)
-            }
+        results.appendAll({ forecast.daily.getValue(Forecast.Daily.temperature2mMax) }) {
+            put("max-temperature", it)
         }
 
-//
-//        Forecast.Daily.run {
-//            forecast.daily.getValue(temperature2mMax).run {
-//                println("# $temperature2mMax ($unit)")
-//                values.forEach{ (t, v) -> println("> $t | $v") }
-//            }
-//        }
+        results.appendAll({ forecast.daily.getValue(Forecast.Daily.temperature2mMin) }) {
+            put("min-temperature", it)
+        }
 
-        return jsonPrinter.encodeToString(result)
+        results.appendAll({ forecast.daily.getValue(Forecast.Daily.weathercode) }) {
+            put("weather", weatherCodes[it?.toInt()] ?: "n/a")
+        }
+
+        results.appendAll({ forecast.daily.getValue(Forecast.Daily.rainSum) }) {
+            put("rain", it)
+        }
+
+        return jsonPrinter.encodeToString(results.results())
     }
 
-    suspend fun get(lat: Double, lng: Double): String {
-        // https://open-meteo.com/en/docs
+    @OptIn(ExperimentalGluedUnitTimeStepValues::class)
+    fun getHourlyForecast(lat: Double, lng: Double, date: MpLocalDate): String {
+        val om = OpenMeteo(
+            latitude = lat.toFloat(),
+            longitude = lng.toFloat(),
+        )
 
-        // https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m,weather_code&forecast_days=1&format=json&timeformat=unixtime
+        val parameters = listOf(
+            Forecast.Hourly.temperature2m,
+            Forecast.Hourly.weathercode,
+            Forecast.Hourly.rain,
+            Forecast.Hourly.snowfall,
+        )
 
-        val url = buildUri("https://api.open-meteo.com/v1/forecast") {
-            set("latitude", lat.toString())
-            set("longitude", lng.toString())
-            set("hourly", "temperature_2m,weather_code")
-            set("format", "json")
-            set("timeformat", "unixtime")
-            set("forecast_days", "1")
+        // TODO: we need to get the timezone from the lat-lng
+        val omDate = Date(date.atStartOfDay(MpTimezone.systemDefault).toEpochMillis())
+
+        val forecast = om.forecast {
+            startDate = omDate
+            endDate = omDate
+            hourly = Forecast.Hourly { parameters }
+            temperatureUnit = TemperatureUnit.Celsius
+            timezone = Timezone.auto
+        }.getOrThrow()
+
+        val results = ResultBuilder.hourly()
+
+        results.appendAll({ forecast.hourly.getValue(Forecast.Hourly.temperature2m) }) {
+            put("temperature", it)
         }
 
-        val response = httpClient.get(url)
-
-        val body = response.body<Map<String, Any?>>()
-
-        val times = ((body["hourly"] as Map<String, Any?>)["time"] as List<Long>)
-        val codes = ((body["hourly"] as Map<String, Any?>)["weather_code"] as List<Int>)
-        val temperatures = ((body["hourly"] as Map<String, Any?>)["temperature_2m"] as List<Double>)
-
-        val result = times.mapIndexed { index, timestamp ->
-
-            val time = MpZonedDateTime.fromEpochSeconds(timestamp, timezone = MpTimezone.UTC)
-            val weatherCode = weatherCodes[codes[index]]
-            val temperature = temperatures[index]
-
-            mapOf(
-                "date" to time.format("yyyy-MM-dd"),
-                "time" to time.format("HH:mm"),
-                "weather" to (weatherCode ?: "unknown"),
-                "temperature" to temperature,
-            )
+        results.appendAll({ forecast.hourly.getValue(Forecast.Hourly.weathercode) }) {
+            put("weather", weatherCodes[it?.toInt()] ?: "n/a")
         }
 
-        return jsonPrinter.encodeToString(result)
+        results.appendAll({ forecast.hourly.getValue(Forecast.Hourly.rain) }) {
+            put("rain", it)
+        }
+
+        results.appendAll({ forecast.hourly.getValue(Forecast.Hourly.snowfall) }) {
+            put("snowfall", it)
+        }
+
+        return jsonPrinter.encodeToString(results.results())
     }
 }

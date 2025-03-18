@@ -14,9 +14,11 @@ import io.ktor.client.plugins.sse.*
 import io.peekandpoke.aktor.model.AiConversation
 import io.peekandpoke.aktor.model.SseMessages
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("FunctionName")
 fun Tag.ChatPage() = comp {
@@ -91,6 +93,7 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
             launch {
                 sendChat(message)
                 input = ""
+                delay(300.milliseconds)
                 textAreaRef { it.focus() }
             }
         }
