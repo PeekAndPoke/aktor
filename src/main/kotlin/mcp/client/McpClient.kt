@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.mcpclient
+package io.peekandpoke.aktor.mcp.client
 
 import io.ktor.client.*
 import io.ktor.client.plugins.sse.*
@@ -101,6 +101,8 @@ class McpClient(
         val client = Client(
             clientInfo = Implementation(name = name, version = version)
         )
+
+        // TODO: send client info on connection
 
         connector.connect()
     }

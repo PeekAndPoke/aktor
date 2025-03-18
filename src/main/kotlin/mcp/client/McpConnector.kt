@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.mcpclient
+package io.peekandpoke.aktor.mcp.client
 
 import io.ktor.client.*
 import io.ktor.client.plugins.sse.*
@@ -8,8 +8,7 @@ import io.ktor.http.*
 import io.modelcontextprotocol.kotlin.sdk.*
 import io.modelcontextprotocol.kotlin.sdk.shared.DEFAULT_REQUEST_TIMEOUT
 import io.modelcontextprotocol.kotlin.sdk.shared.RequestOptions
-import io.peekandpoke.aktor.mcpclient.McpConnector.Companion.JsonCodec
-import io.peekandpoke.aktor.mcpclient.McpConnector.Companion.toJson
+import io.peekandpoke.aktor.mcp.client.McpConnector.Companion.toJson
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.future.await
@@ -124,7 +123,7 @@ class SseMcpConnector(
             try {
                 val response = httpClient.post(endpointUrl) {
                     headers.append(HttpHeaders.ContentType, ContentType.Application.Json)
-                    setBody(JsonCodec.encodeToString(message))
+                    setBody(McpConnector.Companion.JsonCodec.encodeToString(message))
                 }
 
                 if (!response.status.isSuccess()) {
@@ -174,7 +173,6 @@ class SseMcpConnector(
     override val isConnected: Boolean get() = state is Connected
 
     private var state: State = NotConnected()
-
 
     override suspend fun connect(timeout: Duration) {
         if (state !is NotConnected) {
@@ -335,7 +333,8 @@ class SseMcpConnector(
 
                         else -> {
                             try {
-                                val message = JsonCodec.decodeFromString<JSONRPCMessage>(event.data ?: "")
+                                val message =
+                                    McpConnector.Companion.JsonCodec.decodeFromString<JSONRPCMessage>(event.data ?: "")
 
                                 (message as? JSONRPCResponse)?.let { response ->
                                     handlers[response.id]?.response?.invoke(response, null)

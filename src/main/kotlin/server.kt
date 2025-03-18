@@ -11,7 +11,7 @@ import io.ktor.server.sse.*
 import io.peekandpoke.aktor.chatbot.ChatBot
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.mcpclient.McpClient
+import io.peekandpoke.aktor.mcp.client.McpClient
 import io.peekandpoke.aktor.model.SseMessages
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -37,13 +37,18 @@ fun Application.module() {
     suspend fun getBot(): ChatBot {
         bot?.let { return it }
 
-        val mcpClient = McpClient(
-            name = "Play",
-            version = "1.0.0",
-            toolNamespace = "playground",
-        ).connect()
+        val mcpTools = try {
+            val mcpClient = McpClient(
+                name = "Play",
+                version = "1.0.0",
+                toolNamespace = "playground",
+            ).connect()
 
-        val mcpTools = mcpClient.listToolsBound() ?: emptyList()
+            mcpClient.listToolsBound() ?: error("Failed to list tools")
+        } catch (e: Exception) {
+            println("Failed to connect to MCP: $e")
+            emptyList()
+        }
 
         val created = exampleBots.createOpenAiBot(
             apiKey = keys.config.getString("keys.OPEN_AI_TOKEN"),

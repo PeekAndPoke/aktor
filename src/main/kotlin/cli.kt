@@ -9,8 +9,8 @@ import io.ktor.http.*
 import io.modelcontextprotocol.kotlin.sdk.*
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.mcpclient.CustomSSEClientTransport
-import io.peekandpoke.aktor.mcpclient.McpClient
+import io.peekandpoke.aktor.mcp.client.McpClient
+import io.peekandpoke.aktor.mcp.client.McpConnector
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.JsonObject
@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 
 
 private suspend fun sseTest() {
-    val jsonCodec = CustomSSEClientTransport.McpJson
+    val jsonCodec = McpConnector.JsonCodec
 
     val sseClient = HttpClient {
         install(Logging) {
