@@ -106,7 +106,7 @@ class OpenMeteoCom(
 
     @OptIn(ExperimentalGluedUnitTimeStepValues::class)
     private class ResultBuilder(
-        initAction: JsonObjectBuilder.(time: Time) -> Unit,
+        private val initAction: JsonObjectBuilder.(time: Time) -> Unit,
     ) {
         companion object {
             fun daily() = ResultBuilder { time ->
@@ -123,7 +123,7 @@ class OpenMeteoCom(
 
         fun get(time: Time) = results.getOrPut(time) {
             buildJsonObject {
-                put("date", dateFormat.format(time))
+                initAction(time)
             }
         }
 
