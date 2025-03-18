@@ -72,6 +72,7 @@ kotlin {
 //        implementation(Deps.JavaLibs.slf4j_api)
 
         implementation(project(":utils:crawl4ai"))
+        implementation(project(":utils:geo"))
         implementation(project(":frontend"))
 
         Deps.Test {

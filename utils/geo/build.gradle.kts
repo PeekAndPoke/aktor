@@ -42,14 +42,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(Deps.KotlinX.serialization_core)
-                implementation(Deps.KotlinX.serialization_json)
-
-                implementation(Deps.Ktor.Client.core)
-//                implementation(Deps.Ktor.Client.plugins)
-                implementation(Deps.Ktor.Client.content_negotiation)
-                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
-
                 implementation(Deps.KotlinLibs.Ultra.common)
             }
         }
@@ -69,6 +61,17 @@ kotlin {
             dependencies {
                 Deps.Test { jsTestDeps() }
             }
+        }
+
+        jvmMain {
+            dependencies {
+                implementation(Deps.KotlinLibs.Ultra.kontainer)
+                implementation(Deps.JavaLibs.timeshape)
+            }
+        }
+
+        jvmTest {
+            dependencies {}
         }
     }
 }

@@ -14,3 +14,4 @@ rootProject.name = "aktor"
 include(":frontend")
 
 include(":utils:crawl4ai")
+include(":utils:geo")

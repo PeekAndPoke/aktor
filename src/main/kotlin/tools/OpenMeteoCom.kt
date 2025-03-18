@@ -8,17 +8,19 @@ import com.openmeteo.api.common.time.Date
 import com.openmeteo.api.common.time.Time
 import com.openmeteo.api.common.time.Timezone
 import com.openmeteo.api.common.units.TemperatureUnit
+import de.peekandpoke.ultra.common.datetime.Kronos
 import de.peekandpoke.ultra.common.datetime.MpLocalDate
-import de.peekandpoke.ultra.common.datetime.MpTimezone
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.jackson.*
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.utils.append
+import io.peekandpoke.geo.TimeShape
 import kotlinx.serialization.json.*
 import java.net.HttpURLConnection.setFollowRedirects
 import java.text.SimpleDateFormat
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -26,11 +28,11 @@ import kotlin.time.Duration.Companion.seconds
  * LLm Tool for https://open-meteo.com/
  */
 class OpenMeteoCom(
+    private val kronos: Kronos,
+    private val timeshape: TimeShape,
     private val httpClient: HttpClient = createDefaultHttpClient(),
 ) : AutoCloseable {
     companion object {
-        val default = OpenMeteoCom()
-
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd")
         private val timeFormat = SimpleDateFormat("HH:mm")
 
@@ -178,12 +180,30 @@ class OpenMeteoCom(
                     description = "The longitude of the location",
                     required = true
                 ),
+                Llm.Tool.StringParam(
+                    name = "start_date",
+                    description = "The start date of the forecast (yyyy-MM-dd) defaults to today",
+                    required = false,
+                ),
+                Llm.Tool.IntegerParam(
+                    name = "days",
+                    description = "The number of days for the forecast (defaults to 7)",
+                    required = false,
+                )
             ),
             fn = { params ->
                 val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
                 val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
 
-                getDailyForecast(lat = lat, lng = lng)
+                val tz = timeshape.getTimeZone(lat = lat, lng = lng)
+
+                val startDate = params.getString("start_date")
+                    ?.let { MpLocalDate.tryParse(it) ?: error("Invalid start_date '$it'") }
+                    ?: kronos.localDateNow(tz)
+
+                val days = params.getInt("days") ?: 7
+
+                getDailyForecast(lat = lat, lng = lng, startDate = startDate, days = days)
             }
         )
     }
@@ -218,6 +238,7 @@ class OpenMeteoCom(
             fn = { params ->
                 val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
                 val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
+
                 val date = params.getString("date")
                     ?.let { MpLocalDate.tryParse(it) ?: error("Invalid date '$it'") }
                     ?: error("Missing parameter 'date'")
@@ -232,7 +253,8 @@ class OpenMeteoCom(
     }
 
     @OptIn(ExperimentalGluedUnitTimeStepValues::class)
-    fun getDailyForecast(lat: Double, lng: Double): String {
+    fun getDailyForecast(lat: Double, lng: Double, startDate: MpLocalDate, days: Int): String {
+
         val om = OpenMeteo(
             latitude = lat.toFloat(),
             longitude = lng.toFloat(),
@@ -243,12 +265,22 @@ class OpenMeteoCom(
             Forecast.Daily.temperature2mMax,
             Forecast.Daily.weathercode,
             Forecast.Daily.rainSum,
+            Forecast.Daily.snowfallSum,
         )
 
+        val tz = timeshape.getTimeZone(lat = lat, lng = lng)
+
+        val todayPlus14 = kronos.zonedDateTimeNow(tz).atStartOfDay().plus(14.days)
+        val startDT = startDate.atStartOfDay(tz)
+        val start = Date(minOf(todayPlus14, startDT).toEpochMillis())
+        val end = Date(minOf(todayPlus14, startDT.plus(days.days)).toEpochMillis())
+
         val forecast = om.forecast {
-            daily = Forecast.Daily { parameters }
-            temperatureUnit = TemperatureUnit.Celsius
-            timezone = Timezone.auto
+            this.startDate = start
+            this.endDate = end
+            this.daily = Forecast.Daily { parameters }
+            this.temperatureUnit = TemperatureUnit.Celsius
+            this.timezone = Timezone.getTimeZone(id = tz.id)
         }.getOrThrow()
 
         val results = ResultBuilder.daily()
@@ -269,6 +301,10 @@ class OpenMeteoCom(
             put("rain", it)
         }
 
+        results.appendAll({ forecast.daily.getValue(Forecast.Daily.snowfallSum) }) {
+            put("snowfall", it)
+        }
+
         return jsonPrinter.encodeToString(results.results())
     }
 
@@ -286,15 +322,15 @@ class OpenMeteoCom(
             Forecast.Hourly.snowfall,
         )
 
-        // TODO: we need to get the timezone from the lat-lng
-        val omDate = Date(date.atStartOfDay(MpTimezone.systemDefault).toEpochMillis())
+        val tz = timeshape.getTimeZone(lat = lat, lng = lng)
+        val omDate = Date(date.atStartOfDay(tz).toEpochMillis())
 
         val forecast = om.forecast {
-            startDate = omDate
-            endDate = omDate
-            hourly = Forecast.Hourly { parameters }
-            temperatureUnit = TemperatureUnit.Celsius
-            timezone = Timezone.auto
+            this.startDate = omDate
+            this.endDate = omDate
+            this.hourly = Forecast.Hourly { parameters }
+            this.temperatureUnit = TemperatureUnit.Celsius
+            this.timezone = Timezone.getTimeZone(id = tz.id)
         }.getOrThrow()
 
         val results = ResultBuilder.hourly()

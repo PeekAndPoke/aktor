@@ -24,6 +24,7 @@
             <option value="$PROJECT_DIR$/frontend" />
             <option value="$PROJECT_DIR$/utils" />
             <option value="$PROJECT_DIR$/utils/crawl4ai" />
+            <option value="$PROJECT_DIR$/utils/geo" />
           </set>
         </option>
       </GradleProjectSettings>

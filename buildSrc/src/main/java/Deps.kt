@@ -331,6 +331,10 @@ object Deps {
         private const val tika_version = "3.1.0"
         const val tika_core = "org.apache.tika:tika-core:$tika_version"
 
+        // https://search.maven.org/artifact/net.iakovlev/timeshape/2024a.25/jar?eh=
+        private const val timeshape_version = "2024a.25"
+        const val timeshape = "net.iakovlev:timeshape:$timeshape_version"
+
         // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
         private const val okhttp_version = "4.12.0"
         const val okhttp = "com.squareup.okhttp3:okhttp:$okhttp_version"
