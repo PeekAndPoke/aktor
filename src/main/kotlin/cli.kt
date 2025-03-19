@@ -165,24 +165,6 @@ private suspend fun sseTest() {
 
 suspend fun main() {
 
-//    val crawl4aiClient = Crawl4aiClient(
-//        apiKey = "crawl4a-local-key",
-//    )
-//
-//    val health = crawl4aiClient.healthCheck()
-//
-//    println("Health check: $health")
-//
-//    val result = crawl4aiClient
-//        .crawlAsync(url="http://www.barleybrothers.de/")
-//        .await()
-//
-//    println(result.resultAsObj)
-//
-//    exitProcess(0)
-
-    //    sseTest()
-
     val kontainer = blueprint.create()
 
     val keys = kontainer.get(KeysConfig::class)
@@ -203,7 +185,7 @@ suspend fun main() {
 //    )
 //
     val bot = exampleBots.createOpenAiBot(
-        apiKey = keys.config.getString("keys.OPEN_AI_TOKEN"),
+        apiKey = keys.config.getString("OPEN_AI_API_KEY"),
         model = "gpt-4o-mini",
         streaming = true,
         tools = mcpTools,

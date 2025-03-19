@@ -51,7 +51,7 @@ fun Application.module() {
         }
 
         val created = exampleBots.createOpenAiBot(
-            apiKey = keys.config.getString("keys.OPEN_AI_TOKEN"),
+            apiKey = keys.config.getString("OPENAI_API_KEY"),
             model = "gpt-4o-mini",
             streaming = true,
             tools = mcpTools,

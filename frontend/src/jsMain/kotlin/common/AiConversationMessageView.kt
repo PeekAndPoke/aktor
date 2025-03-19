@@ -1,5 +1,6 @@
 package de.peekandpoke.aktor.frontend.common
 
+import de.peekandpoke.aktor.frontend.common.markdown.renderMarkdown
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp

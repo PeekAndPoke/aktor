@@ -18,7 +18,7 @@ val blueprint = kontainer {
     // singleton
     singleton(KeysConfig::class) {
         KeysConfig(
-            ConfigFactory.parseFile(File("./config/keys.conf"))
+            ConfigFactory.parseFile(File("./config/keys.env"))
         )
     }
 
@@ -28,7 +28,7 @@ val blueprint = kontainer {
     // TODO: create kontainer module
     dynamic(Crawl4aiClient::class) { keys: KeysConfig ->
         Crawl4aiClient(
-            apiKey = keys.config.getString("keys.CRAWL4AI_TOKEN")
+            apiKey = keys.config.getString("CRAWL4AI_API_KEY")
         )
     }
 
@@ -38,7 +38,7 @@ val blueprint = kontainer {
     dynamic(ExchangeRateApiCom::class) { ExchangeRateApiCom.default }
     dynamic(IpApiCom::class) { IpApiCom.default }
     dynamic(IpInfoIo::class) { keys: KeysConfig ->
-        IpInfoIo(keys.config.getString("keys.IP_INFO_TOKEN"))
+        IpInfoIo(keys.config.getString("IP_INFO_API_KEY"))
     }
     dynamic(OpenMeteoCom::class) { kronos: Kronos, timeshape: TimeShape ->
         OpenMeteoCom(kronos = kronos, timeshape = timeshape)

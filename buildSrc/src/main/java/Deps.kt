@@ -31,7 +31,7 @@ object Deps {
 
     object KotlinLibs {
         private const val ultra_version = "0.83.6"
-        private const val kraft_version = "0.62.2"
+        private const val kraft_version = "0.63.2"
 
         object Ultra {
             // https://search.maven.org/search?q=g:io.peekandpoke.ultra%20AND%20a:commonmp
@@ -355,6 +355,10 @@ object Deps {
         operator fun <T> invoke(block: Npm.() -> T): T {
             return this.block()
         }
+
+        fun KotlinDependencyHandler.katex() = npm("katex", "0.16.21")
+        fun KotlinDependencyHandler.markedKatexExtension() = npm("marked-katex-extension", "5.1.4")
+
     }
 
     // // Test dependencies ////////////////////////////////////////////////////////////////////////

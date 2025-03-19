@@ -54,7 +54,7 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
                     sseSession = Api.sse()
 
                     sseSession?.incoming?.collect { event ->
-                        console.log("SSE: received event: ${event.data}")
+//                        console.log("SSE: received event: ${event.data}")
 
                         val payload = try {
                             Json.decodeFromString<SseMessages>(event.data ?: "")
