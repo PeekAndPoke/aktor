@@ -10,10 +10,7 @@ import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
 import io.peekandpoke.aktor.model.AiConversation
-import kotlinx.html.HTMLTag
-import kotlinx.html.Tag
-import kotlinx.html.style
-import kotlinx.html.unsafe
+import kotlinx.html.*
 
 @Suppress("FunctionName")
 fun Tag.AiConversationView(
@@ -71,6 +68,7 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
                 val isUser = message is AiConversation.Message.User
 
                 noui.row {
+                    id = message.uuid
                     key = message.uuid
 
                     if (isUser) {

@@ -1,6 +1,6 @@
 package de.peekandpoke.aktor.frontend.common
 
-import de.peekandpoke.aktor.frontend.common.markdown.renderMarkdown
+import de.peekandpoke.aktor.frontend.common.markdown.MarkdownView
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
@@ -41,7 +41,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                 ui.fourteen.wide.left.floated.column {
                     ui.orange.segment {
                         renderLeftIcon { orange.robot }
-                        renderMarkdown(message.content)
+                        MarkdownView(message.content)
                     }
                 }
             }
@@ -52,7 +52,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                     message.content?.takeIf { it.isNotBlank() }?.let { content ->
                         ui.green.segment {
                             renderLeftIcon { green.comment }
-                            renderMarkdown(content)
+                            MarkdownView(content)
                         }
                     }
 
@@ -91,7 +91,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                 ui.fourteen.wide.right.floated.column {
                     ui.blue.segment {
                         renderRightIcon { blue.user }
-                        renderMarkdown(message.content)
+                        MarkdownView(message.content)
                     }
                 }
             }

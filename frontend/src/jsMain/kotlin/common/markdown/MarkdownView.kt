@@ -7,7 +7,6 @@ import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
 import de.peekandpoke.kraft.utils.SimpleAsyncQueue
 import de.peekandpoke.kraft.vdom.VDom
-import kotlinx.coroutines.await
 import kotlinx.html.Tag
 import kotlinx.html.div
 import kotlinx.html.unsafe
@@ -52,7 +51,7 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
         val markdown: String,
     )
 
-    private var pipeline: UnifiedModule.Unified? by value(null)
+    private var pipeline: MarkdownRenderer? by value(null)
 
     private var rendered: String by value("")
 
@@ -66,7 +65,7 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
                 StyleSheets.mount(highlightStyle)
                 StyleSheets.mount(katexStyle)
 
-                queue.add { pipeline = getMarkdownPipeline() }
+                queue.add { pipeline = MarkdownProcessor.getMarkdownRenderer() }
                 queue.add { process() }
             }
 
@@ -80,7 +79,7 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
     }
 
     private suspend fun process() {
-        console.log("raw", props.markdown)
+//        console.log("raw", props.markdown)
 
         // Modify markdown for remarkMath
         val cleaned = props.markdown
@@ -93,7 +92,11 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
             .replace("\\(", "$")
             .replace("\\)", "$")
 
-        rendered = pipeline!!.process(cleaned).await().value
+        try {
+            rendered = pipeline!!(cleaned).await().value
+        } catch (e: Exception) {
+            console.error("Failed to render markdown", e)
+        }
     }
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
