@@ -63,6 +63,9 @@ kotlin {
         // https://github.com/open-meteo/open-meteo-api-kotlin/wiki/Installation
         implementation("com.open-meteo:open-meteo-api-kotlin:0.7.1-beta.1")
 
+        // https://mvnrepository.com/artifact/org.mariuszgromada.math/MathParser.org-mXparser
+        implementation("org.mariuszgromada.math:MathParser.org-mXparser:6.1.0")
+
         // https://mvnrepository.com/artifact/io.modelcontextprotocol/kotlin-sdk
         implementation("io.modelcontextprotocol:kotlin-sdk:0.3.0")
 

@@ -5,14 +5,12 @@ import io.peekandpoke.aktor.chatbot.ChatBot
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.llm.ollama.OllamaLlm
 import io.peekandpoke.aktor.llm.openai.OpenAiLlm
-import io.peekandpoke.aktor.tools.ExchangeRateApiCom
-import io.peekandpoke.aktor.tools.IpInfoIo
-import io.peekandpoke.aktor.tools.OpenMeteoCom
-import io.peekandpoke.aktor.tools.RausgegangenDe
+import io.peekandpoke.aktor.tools.*
 
 class ExampleBots(
     exchangeRateApiCom: ExchangeRateApiCom,
     ipInfoIo: IpInfoIo,
+    mathParserTool: MathParserTool,
     openMeteoCom: OpenMeteoCom,
     rausgegangenDe: RausgegangenDe,
 ) {
@@ -70,6 +68,7 @@ class ExampleBots(
     val builtInTools = emptyList<Llm.Tool>()
         .plus(exchangeRateApiCom.asLlmTool())
         .plus(ipInfoIo.asLlmTool())
+        .plus(mathParserTool.asLlmTool())
         .plus(openMeteoCom.asLlmTools())
         .plus(rausgegangenDe.asLlmTool())
         // Example tools

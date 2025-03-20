@@ -29,14 +29,13 @@ class IpInfoIo(
 
     fun asLlmTool(ip: suspend () -> String? = { null }): Llm.Tool {
 
-
         return Llm.Tool.Function(
-            name = "get_detailed_location_info_IpInfoIo",
+            name = "get_location_info_IpInfoIo",
             description = """
-                Gets detailed information about the user current location.
+                Gets the users current location and additional information.
                 
                 Returns: 
-                JSON
+                    JSON
             """.trimIndent(),
             parameters = emptyList(),
             fn = { _ ->

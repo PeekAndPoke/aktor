@@ -40,6 +40,7 @@ val blueprint = kontainer {
     dynamic(IpInfoIo::class) { keys: KeysConfig ->
         IpInfoIo(keys.config.getString("IP_INFO_API_KEY"))
     }
+    dynamic(MathParserTool::class)
     dynamic(OpenMeteoCom::class) { kronos: Kronos, timeshape: TimeShape ->
         OpenMeteoCom(kronos = kronos, timeshape = timeshape)
     }
