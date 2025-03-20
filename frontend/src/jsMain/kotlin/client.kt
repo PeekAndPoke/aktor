@@ -7,7 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
-import io.peekandpoke.aktor.model.AiConversation
+import io.peekandpoke.aktor.shared.model.AiConversation
 import kotlinx.serialization.json.Json
 
 /**

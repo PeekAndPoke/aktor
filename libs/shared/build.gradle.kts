@@ -1,7 +1,5 @@
 @file:Suppress("PropertyName")
 
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
-
 
 plugins {
     kotlin("multiplatform")
@@ -23,14 +21,6 @@ version = VERSION_NAME
 kotlin {
     js {
         browser {
-            binaries.executable()
-
-            // Add webpack configuration
-            commonWebpackConfig {
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).copy(
-                    port = 25867
-                )
-            }
         }
     }
 
@@ -45,10 +35,14 @@ kotlin {
                 implementation(Deps.KotlinX.serialization_core)
                 implementation(Deps.KotlinX.serialization_json)
 
-                implementation(Deps.KotlinLibs.uuid)
-                implementation(Deps.KotlinLibs.Kraft.core)
+                implementation(Deps.Ktor.Client.core)
+//                implementation(Deps.Ktor.Client.plugins)
+                implementation(Deps.Ktor.Client.content_negotiation)
+                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
 
-                implementation(project(":libs:shared"))
+                implementation(Deps.KotlinLibs.uuid)
+
+                implementation(Deps.KotlinLibs.Ultra.common)
             }
         }
 
@@ -60,16 +54,6 @@ kotlin {
 
         jsMain {
             dependencies {
-                implementation(Deps.KotlinX.coroutines_core)
-
-                implementation(Deps.Ktor.Client.core)
-                implementation(Deps.Ktor.Client.content_negotiation)
-                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
-
-                implementation(Deps.KotlinLibs.Kraft.addons_marked)
-                implementation(Deps.KotlinLibs.Kraft.addons_pdfjs)
-                implementation(Deps.KotlinLibs.Kraft.addons_signaturepad)
-                implementation(Deps.KotlinLibs.Kraft.addons_sourcemappedstacktrace)
             }
         }
 

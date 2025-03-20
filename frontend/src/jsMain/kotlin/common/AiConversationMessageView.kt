@@ -9,7 +9,7 @@ import de.peekandpoke.kraft.semanticui.css
 import de.peekandpoke.kraft.semanticui.icon
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
-import io.peekandpoke.aktor.model.AiConversation
+import io.peekandpoke.aktor.shared.model.AiConversation
 import kotlinx.css.*
 import kotlinx.html.*
 

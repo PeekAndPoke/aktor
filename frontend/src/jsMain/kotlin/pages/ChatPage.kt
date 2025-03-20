@@ -11,8 +11,8 @@ import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import io.ktor.client.plugins.sse.*
-import io.peekandpoke.aktor.model.AiConversation
-import io.peekandpoke.aktor.model.SseMessages
+import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.shared.model.SseMessages
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.html.FlowContent

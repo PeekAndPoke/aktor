@@ -161,12 +161,13 @@ object Deps {
             const val metrics = "io.ktor:ktor-server-metrics:$ktor_version"
             const val partial_content = "io.ktor:ktor-server-partial-content:$ktor_version"
             const val sessions = "io.ktor:ktor-server-sessions:$ktor_version"
+            const val sse = "io.ktor:ktor-server-sse:$ktor_version"
             const val status_pages = "io.ktor:ktor-server-status-pages:$ktor_version"
             const val webjars = "io.ktor:ktor-server-webjars:$ktor_version"
             const val websockets = "io.ktor:ktor-server-websockets:$ktor_version"
             const val double_receive = "io.ktor:ktor-server-double-receive:$ktor_version"
 
-            fun full(scope: KotlinDependencyHandler) = with(scope) {
+            fun full(scope: DependencyHandlerScope) = with(scope) {
                 implementation(auth)
                 implementation(auth_jwt)
                 implementation(auto_head)
@@ -183,6 +184,7 @@ object Deps {
                 implementation(metrics)
                 implementation(partial_content)
                 implementation(sessions)
+                implementation(sse)
                 implementation(status_pages)
                 implementation(webjars)
                 implementation(websockets)
@@ -237,7 +239,7 @@ object Deps {
             const val module_kotlin =
                 "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_kotlin_module_version"
 
-            fun fullImpl(scope: KotlinDependencyHandler) = with(scope) {
+            fun fullImpl(scope: DependencyHandlerScope) = with(scope) {
                 implementation(databind)
                 implementation(annotations)
                 implementation(datatype_jdk8)

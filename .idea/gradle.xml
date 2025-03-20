@@ -16,7 +16,6 @@
           </compositeBuild>
         </compositeConfiguration>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
@@ -33,11 +32,13 @@
             <option value="$PROJECT_DIR$/libs/ktorfx/rest" />
             <option value="$PROJECT_DIR$/libs/ktorfx/staticweb" />
             <option value="$PROJECT_DIR$/libs/ktorfx/testing" />
+            <option value="$PROJECT_DIR$/libs/shared" />
             <option value="$PROJECT_DIR$/utils" />
             <option value="$PROJECT_DIR$/utils/crawl4ai" />
             <option value="$PROJECT_DIR$/utils/geo" />
           </set>
         </option>
+        <option name="resolveExternalAnnotations" value="true" />
       </GradleProjectSettings>
     </option>
   </component>
