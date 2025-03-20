@@ -15,3 +15,15 @@ include(":frontend")
 
 include(":utils:crawl4ai")
 include(":utils:geo")
+
+
+// TEMP
+include(":libs:ktorfx:all")
+include(":libs:ktorfx:core")
+include(":libs:ktorfx:cluster")
+include(":libs:ktorfx:logging")
+include(":libs:ktorfx:insights")
+include(":libs:ktorfx:rest")
+include(":libs:ktorfx:staticweb")
+include(":libs:ktorfx:messaging")
+include(":libs:ktorfx:testing")

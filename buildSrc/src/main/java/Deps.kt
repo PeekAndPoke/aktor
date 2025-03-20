@@ -11,6 +11,18 @@ object Deps {
 
     // Kotlin ////////////////////////////////////////////////////////////////////////////////////
     const val kotlinVersion = "2.1.10"
+
+    object Ksp {
+        // https://github.com/google/ksp/releases
+        const val version = "2.1.10-1.0.31"
+        const val symbol_processing = "com.google.devtools.ksp:symbol-processing-api:$version"
+
+        // https://mvnrepository.com/artifact/com.github.tschuchortdev/kotlin-compile-testing
+        private const val compiletesting_version = "1.6.0"
+        const val compiletesting = "com.github.tschuchortdev:kotlin-compile-testing:$compiletesting_version"
+        const val compiletesting_ksp = "com.github.tschuchortdev:kotlin-compile-testing-ksp:$compiletesting_version"
+    }
+
     // ///////////////////////////////////////////////////////////////////////////////////////////
 
     // JVM ///////////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +166,7 @@ object Deps {
             const val websockets = "io.ktor:ktor-server-websockets:$ktor_version"
             const val double_receive = "io.ktor:ktor-server-double-receive:$ktor_version"
 
-            fun full(scope: DependencyHandlerScope) = with(scope) {
+            fun full(scope: KotlinDependencyHandler) = with(scope) {
                 implementation(auth)
                 implementation(auth_jwt)
                 implementation(auto_head)
@@ -175,8 +187,6 @@ object Deps {
                 implementation(webjars)
                 implementation(websockets)
                 implementation(double_receive)
-                // Tests
-                testImplementation(Test.host)
             }
         }
 
@@ -227,7 +237,7 @@ object Deps {
             const val module_kotlin =
                 "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_kotlin_module_version"
 
-            fun fullImpl(scope: DependencyHandlerScope) = with(scope) {
+            fun fullImpl(scope: KotlinDependencyHandler) = with(scope) {
                 implementation(databind)
                 implementation(annotations)
                 implementation(datatype_jdk8)
@@ -347,6 +357,37 @@ object Deps {
     object IDE {
         const val jetbrains_annotations_version = "26.0.2"
         const val jetbrains_annotations = "org.jetbrains:annotations:$jetbrains_annotations_version"
+    }
+
+    object WebJars {
+        // jQuery: https://www.webjars.org/
+        private const val jquery_version = "3.7.1"
+        const val jquery = "org.webjars:jquery:$jquery_version"
+
+        // Lazy Sized: https://www.webjars.org/
+        private const val lazysizes_version = "5.1.2"
+        const val lazysizes = "org.webjars.bower:lazysizes:$lazysizes_version"
+
+        // VisJS: https://www.webjars.org/
+        private const val visjs_version = "4.21.0"
+        const val visjs = "org.webjars:visjs:$visjs_version"
+
+        // https://mvnrepository.com/artifact/org.webjars.bower/slick-carousel
+        private const val slick_carousel_version = "1.8.1"
+        const val slick_carousel = "org.webjars.bower:slick-carousel:$slick_carousel_version"
+
+        // https://mvnrepository.com/artifact/org.webjars.npm/glidejs__glide
+        private const val glidejs_version = "3.4.1"
+        const val glidejs = "org.webjars.npm:glidejs__glide:$glidejs_version"
+
+        // https://mvnrepository.com/artifact/org.webjars.npm/prismjs
+        private const val prismjs_version = "1.29.0"
+        const val prismjs = "org.webjars.npm:prismjs:$prismjs_version"
+
+        // https://www.webjars.org/
+        private const val fomanticui_version = "2.8.8"
+        const val fomanticui_css = "org.webjars.npm:fomantic-ui-css:$fomanticui_version"
+        const val fomanticui_js = "org.webjars.npm:fomantic-ui-js:$fomanticui_version"
     }
 
     // // NPM dependencies /////////////////////////////////////////////////////////////////////////

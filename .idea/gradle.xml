@@ -22,6 +22,17 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/frontend" />
+            <option value="$PROJECT_DIR$/libs" />
+            <option value="$PROJECT_DIR$/libs/ktorfx" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/all" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/cluster" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/core" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/insights" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/logging" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/messaging" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/rest" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/staticweb" />
+            <option value="$PROJECT_DIR$/libs/ktorfx/testing" />
             <option value="$PROJECT_DIR$/utils" />
             <option value="$PROJECT_DIR$/utils/crawl4ai" />
             <option value="$PROJECT_DIR$/utils/geo" />

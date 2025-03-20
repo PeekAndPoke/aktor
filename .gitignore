@@ -2,6 +2,8 @@ config/keys.conf
 config/keys.env
 logs
 
+libs/ktorfx
+
 #################################################################################
 
 .gradle

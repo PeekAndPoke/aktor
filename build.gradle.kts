@@ -3,10 +3,12 @@
 import Deps.Test.configureJvmTests
 
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
     kotlin("plugin.serialization") version Deps.kotlinVersion
+    id("com.google.devtools.ksp") version Deps.Ksp.version
     java
     idea
+    application
 }
 
 val GROUP: String by project
@@ -30,67 +32,123 @@ idea {
     }
 }
 
+application {
+    mainClass.set(
+        if (project.hasProperty("mainClass")) {
+            project.property("mainClass").toString()
+        } else {
+            "io.peekandpoke.aktor.MainKt"
+        }
+    )
+}
+
 kotlin {
+    js {
+        browser()
+    }
+
     jvmToolchain(21)
 
-    dependencies {
-        implementation(kotlin("reflect"))
-        implementation(Deps.KotlinX.coroutines_core)
-        implementation(Deps.KotlinX.coroutines_reactor)
-        implementation(Deps.KotlinX.serialization_core)
-        implementation(Deps.KotlinX.serialization_json)
-        implementation(Deps.KotlinX.atomicfu)
+    jvm {}
 
-        implementation(Deps.KotlinLibs.Ultra.common)
-        implementation(Deps.KotlinLibs.Ultra.slumber)
-        implementation(Deps.KotlinLibs.Ultra.kontainer)
+    sourceSets {
+        commonMain {
+            dependencies {
+            }
+        }
 
-        Deps.Ktor.Server.full(this)
+        commonTest {
+            dependencies {
+                Deps.Test {
+                    commonTestDeps()
+                }
+            }
+        }
 
-        implementation(Deps.Ktor.Client.core)
-        implementation(Deps.Ktor.Client.okhttp)
-        implementation(Deps.Ktor.Client.cio)
-        implementation(Deps.Ktor.Client.content_negotiation)
-        implementation(Deps.Ktor.Client.plugins)
-        implementation(Deps.Ktor.Client.logging)
+        jsMain {
+            dependencies {
+            }
+        }
 
-        implementation(Deps.Ktor.Common.serialization_kotlinx_json)
-        implementation(Deps.Ktor.Common.serialization_jackson)
+        jsTest {
+            dependencies {
+                Deps.Test {
+                    jsTestDeps()
+                }
+            }
+        }
 
-        implementation("com.typesafe:config:1.4.3")
-        implementation("com.aallam.openai:openai-client:4.0.1")
+        jvmMain {
+            dependencies {
+                implementation(kotlin("reflect"))
+                implementation(Deps.KotlinX.coroutines_core)
+                implementation(Deps.KotlinX.coroutines_reactor)
+                implementation(Deps.KotlinX.serialization_core)
+                implementation(Deps.KotlinX.serialization_json)
+                implementation(Deps.KotlinX.atomicfu)
 
-        // https://github.com/open-meteo/open-meteo-api-kotlin/wiki/Installation
-        implementation("com.open-meteo:open-meteo-api-kotlin:0.7.1-beta.1")
+                implementation(Deps.KotlinLibs.Ultra.common)
+                implementation(Deps.KotlinLibs.Ultra.slumber)
+                implementation(Deps.KotlinLibs.Ultra.kontainer)
 
-        // https://mvnrepository.com/artifact/org.mariuszgromada.math/MathParser.org-mXparser
-        implementation("org.mariuszgromada.math:MathParser.org-mXparser:6.1.0")
+                Deps.Ktor.Server.full(this)
 
-        // https://mvnrepository.com/artifact/io.modelcontextprotocol/kotlin-sdk
-        implementation("io.modelcontextprotocol:kotlin-sdk:0.3.0")
+                implementation(Deps.Ktor.Client.core)
+                implementation(Deps.Ktor.Client.okhttp)
+                implementation(Deps.Ktor.Client.cio)
+                implementation(Deps.Ktor.Client.content_negotiation)
+                implementation(Deps.Ktor.Client.plugins)
+                implementation(Deps.Ktor.Client.logging)
 
-        Deps.JavaLibs.Jackson.fullImpl(this)
+                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
+                implementation(Deps.Ktor.Common.serialization_jackson)
 
-        implementation(Deps.JavaLibs.logback_classic)
-//        implementation(Deps.JavaLibs.slf4j_api)
+                implementation("com.typesafe:config:1.4.3")
+                implementation("com.aallam.openai:openai-client:4.0.1")
 
-        implementation(project(":utils:crawl4ai"))
-        implementation(project(":utils:geo"))
-        implementation(project(":frontend"))
+                // https://github.com/open-meteo/open-meteo-api-kotlin/wiki/Installation
+                implementation("com.open-meteo:open-meteo-api-kotlin:0.7.1-beta.1")
 
-        Deps.Test {
-            jvmTestDeps()
+                // https://mvnrepository.com/artifact/org.mariuszgromada.math/MathParser.org-mXparser
+                implementation("org.mariuszgromada.math:MathParser.org-mXparser:6.1.0")
+
+                // https://mvnrepository.com/artifact/io.modelcontextprotocol/kotlin-sdk
+                implementation("io.modelcontextprotocol:kotlin-sdk:0.3.0")
+
+                Deps.JavaLibs.Jackson.fullImpl(this)
+
+                implementation(Deps.JavaLibs.logback_classic)
+
+                implementation(Deps.KotlinLibs.Karango.core)
+                implementation(Deps.KotlinLibs.Karango.addons)
+
+                implementation(project(":libs:ktorfx:all"))
+
+                implementation(project(":utils:crawl4ai"))
+                implementation(project(":utils:geo"))
+                implementation(project(":frontend"))
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                Deps.Test {
+                    implementation(Deps.Ktor.Server.Test.host)
+                    jvmTestDeps()
+                }
+            }
         }
     }
 }
+
 dependencies {
-    implementation("io.ktor:ktor-client-cio-jvm:3.1.1")
-    implementation("io.ktor:ktor-client-okhttp-jvm:3.1.1")
-    implementation("io.ktor:ktor-server-core:3.1.1")
-    implementation("io.ktor:ktor-server-sse:3.1.1")
-    implementation("io.ktor:ktor-server-core:3.1.1")
+    add("kspJvm", Deps.KotlinLibs.Karango.ksp)
 }
 
 tasks {
     configureJvmTests()
+
+    named<JavaExec>("run") {
+        standardInput = System.`in`
+    }
 }
