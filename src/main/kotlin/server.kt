@@ -17,9 +17,13 @@ import io.peekandpoke.aktor.api.ApiApp
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.ChatBot
 import io.peekandpoke.aktor.llm.mcp.client.McpClient
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 var bot: ChatBot? = null
+
+var mcp: McpClient? = null
 
 suspend fun ApplicationCall.getBot(): ChatBot {
     bot?.let { return it }
@@ -28,18 +32,12 @@ suspend fun ApplicationCall.getBot(): ChatBot {
     val exampleBots = kontainer.get(ExampleBots::class)
 
     val mcpTools = try {
-        val mcpClient = McpClient(
-            name = "Play",
-            version = "1.0.0",
-            toolNamespace = "playground",
-        ).connect()
-
-        mcpClient.listToolsBound() ?: error("Failed to list tools")
+        mcp?.listToolsBound() ?: error("Failed to list tools")
     } catch (e: Exception) {
         println("Failed to connect to MCP: $e")
+        e.printStackTrace()
         emptyList()
     }
-
 
     val created = exampleBots.createOpenAiBot(
         apiKey = keys.config.getString("OPENAI_API_KEY"),
@@ -61,6 +59,22 @@ suspend fun ApplicationCall.getBot(): ChatBot {
 
 @Suppress("unused")
 fun Application.module() = app.module(this) { app, config, init ->
+
+    launch {
+        delay(5000)
+        try {
+            mcp = McpClient(
+                name = "Play",
+                version = "1.0.0",
+                toolNamespace = "playground",
+            )
+
+            mcp!!.connect()
+        } catch (e: Exception) {
+            println("Failed to connect to MCP: $e")
+        }
+    }
+
 
     // Add log appender that writes to the database
     addKarangoAppender(config = config.arangodb, minLevel = Level.INFO)

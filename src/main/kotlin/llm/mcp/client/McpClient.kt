@@ -19,6 +19,7 @@ class McpClient(
     val connector: McpConnector = SseMcpConnector(
         baseUrl = "http://localhost:8001",
         connectUri = "/sse",
+        clientInfo = Implementation(name = name, version = version),
         httpClient = HttpClient {
             install(SSE) {
                 reconnectionTime = 1.seconds

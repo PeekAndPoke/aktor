@@ -28,6 +28,8 @@ private val LOGGER = LoggerFactory.getLogger("SseMcpConnector")
 class SseMcpConnector(
     val baseUrl: String = "http://localhost:8000",
     val connectUri: String = "/sse",
+    val clientInfo: Implementation,
+    val clientCapabilities: ClientCapabilities = ClientCapabilities(),
     val httpClient: HttpClient = HttpClient {
         install(SSE)
 
@@ -38,6 +40,8 @@ class SseMcpConnector(
 ) : McpConnector {
 
     sealed interface State {
+        val name: String get() = this::class.simpleName ?: "Unknown"
+
         suspend fun close()
     }
 
@@ -95,9 +99,11 @@ class SseMcpConnector(
 
     private val handlers = mutableMapOf<RequestId, RequestHandler>()
 
+    private var state: State = NotConnected()
+
     override val isConnected: Boolean get() = state is Connected
 
-    private var state: State = NotConnected()
+    private val canSend get() = state is SenderState
 
     override suspend fun connect(timeout: Duration) {
         if (state !is NotConnected) {
@@ -133,7 +139,18 @@ class SseMcpConnector(
         options: RequestOptions?,
     ): T {
         if (!isConnected) {
-            LOGGER.error("Not connected. Trying to send request: ${request.method}")
+            error("Cannot send request in state ${state.name}. Request: ${request.method}")
+        }
+
+        return requestInternal(request, options)
+    }
+
+    private suspend fun <T : RequestResult> requestInternal(
+        request: Request,
+        options: RequestOptions?,
+    ): T {
+        if (!canSend) {
+            error("Cannot send request in state ${state.name}. Request: ${request.method}")
         }
 
         val message = request.toJson()
@@ -202,7 +219,7 @@ class SseMcpConnector(
 
     private suspend fun send(message: JSONRPCMessage) {
         LOGGER.debug("Sending: $message")
-        (state as? Connected)?.send(message)
+        (state as? SenderState)?.send(message)
     }
 
     private fun listen(session: ClientSSESession): Job {
@@ -215,6 +232,8 @@ class SseMcpConnector(
             var running = true
 
             launch {
+                LOGGER.trace("Launching heartbeat")
+
                 while (running) {
                     delay(5000)
                     LOGGER.trace("Sending ping")
@@ -224,7 +243,8 @@ class SseMcpConnector(
             }
 
             session.incoming.onCompletion { cause ->
-                println("Session closed with reason: $cause")
+                LOGGER.info("===========================================================================")
+                LOGGER.info("Session closed with reason: $cause")
                 // TODO: what now? schedule reconnect?
             }.collect { event ->
                 LOGGER.debug("Received: ${event.event} | ${event.data?.ellipsis(80)}")
@@ -247,13 +267,31 @@ class SseMcpConnector(
                         // check url correctness
                         val endpoint = "${baseUrl.trimEnd('/')}/${eventData.trimStart('/')}"
 
+                        LOGGER.info("Endpoint: $endpoint")
+
                         when (val s = state) {
                             is Handshake -> {
                                 state = Connected(s.sseSessionJob, endpoint)
 
-                                send(InitializedNotification())
+                                LOGGER.info("Sending initialize request")
 
-                                s.onConnected.complete(Unit)
+                                launch {
+                                    val result = request<InitializeResult>(
+                                        InitializeRequest(
+                                            protocolVersion = LATEST_PROTOCOL_VERSION,
+                                            capabilities = clientCapabilities,
+                                            clientInfo = clientInfo,
+                                        )
+                                    )
+
+                                    LOGGER.info("Initialize result: $result")
+
+                                    LOGGER.info("Sending initialized notification")
+
+                                    send(InitializedNotification())
+
+                                    s.onConnected.complete(Unit)
+                                }
                             }
 
                             else -> {
@@ -282,6 +320,7 @@ class SseMcpConnector(
 
             running = false
 
+            LOGGER.info("===========================================================================")
             LOGGER.info("Session closed $session")
         }
     }
