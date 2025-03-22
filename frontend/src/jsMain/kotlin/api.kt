@@ -5,7 +5,13 @@ import de.peekandpoke.ultra.common.remote.RemoteRequest
 import de.peekandpoke.ultra.common.remote.RemoteResponse
 import de.peekandpoke.ultra.common.remote.RequestInterceptor
 import de.peekandpoke.ultra.common.remote.ResponseInterceptor
+import io.ktor.client.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
+import io.ktor.serialization.kotlinx.json.*
+import io.peekandpoke.aktor.shared.api.AppUserConversationsApiClient
 import io.peekandpoke.aktor.shared.api.AppUserLoginApiClient
+import io.peekandpoke.aktor.shared.api.AppUserSseApiClient
 import kotlinx.serialization.json.Json
 
 class WebAppApis(appConfig: WebAppConfig, tokenProvider: () -> String?) {
@@ -26,12 +32,23 @@ class WebAppApis(appConfig: WebAppConfig, tokenProvider: () -> String?) {
         responseInterceptors = listOf(
 //            ApiResponseInterceptor(),
             ErrorLoggingResponseInterceptor()
-        )
+        ),
+        client = HttpClient {
+            install(SSE) {
+                showCommentEvents()
+                showRetryEvents()
+            }
+
+            install(ContentNegotiation) {
+                json(json = codec)
+            }
+        },
     )
 
     val login = AppUserLoginApiClient(config)
+    val sse = AppUserSseApiClient(config)
+    val conversations = AppUserConversationsApiClient(config)
 }
-
 
 class JwtRequestInterceptor(private val token: () -> String?) : RequestInterceptor {
 

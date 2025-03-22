@@ -18,6 +18,7 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.peekandpoke.aktor.api.ApiApp
 import io.peekandpoke.aktor.api.AppUserApiFeature
+import io.peekandpoke.aktor.backend.AiConversationsRepo
 import io.peekandpoke.aktor.backend.AppUserServices
 import io.peekandpoke.aktor.backend.AppUsersRepo
 import io.peekandpoke.aktor.cli.CommandLineChatCli
@@ -89,12 +90,16 @@ fun createBlueprint(config: AktorConfig) = kontainer {
 
     // Apps
     singleton(ApiApp::class)
+    singleton(AppUserApiFeature::class)
 
     // App services
     singleton(AppUserServices::class)
-    singleton(AppUserApiFeature::class)
+
     singleton(AppUsersRepo::class)
     singleton(AppUsersRepo.Fixtures::class)
+
+    singleton(AiConversationsRepo::class)
+    singleton(AiConversationsRepo.Fixtures::class)
 
     // /////////////////////////////////////////////////////////////////////////////////
 

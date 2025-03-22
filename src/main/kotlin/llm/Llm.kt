@@ -1,7 +1,6 @@
 package io.peekandpoke.aktor.llm
 
-import io.peekandpoke.aktor.model.Mutable
-import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.backend.AiConversation
 import kotlinx.coroutines.flow.Flow
 
 interface Llm {
@@ -61,18 +60,24 @@ interface Llm {
 
     sealed interface Update {
         data class Response(
+            override val conversation: AiConversation,
             val content: String?,
         ) : Update
 
         data class Info(
+            override val conversation: AiConversation,
             val message: String,
         ) : Update
 
-        data object Stop : Update
+        data class Stop(
+            override val conversation: AiConversation,
+        ) : Update
+
+        val conversation: AiConversation
     }
 
     fun chat(
-        conversation: Mutable<AiConversation>,
+        conversation: AiConversation,
         streaming: Boolean,
     ): Flow<Update>
 

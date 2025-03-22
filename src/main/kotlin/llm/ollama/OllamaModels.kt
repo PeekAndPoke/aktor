@@ -3,6 +3,7 @@ package io.peekandpoke.aktor.llm.ollama
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.json.JsonObject
 
 @Suppress("PropertyName")
 object OllamaModels {
@@ -85,7 +86,7 @@ object OllamaModels {
             @Serializable
             data class Function(
                 val name: String,
-                val arguments: Map<String, String?>? = null,
+                val arguments: JsonObject? = null,
             )
         }
     }

@@ -1,30 +1,37 @@
 package de.peekandpoke.aktor.frontend
 
+import de.peekandpoke.aktor.frontend.layout.AccountLayout
 import de.peekandpoke.aktor.frontend.pages.ChatPage
+import de.peekandpoke.aktor.frontend.pages.DashboardPage
 import de.peekandpoke.aktor.frontend.pages.LoginPage
 import de.peekandpoke.aktor.frontend.pages.NotFoundPage
-import de.peekandpoke.kraft.addons.routing.RouterBuilder
-import de.peekandpoke.kraft.addons.routing.RouterMiddleware
-import de.peekandpoke.kraft.addons.routing.Static
-import de.peekandpoke.kraft.addons.routing.routerMiddleware
+import de.peekandpoke.kraft.addons.routing.*
 
 object Nav {
     val login = Static("/login")
-    val chat = Static("/chat")
+
+    val dashboard = Static("")
+    val dashboardSlash = Static("/")
+    val chat = Route1("/chat/{id}")
+    fun chat(id: String) = chat.buildUri(id)
 }
 
 fun RouterBuilder.mountNav() {
     val isLoggedIn: RouterMiddleware = routerMiddleware {
-//        if (state.auth().isNotLoggedIn || state.auth().user == null) {
-//            state.redirectAfterLoginUri = uri
-//            redirectTo(com.thebase.frontend.webapp.Nav.login())
-//        }
+        console.log("isLoggedIn", AuthState().loggedInUser)
+
+        if (AuthState().loggedInUser == null) {
+            AuthState.redirectAfterLoginUri = uri
+            redirectTo(Nav.login())
+        }
     }
 
     mount(Nav.login) { LoginPage() }
 
-    with(isLoggedIn) {
-        mount(Nav.chat) { ChatPage() }
+    using(isLoggedIn) {
+        mount(Nav.dashboard) { AccountLayout { DashboardPage() } }
+        mount(Nav.dashboardSlash) { AccountLayout { DashboardPage() } }
+        mount(Nav.chat) { AccountLayout { ChatPage(it["id"]) } }
     }
 
     catchAll {

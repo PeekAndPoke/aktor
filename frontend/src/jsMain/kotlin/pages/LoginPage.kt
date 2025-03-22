@@ -1,6 +1,6 @@
 package de.peekandpoke.aktor.frontend.pages
 
-import de.peekandpoke.aktor.frontend.Apis
+import de.peekandpoke.aktor.frontend.AuthState
 import de.peekandpoke.aktor.frontend.MainRouter
 import de.peekandpoke.aktor.frontend.Nav
 import de.peekandpoke.kraft.addons.semanticui.forms.UiInputField
@@ -13,8 +13,6 @@ import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
-import io.peekandpoke.aktor.shared.model.LoginWithPassword
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.html.Tag
 
 @Suppress("FunctionName")
@@ -34,12 +32,18 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private suspend fun login() = noDblClick.runBlocking {
-        val result = Apis.login.withPassword(
-            LoginWithPassword(user = user, password = password)
-        ).firstOrNull()
 
-        result.let {
-            MainRouter.navToUri(Nav.chat())
+        val result = AuthState.loginWithPassword(user = user, password = password)
+
+        if (result.isLoggedIn) {
+            result.let {
+                when (val uri = AuthState.redirectAfterLoginUri) {
+                    null -> MainRouter.navToUri(Nav.dashboard())
+                    else -> MainRouter.navToUri(uri)
+                }
+            }
+        } else {
+            // TODO: show error
         }
     }
 
@@ -67,6 +71,5 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
                 }
             }
         }
-
     }
 }

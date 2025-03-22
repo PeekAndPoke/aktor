@@ -8,9 +8,10 @@ import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
+import io.peekandpoke.aktor.backend.AiConversation
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.model.Mutable
-import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.shared.model.Mutable
+import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable
 import kotlinx.coroutines.flow.*
 
 class OpenAiLlm(
@@ -34,7 +35,11 @@ class OpenAiLlm(
         client.close()
     }
 
-    override fun chat(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
+    override fun chat(conversation: AiConversation, streaming: Boolean): Flow<Llm.Update> {
+        return chatInternal(conversation.mutable(), streaming)
+    }
+
+    private fun chatInternal(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
         return if (streaming) {
             chatStreaming(conversation)
         } else {
@@ -67,14 +72,16 @@ class OpenAiLlm(
                     val choice = chunk.choices.first()
 
                     choice.delta?.content?.let { content ->
-                        emit(Llm.Update.Response(content))
+                        emit(
+                            Llm.Update.Response(conversation.value, content)
+                        )
                     }
                 }.map { chunk ->
                     merger.process(chunk = chunk)
                         .also { partial -> conversation.modify { it.addOrUpdate(partial.messages) } }
                 }.toList()
 
-                val merged = chunks.lastOrNull() ?: AiConversation.new
+                val merged = chunks.lastOrNull() ?: AiConversation.new("empty")
 
                 val toolCalls = merged.messages
                     .filterIsInstance<AiConversation.Message.Assistant>()
@@ -88,7 +95,9 @@ class OpenAiLlm(
                 }
             }
 
-            emit(Llm.Update.Stop)
+            emit(
+                Llm.Update.Stop(conversation.value)
+            )
         }
     }
 
@@ -130,7 +139,9 @@ class OpenAiLlm(
                 } else {
                     val answer = response.choices.first().message.content
 
-                    emit(Llm.Update.Response(answer.orEmpty()))
+                    emit(
+                        Llm.Update.Response(conversation.value, answer.orEmpty())
+                    )
 
                     conversation.modify {
                         it.addOrUpdate(AiConversation.Message.Assistant(content = answer))
@@ -140,7 +151,9 @@ class OpenAiLlm(
                 }
             }
 
-            emit(Llm.Update.Stop)
+            emit(
+                Llm.Update.Stop(conversation.value)
+            )
         }
     }
 
@@ -154,7 +167,8 @@ class OpenAiLlm(
 
         emit(
             Llm.Update.Info(
-                "Tool call: $fnName | Id: $fnCallId | Args: ${fnArgs.print()} | ArgsRaw: n/a"
+                conversation = conversation.value,
+                message = "Tool call: $fnName | Id: $fnCallId | Args: ${fnArgs.print()}",
             )
         )
 
@@ -180,7 +194,8 @@ class OpenAiLlm(
 
         emit(
             Llm.Update.Info(
-                "Tool result: $toolResult"
+                conversation = conversation.value,
+                message = "Tool result: $toolResult",
             )
         )
     }

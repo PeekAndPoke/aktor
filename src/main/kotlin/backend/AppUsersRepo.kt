@@ -19,7 +19,7 @@ class AppUsersRepo(
     timestamps: TimestampedHook,
 ) : EntityRepository<AppUser>(
     name = "app_users",
-    storedType = kType<AppUser>(),
+    storedType = kType(),
     driver = driver,
     hooks = Repository.Hooks
         .of(onAfterSaves)

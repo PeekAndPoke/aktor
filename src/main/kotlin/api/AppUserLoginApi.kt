@@ -23,7 +23,6 @@ import kotlin.time.Duration.Companion.hours
 
 class AppUserLoginApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
 
-
     val withPassword = AppUserLoginApiClient.WithPassword.mount {
         docs {
             name = "Log in with password"

@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 sealed class SseMessages {
 
     @Serializable
-    @SerialName("ai-conversation")
-    data class AiConversationMessage(val data: AiConversation) : SseMessages()
+    @SerialName("ai-conversation-update")
+    data class AiConversationUpdate(val data: AiConversationModel) : SseMessages()
 }

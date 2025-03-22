@@ -3,6 +3,7 @@ package io.peekandpoke.aktor.cli
 import com.github.ajalt.clikt.core.CliktCommand
 import de.peekandpoke.ultra.kontainer.Kontainer
 import io.peekandpoke.aktor.KeysConfig
+import io.peekandpoke.aktor.backend.AiConversation
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.llm.mcp.client.McpClient
@@ -33,6 +34,8 @@ class CommandLineChatCli(
         ).connect()
 
         val mcpTools = mcpClient.listToolsBound() ?: emptyList()
+
+        var conversation = AiConversation.new(ownerId = "tmp")
 
 //    val bot = ExampleBot.createOllamaBot(
 //        config = config,
@@ -72,15 +75,16 @@ class CommandLineChatCli(
                 }
 
                 "/clear" -> {
-                    bot.clearConversation()
+                    conversation = conversation.copy(messages = emptyList())
                 }
 
                 "/h", "/history" -> {
-                    bot.conversation.value.messages.forEach { println(it) }
+                    conversation.messages.forEach { println(it) }
                 }
 
                 else -> {
-                    bot.chat(prompt).collect { update ->
+                    bot.chat(conversation, prompt).collect { update ->
+                        conversation = update.conversation
 
                         when (update) {
                             is Llm.Update.Response -> {

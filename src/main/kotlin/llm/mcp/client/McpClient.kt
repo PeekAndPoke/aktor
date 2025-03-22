@@ -17,7 +17,7 @@ class McpClient(
     val version: String,
     val toolNamespace: String,
     val connector: McpConnector = SseMcpConnector(
-        baseUrl = "http://localhost:8000",
+        baseUrl = "http://localhost:8001",
         connectUri = "/sse",
         httpClient = HttpClient {
             install(SSE) {
@@ -117,7 +117,5 @@ class McpClient(
 
     suspend fun callTool(name: String, args: Map<String, Any?>): CallToolResultBase? {
         return connector.callTool(name, args)
-
-        return null
     }
 }

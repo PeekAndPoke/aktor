@@ -9,13 +9,13 @@ import de.peekandpoke.kraft.semanticui.css
 import de.peekandpoke.kraft.semanticui.icon
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
-import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.shared.model.AiConversationModel
 import kotlinx.css.*
 import kotlinx.html.*
 
 @Suppress("FunctionName")
 fun Tag.AiConversationMessageView(
-    message: AiConversation.Message,
+    message: AiConversationModel.Message,
 ) = comp(
     AiConversationMessageView.Props(message = message)
 ) {
@@ -27,7 +27,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
     //  PROPS  //////////////////////////////////////////////////////////////////////////////////////////////////
 
     data class Props(
-        val message: AiConversation.Message,
+        val message: AiConversationModel.Message,
     )
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
     override fun VDom.render() {
         when (val message = props.message) {
 
-            is AiConversation.Message.System -> {
+            is AiConversationModel.Message.System -> {
                 ui.fourteen.wide.left.floated.column {
                     ui.orange.segment {
                         renderLeftIcon { orange.robot }
@@ -46,12 +46,12 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                 }
             }
 
-            is AiConversation.Message.Assistant -> {
+            is AiConversationModel.Message.Assistant -> {
 
                 ui.fourteen.wide.left.floated.column {
                     message.content?.takeIf { it.isNotBlank() }?.let { content ->
                         ui.green.segment {
-                            renderLeftIcon { green.comment }
+                            renderLeftIcon { green.robot }
                             MarkdownView(content)
                         }
                     }
@@ -71,7 +71,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                 }
             }
 
-            is AiConversation.Message.Tool -> {
+            is AiConversationModel.Message.Tool -> {
                 ui.fourteen.wide.left.floated.column {
                     ui.violet.segment {
                         renderLeftIcon { violet.hammer }
@@ -87,7 +87,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                 }
             }
 
-            is AiConversation.Message.User -> {
+            is AiConversationModel.Message.User -> {
                 ui.fourteen.wide.right.floated.column {
                     ui.blue.segment {
                         renderRightIcon { blue.user }

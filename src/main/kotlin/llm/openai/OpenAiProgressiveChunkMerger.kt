@@ -3,12 +3,13 @@ package io.peekandpoke.aktor.llm.openai
 import com.aallam.openai.api.chat.ChatChunk
 import com.aallam.openai.api.chat.ChatCompletionChunk
 import de.peekandpoke.ultra.common.replaceFirstByOrAdd
-import io.peekandpoke.aktor.model.Mutable
-import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.shared.model.Mutable
+import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable
 
 class OpenAiProgressiveChunkMerger {
 
-    private val conversation: Mutable<AiConversation> = Mutable(AiConversation.new)
+    private val conversation: Mutable<AiConversation> = AiConversation.new("merger").mutable()
 
     private var messages = mutableMapOf<String, AiConversation.Message.Assistant>()
 
@@ -19,7 +20,9 @@ class OpenAiProgressiveChunkMerger {
         val choice = chunk.choices.firstOrNull() ?: return conversation.value
 
         val completionId = chunk.id
-        val message = messages.getOrPut(completionId) { AiConversation.Message.Assistant() }
+        val message = messages.getOrPut(completionId) {
+            AiConversation.Message.Assistant()
+        }
 
         val modified = message.modify(
             { appendContent(choice.delta?.content.orEmpty()) },

@@ -1,37 +1,57 @@
 package de.peekandpoke.aktor.frontend.pages
 
-import de.peekandpoke.aktor.frontend.Api
+import de.peekandpoke.aktor.frontend.Apis
+import de.peekandpoke.aktor.frontend.AuthState
 import de.peekandpoke.aktor.frontend.common.AiConversationView
 import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextArea
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextAreaComponent
 import de.peekandpoke.kraft.components.*
 import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import io.ktor.client.plugins.sse.*
-import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.shared.model.AiConversationModel
+import io.peekandpoke.aktor.shared.model.AiConversationRequest
 import io.peekandpoke.aktor.shared.model.SseMessages
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("FunctionName")
-fun Tag.ChatPage() = comp {
+fun Tag.ChatPage(id: String) = comp(
+    ChatPage.Props(
+        id = id
+    )
+) {
     ChatPage(it)
 }
 
-class ChatPage(ctx: NoProps) : PureComponent(ctx) {
+class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
+
+    data class Props(
+        val id: String,
+    )
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private val auth by subscribingTo(AuthState)
+    private val user get() = auth.user!!
+
     private var input by value("")
 
-    private var conversation by value(AiConversation.new)
+    private var conversation = dataLoader {
+        Apis.conversations
+            .get(user = user.id, conversation = props.id)
+            .map { it.data!! }
+    }
 
     val textAreaRef = ComponentRef.Tracker<UiTextAreaComponent>()
 
@@ -47,11 +67,7 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
                 console.log("mounting ChatPage ...")
 
                 launch {
-                    loadChat()
-                }
-
-                launch {
-                    sseSession = Api.sse()
+                    sseSession = Apis.sse.connect(user.id)
 
                     sseSession?.incoming?.collect { event ->
 //                        console.log("SSE: received event: ${event.data}")
@@ -63,8 +79,8 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
                         }
 
                         when (payload) {
-                            is SseMessages.AiConversationMessage -> {
-                                conversation = payload.data
+                            is SseMessages.AiConversationUpdate -> {
+                                updateConversation(payload.data)
                             }
                         }
                     }
@@ -79,9 +95,9 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
         }
     }
 
-    private suspend fun loadChat() = noDblClick.runBlocking {
-        val response = Api.loadChat()
-        conversation = response
+    private fun updateConversation(new: AiConversationModel) {
+        conversation.modifyValue { new }
+        triggerRedraw()
     }
 
     fun canSend() = noDblClick.canRun && input.isNotBlank()
@@ -100,22 +116,34 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
     }
 
     private suspend fun sendChat(message: String) = noDblClick.runBlocking {
-        val response = Api.sendMessage(message)
+        val response = Apis.conversations
+            .send(
+                user = user.id,
+                conversation = props.id,
+                message = AiConversationRequest.Send(message),
+            ).map { it.data!! }
+            .firstOrNull()
 
-        conversation = response
+        response?.let {
+            updateConversation(response.conversation)
+        }
     }
 
     override fun VDom.render() {
         JoinedPageTitle { listOf("Chat") }
 
-        ui.container {
-            ui.header H1 { +"Chat" }
+        ui.header H1 { +"Chat" }
 
-            renderConversation()
+        conversation(this) {
+            error { +"Error loading conversation" }
+            loading { +"Loading ..." }
+            loaded { data ->
+                renderConversation(data)
 
-            ui.hidden.divider()
+                ui.hidden.divider()
 
-            renderInputs()
+                renderInputs()
+            }
         }
     }
 
@@ -155,7 +183,7 @@ class ChatPage(ctx: NoProps) : PureComponent(ctx) {
         }
     }
 
-    private fun FlowContent.renderConversation() {
+    private fun FlowContent.renderConversation(conversation: AiConversationModel) {
         AiConversationView(conversation)
     }
 }

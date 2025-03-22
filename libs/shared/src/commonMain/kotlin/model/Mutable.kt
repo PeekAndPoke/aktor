@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.model
+package io.peekandpoke.aktor.shared.model
 
 class Mutable<T>(
     subject: T,

@@ -32,10 +32,7 @@ val Popups: PopupsManager = PopupsManager()
 
 val MainRouter: Router = createRouter()
 
-// TODO: token provider
-val Apis = WebAppApis(Config) { "" }
-
-val Api = ChatClient()
+val Apis = WebAppApis(Config) { AuthState().token }
 
 fun main() {
     val mountPoint = document.getElementById("spa") as HTMLElement

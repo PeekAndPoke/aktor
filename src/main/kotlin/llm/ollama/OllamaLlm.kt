@@ -7,9 +7,10 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
+import io.peekandpoke.aktor.backend.AiConversation
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.model.Mutable
-import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.shared.model.Mutable
+import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.json.Json
 import java.net.HttpURLConnection.setFollowRedirects
@@ -40,7 +41,12 @@ class OllamaLlm(
         httpClient.close()
     }
 
-    override fun chat(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
+
+    override fun chat(conversation: AiConversation, streaming: Boolean): Flow<Llm.Update> {
+        return chatInternal(conversation.mutable(), streaming)
+    }
+
+    private fun chatInternal(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
         return flow {
             suspend fun call(): List<OllamaModels.ChatResponse> {
                 return httpClient.chat(
@@ -69,7 +75,7 @@ class OllamaLlm(
                         .mapNotNull { part -> part.message.content }
                         .joinToString("") { it }
 
-                    emit(Llm.Update.Response(answer))
+                    emit(Llm.Update.Response(conversation.value, answer))
 
                     conversation.modify {
                         it.addOrUpdate(AiConversation.Message.Assistant(content = answer))
@@ -79,7 +85,7 @@ class OllamaLlm(
                 }
             }
 
-            emit(Llm.Update.Stop)
+            emit(Llm.Update.Stop(conversation.value))
         }
     }
 
@@ -158,7 +164,8 @@ class OllamaLlm(
 
             emit(
                 Llm.Update.Info(
-                    "Tool call: ${function.name} | Args: ${fnArgs.print()} | ArgsRaw: $fnArgsRaw"
+                    conversation = conversation.value,
+                    message = "Tool call: ${function.name} | Args: ${fnArgs.print()} | ArgsRaw: $fnArgsRaw"
                 )
             )
 
@@ -173,7 +180,8 @@ class OllamaLlm(
 
             emit(
                 Llm.Update.Info(
-                    "Tool result: $toolResult"
+                    conversation = conversation.value,
+                    message = "Tool result: $toolResult"
                 )
             )
 
@@ -250,7 +258,7 @@ class OllamaLlm(
         return OllamaModels.Message.ToolCall(
             function = OllamaModels.Message.ToolCall.Function(
                 name = name,
-                arguments = args.toMap()
+                arguments = args.json
             )
         )
     }

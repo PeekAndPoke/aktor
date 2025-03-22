@@ -42,7 +42,7 @@ object Deps {
     // ///////////////////////////////////////////////////////////////////////////////////////////
 
     object KotlinLibs {
-        private const val ultra_version = "0.83.6"
+        private const val ultra_version = "0.83.9"
         private const val kraft_version = "0.63.2"
 
         object Ultra {

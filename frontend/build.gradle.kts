@@ -46,6 +46,7 @@ kotlin {
                 implementation(Deps.KotlinX.serialization_json)
 
                 implementation(Deps.KotlinLibs.uuid)
+                implementation(Deps.KotlinLibs.Ultra.security)
                 implementation(Deps.KotlinLibs.Kraft.core)
 
                 implementation(project(":libs:shared"))

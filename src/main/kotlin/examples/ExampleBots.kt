@@ -30,12 +30,10 @@ class ExampleBots(
         streaming: Boolean,
         tools: List<Llm.Tool> = emptyList(),
     ): ChatBot {
-
         val allTools = builtInTools.plus(tools)
 
         val llm = OllamaLlm(model = model, tools = allTools)
-
-        val bot = ChatBot.of(llm = llm, streaming = streaming)
+        val bot = ChatBot(llm = llm, streaming = streaming)
 
         return bot
     }
@@ -49,7 +47,7 @@ class ExampleBots(
         val allTools = builtInTools.plus(tools)
 
         val llm = OpenAiLlm(model = model, tools = allTools, authToken = apiKey)
-        val bot = ChatBot.of(llm = llm, streaming = streaming)
+        val bot = ChatBot(llm = llm, streaming = streaming)
 
         return bot
     }

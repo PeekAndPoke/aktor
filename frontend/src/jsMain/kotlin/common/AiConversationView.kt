@@ -9,12 +9,12 @@ import de.peekandpoke.kraft.components.key
 import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
-import io.peekandpoke.aktor.shared.model.AiConversation
+import io.peekandpoke.aktor.shared.model.AiConversationModel
 import kotlinx.html.*
 
 @Suppress("FunctionName")
 fun Tag.AiConversationView(
-    conversation: AiConversation,
+    conversation: AiConversationModel,
 ) = comp(
     AiConversationView.Props(conversation = conversation)
 ) {
@@ -26,7 +26,7 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
     //  PROPS  //////////////////////////////////////////////////////////////////////////////////////////////////
 
     data class Props(
-        val conversation: AiConversation,
+        val conversation: AiConversationModel,
     )
 
     private object Style : StyleSheet() {
@@ -65,7 +65,7 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
             }
 
             conversation.messages.forEach { message ->
-                val isUser = message is AiConversation.Message.User
+                val isUser = message is AiConversationModel.Message.User
 
                 noui.row {
                     id = message.uuid
