@@ -28,11 +28,8 @@ class ExampleBots(
     fun createOllamaBot(
         model: String,
         streaming: Boolean,
-        tools: List<Llm.Tool> = emptyList(),
     ): ChatBot {
-        val allTools = builtInTools.plus(tools)
-
-        val llm = OllamaLlm(model = model, tools = allTools)
+        val llm = OllamaLlm(model = model)
         val bot = ChatBot(llm = llm, streaming = streaming)
 
         return bot
@@ -42,14 +39,10 @@ class ExampleBots(
         apiKey: String,
         model: String,
         streaming: Boolean,
-        tools: List<Llm.Tool> = emptyList(),
     ): ChatBot {
-        val allTools = builtInTools.plus(tools)
-
-        val llm = OpenAiLlm(model = model, tools = allTools, authToken = apiKey)
+        val llm = OpenAiLlm(model = model, authToken = apiKey)
         val bot = ChatBot(llm = llm, streaming = streaming)
 
         return bot
     }
-
 }

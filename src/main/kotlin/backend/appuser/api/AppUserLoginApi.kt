@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.api
+package io.peekandpoke.aktor.backend.appuser.api
 
 import de.peekandpoke.ktorfx.core.broker.OutgoingConverter
 import de.peekandpoke.ktorfx.core.kontainer
@@ -12,7 +12,7 @@ import de.peekandpoke.ultra.security.jwt.JwtGenerator
 import de.peekandpoke.ultra.security.jwt.JwtUserData
 import de.peekandpoke.ultra.security.user.UserPermissions
 import io.peekandpoke.aktor.appUsers
-import io.peekandpoke.aktor.backend.AppUsersRepo.Companion.asApiModel
+import io.peekandpoke.aktor.backend.appuser.AppUsersRepo.Companion.asApiModel
 import io.peekandpoke.aktor.shared.api.AppUserLoginApiClient
 import io.peekandpoke.aktor.shared.model.AppUserLoginResponse
 import io.peekandpoke.aktor.shared.model.AppUserModel

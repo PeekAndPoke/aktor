@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.backend
+package io.peekandpoke.aktor.backend.appuser
 
 import de.peekandpoke.karango.aql.EQ
 import de.peekandpoke.karango.aql.FOR

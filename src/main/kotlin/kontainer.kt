@@ -17,12 +17,15 @@ import de.peekandpoke.ultra.vault.profiling.DefaultQueryProfiler
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.peekandpoke.aktor.api.ApiApp
-import io.peekandpoke.aktor.api.AppUserApiFeature
-import io.peekandpoke.aktor.backend.AiConversationsRepo
-import io.peekandpoke.aktor.backend.AppUserServices
-import io.peekandpoke.aktor.backend.AppUsersRepo
+import io.peekandpoke.aktor.backend.aiconversation.AiConversationsRepo
+import io.peekandpoke.aktor.backend.appuser.AppUserServices
+import io.peekandpoke.aktor.backend.appuser.AppUsersRepo
+import io.peekandpoke.aktor.backend.appuser.api.AppUserApiFeature
 import io.peekandpoke.aktor.cli.CommandLineChatCli
 import io.peekandpoke.aktor.examples.ExampleBots
+import io.peekandpoke.aktor.llm.LlmRegistry
+import io.peekandpoke.aktor.llm.ollama.OllamaLlm
+import io.peekandpoke.aktor.llm.openai.OpenAiLlm
 import io.peekandpoke.aktor.llm.tools.*
 import io.peekandpoke.crawl4ai.Crawl4aiClient
 import io.peekandpoke.geo.GeoModule
@@ -102,6 +105,39 @@ fun createBlueprint(config: AktorConfig) = kontainer {
     singleton(AiConversationsRepo.Fixtures::class)
 
     // /////////////////////////////////////////////////////////////////////////////////
+
+    singleton(LlmRegistry::class) { keys: KeysConfig ->
+
+        val default = LlmRegistry.RegisteredLlm(
+            id = "openai/gpt-4o-mini",
+            description = "OpenAI GPT-4 Mini",
+            llm = OpenAiLlm(
+                model = "gpt-4o-mini",
+                authToken = keys.config.getString("OPENAI_API_KEY"),
+            )
+        )
+
+        LlmRegistry(default = default).plus(
+            id = "openai/gpt-4",
+            description = "OpenAI GPT-4",
+            llm = OpenAiLlm(
+                model = "gpt-4",
+                authToken = keys.config.getString("OPENAI_API_KEY"),
+            )
+        ).plus(
+            id = "ollama/llama3.2:1b",
+            description = "Ollama Llama 3.2 1B",
+            llm = OllamaLlm(
+                model = "ollama/llama3.2:1b",
+            )
+        ).plus(
+            id = "ollama/llama3.2:3b",
+            description = "Ollama Llama 3.2 3B",
+            llm = OllamaLlm(
+                model = "ollama/llama3.2:3b",
+            )
+        )
+    }
 
     // TODO: create kontainer module
     dynamic(Crawl4aiClient::class) { keys: KeysConfig ->

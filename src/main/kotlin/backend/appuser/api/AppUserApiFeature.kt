@@ -1,11 +1,11 @@
-package io.peekandpoke.aktor.api
+package io.peekandpoke.aktor.backend.appuser.api
 
 import de.peekandpoke.ktorfx.core.broker.OutgoingConverter
 import de.peekandpoke.ktorfx.rest.ApiFeature
 import de.peekandpoke.ktorfx.rest.ApiRoutes
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.aktor.api.api.AppUserConversationsApi
-import io.peekandpoke.aktor.backend.AppUser
+import io.peekandpoke.aktor.backend.aiconversation.api.AppUserConversationsApi
+import io.peekandpoke.aktor.backend.appuser.AppUser
 
 class AppUserApiFeature(converter: OutgoingConverter) : ApiFeature {
 

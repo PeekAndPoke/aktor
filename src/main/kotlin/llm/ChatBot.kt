@@ -1,6 +1,6 @@
 package io.peekandpoke.aktor.llm
 
-import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import kotlinx.coroutines.flow.Flow
 
 class ChatBot(
@@ -19,11 +19,12 @@ class ChatBot(
         val defaultSystemMessage = AiConversation.Message.System(content = defaultSystemPrompt)
     }
 
-    fun chat(conversation: AiConversation, prompt: String): Flow<Llm.Update> {
+    fun chat(conversation: AiConversation, prompt: String, tools: List<Llm.Tool>): Flow<Llm.Update> {
         return llm.chat(
             conversation = conversation.addOrUpdate(
                 AiConversation.Message.User(content = prompt)
             ),
+            tools = tools,
             streaming = streaming,
         )
     }

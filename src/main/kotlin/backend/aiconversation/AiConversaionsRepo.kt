@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.backend
+package io.peekandpoke.aktor.backend.aiconversation
 
 import de.peekandpoke.karango.aql.*
 import de.peekandpoke.karango.vault.EntityRepository
@@ -33,6 +33,7 @@ class AiConversationsRepo(
                 id = _id,
                 ownerId = ownerId,
                 messages = messages.map { it.asApiModel() },
+                tools = tools,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
             )

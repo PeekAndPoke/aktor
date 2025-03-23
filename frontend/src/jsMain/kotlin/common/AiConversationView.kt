@@ -73,12 +73,12 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
 
                     if (isUser) {
                         ui.fourteen.wide.right.floated.column {
-                            AiConversationMessageView(message)
+                            AiConversationMessageView(message, conversation)
                         }
 
                     } else {
                         ui.fourteen.wide.left.floated.column {
-                            AiConversationMessageView(message)
+                            AiConversationMessageView(message, conversation)
                         }
                     }
                 }

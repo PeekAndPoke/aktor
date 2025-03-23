@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.backend
+package io.peekandpoke.aktor.backend.aiconversation
 
 import com.benasher44.uuid.uuid4
 import de.peekandpoke.karango.Karango
@@ -17,6 +17,7 @@ import kotlinx.serialization.json.jsonObject
 data class AiConversation(
     val ownerId: String,
     val messages: List<Message>,
+    val tools: List<AiConversationModel.ToolRef> = emptyList(),
     override val createdAt: MpInstant = MpInstant.Epoch,
     override val updatedAt: MpInstant = createdAt,
 ) : Timestamped {
@@ -24,6 +25,7 @@ data class AiConversation(
     companion object {
         fun new(ownerId: String) = AiConversation(
             ownerId = ownerId,
+            tools = emptyList(),
             messages = emptyList(),
         )
     }

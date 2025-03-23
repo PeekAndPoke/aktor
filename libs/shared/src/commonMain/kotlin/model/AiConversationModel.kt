@@ -11,6 +11,7 @@ data class AiConversationModel(
     val id: String,
     val ownerId: String,
     val messages: List<Message>,
+    val tools: List<ToolRef>,
     val createdAt: MpInstant,
     val updatedAt: MpInstant,
 ) {
@@ -19,6 +20,7 @@ data class AiConversationModel(
             id = "",
             ownerId = "",
             messages = emptyList(),
+            tools = emptyList(),
             createdAt = MpInstant.now(),
             updatedAt = MpInstant.now(),
         )
@@ -30,6 +32,13 @@ data class AiConversationModel(
         val numAssistant: Int,
         val numUser: Int,
         val numTool: Int,
+    )
+
+    @Serializable
+    data class ToolRef(
+        val name: String,
+        val description: String,
+        val parameters: Map<String, String>,
     )
 
     @Serializable

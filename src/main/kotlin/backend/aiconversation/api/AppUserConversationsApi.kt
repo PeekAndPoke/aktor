@@ -1,27 +1,29 @@
-package io.peekandpoke.aktor.api.api
+package io.peekandpoke.aktor.backend.aiconversation.api
 
 import de.peekandpoke.ktorfx.cluster.database
 import de.peekandpoke.ktorfx.core.broker.OutgoingConverter
+import de.peekandpoke.ktorfx.core.kontainer
 import de.peekandpoke.ktorfx.rest.ApiRoutes
 import de.peekandpoke.ktorfx.rest.docs.codeGen
 import de.peekandpoke.ktorfx.rest.docs.docs
 import de.peekandpoke.ultra.common.model.Paged
 import de.peekandpoke.ultra.common.remote.ApiResponse
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.aktor.api.AppUserApiFeature
+import io.ktor.server.routing.*
 import io.peekandpoke.aktor.api.SseSessions
-import io.peekandpoke.aktor.backend.AiConversation
-import io.peekandpoke.aktor.backend.AiConversationsRepo.Companion.asApiModel
-import io.peekandpoke.aktor.backend.AppUser
-import io.peekandpoke.aktor.backend.aiConversations
-import io.peekandpoke.aktor.getBot
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversationsRepo.Companion.asApiModel
+import io.peekandpoke.aktor.backend.aiconversation.aiConversations
+import io.peekandpoke.aktor.backend.appuser.AppUser
+import io.peekandpoke.aktor.backend.appuser.api.AppUserApiFeature
+import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.ChatBot
+import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llm.LlmRegistry
+import io.peekandpoke.aktor.mcp
 import io.peekandpoke.aktor.shared.api.AppUserConversationsApiClient
 import io.peekandpoke.aktor.shared.model.AiConversationRequest
 import io.peekandpoke.aktor.shared.model.SseMessages
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
 import kotlinx.serialization.json.Json
 
 class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("conversations", converter) {
@@ -31,7 +33,7 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
         val conversation: Stored<AiConversation>,
     ) : AppUserApiFeature.AppUserAware
 
-    val list = AppUserConversationsApiClient.List.mount(AppUserApiFeature.SearchForAppUserParam::class) {
+    val list = AppUserConversationsApiClient.Companion.List.mount(AppUserApiFeature.SearchForAppUserParam::class) {
         docs {
             name = "List"
         }.codeGen {
@@ -46,7 +48,7 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
                 epp = params.epp,
             )
 
-            ApiResponse.ok(
+            ApiResponse.Companion.ok(
                 Paged(
                     items = found.map { it.asApiModel() },
                     page = params.page,
@@ -57,7 +59,7 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
         }
     }
 
-    val create = AppUserConversationsApiClient.Create.mount(AppUserApiFeature.AppUserParam::class) {
+    val create = AppUserConversationsApiClient.Companion.Create.mount(AppUserApiFeature.AppUserParam::class) {
         docs {
             name = "Create"
         }.codeGen {
@@ -65,23 +67,24 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
         }.authorize {
             public()
         }.handle { params, body ->
+            // TODO: let the user choose the tools to be attached to the conversation
+            val tools = getAllTools()
 
             val new = AiConversation(
                 ownerId = params.user._id,
-                messages = listOf(
-                    ChatBot.defaultSystemMessage
-                )
+                messages = listOf(ChatBot.defaultSystemMessage),
+                tools = tools.map { it.toToolRef() },
             )
 
             val saved = database.aiConversations.insert(new)
 
-            ApiResponse.ok(
+            ApiResponse.Companion.ok(
                 saved.asApiModel()
             )
         }
     }
 
-    val get = AppUserConversationsApiClient.Get.mount(GetConversationParam::class) {
+    val get = AppUserConversationsApiClient.Companion.Get.mount(GetConversationParam::class) {
         docs {
             name = "get"
         }.codeGen {
@@ -90,13 +93,13 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
             public()
         }.handle { params ->
 
-            ApiResponse.ok(
+            ApiResponse.Companion.ok(
                 params.conversation.asApiModel()
             )
         }
     }
 
-    val send = AppUserConversationsApiClient.Send.mount(GetConversationParam::class) {
+    val send = AppUserConversationsApiClient.Companion.Send.mount(GetConversationParam::class) {
         docs {
             name = "send"
         }.codeGen {
@@ -105,18 +108,18 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
             public()
         }.handle { params, body ->
 
-            val bot = call.application.async(SupervisorJob() + Dispatchers.IO) {
-                call.getBot()
-            }.await()
+            val llm = kontainer.get<LlmRegistry>().getById("openai/gpt-4o-mini")
+            val bot = ChatBot(llm = llm.llm, streaming = true)
+            val tools = getAllTools()
 
             var updated = params.conversation
 
-            bot.chat(params.conversation.value, body.message).collect { update ->
+            bot.chat(params.conversation.value, body.message, tools).collect { update ->
                 updated = updated.modify { update.conversation }
 
                 SseSessions.session?.send(
                     event = "message",
-                    data = Json.encodeToString<SseMessages>(
+                    data = Json.Default.encodeToString<SseMessages>(
                         SseMessages.AiConversationUpdate(updated.asApiModel())
                     )
                 )
@@ -125,11 +128,24 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
             // Save to the database
             val saved = database.aiConversations.save(updated)
 
-            ApiResponse.ok(
+            ApiResponse.Companion.ok(
                 AiConversationRequest.Response(
                     conversation = saved.asApiModel(),
                 )
             )
         }
+    }
+
+    private suspend fun RoutingContext.getAllTools(): List<Llm.Tool> {
+        val mcpTools = try {
+            mcp?.listToolsBound() ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+        val tools = kontainer.get(ExampleBots::class).builtInTools
+            .plus(mcpTools)
+
+        return tools
     }
 }

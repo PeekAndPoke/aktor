@@ -3,7 +3,7 @@ package io.peekandpoke.aktor.llm.openai
 import com.aallam.openai.api.chat.ChatChunk
 import com.aallam.openai.api.chat.ChatCompletionChunk
 import de.peekandpoke.ultra.common.replaceFirstByOrAdd
-import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.shared.model.Mutable
 import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable
 

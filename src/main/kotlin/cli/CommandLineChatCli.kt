@@ -3,8 +3,9 @@ package io.peekandpoke.aktor.cli
 import com.github.ajalt.clikt.core.CliktCommand
 import de.peekandpoke.ultra.kontainer.Kontainer
 import io.peekandpoke.aktor.KeysConfig
-import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.examples.ExampleBots
+import io.peekandpoke.aktor.llm.ChatBot
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.llm.mcp.client.McpClient
 import kotlinx.coroutines.async
@@ -34,8 +35,13 @@ class CommandLineChatCli(
         ).connect()
 
         val mcpTools = mcpClient.listToolsBound() ?: emptyList()
+        val tools = kontainer.get(ExampleBots::class).builtInTools.plus(mcpTools)
 
-        var conversation = AiConversation.new(ownerId = "tmp")
+        var conversation = AiConversation(
+            ownerId = "tmp",
+            messages = listOf(ChatBot.defaultSystemMessage),
+            tools = tools.map { it.toToolRef() },
+        )
 
 //    val bot = ExampleBot.createOllamaBot(
 //        config = config,
@@ -47,19 +53,16 @@ class CommandLineChatCli(
             apiKey = keys.config.getString("OPENAI_API_KEY"),
             model = "gpt-4o-mini",
             streaming = true,
-            tools = mcpTools,
         )
 
         println("Chatting with model: ${bot.llm.model}")
 
         println("Available tools:")
-        bot.llm.tools.forEach { tool ->
-            println("- ${tool.describe().split("\n").first()}")
+        conversation.tools.forEach { tool ->
+            println("- ${tool.name}: ${tool.description.split("\n").first()}")
 
-            when (tool) {
-                is Llm.Tool.Function -> tool.parameters.forEach { p ->
-                    println("  param: ${p.name} ${p::class.simpleName} (${p.description})")
-                }
+            tool.parameters.forEach { name, desc ->
+                println("  param: $name $desc")
             }
         }
 
@@ -83,7 +86,7 @@ class CommandLineChatCli(
                 }
 
                 else -> {
-                    bot.chat(conversation, prompt).collect { update ->
+                    bot.chat(conversation, prompt, tools).collect { update ->
                         conversation = update.conversation
 
                         when (update) {

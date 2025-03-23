@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.backend
+package io.peekandpoke.aktor.backend.appuser
 
 class AppUserServices(
     appUsersRepo: Lazy<AppUsersRepo>,

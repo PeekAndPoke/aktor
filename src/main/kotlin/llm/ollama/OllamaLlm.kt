@@ -7,7 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
-import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.shared.model.Mutable
 import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable
@@ -18,7 +18,6 @@ import kotlin.time.Duration.Companion.seconds
 
 class OllamaLlm(
     override val model: String,
-    override val tools: List<Llm.Tool>,
     private val baseUrl: String = "http://127.0.0.1:11434",
     private val httpClient: HttpClient = createDefaultHttpClient(),
 ) : Llm, AutoCloseable {
@@ -42,16 +41,28 @@ class OllamaLlm(
     }
 
 
-    override fun chat(conversation: AiConversation, streaming: Boolean): Flow<Llm.Update> {
-        return chatInternal(conversation.mutable(), streaming)
+    override fun chat(
+        conversation: AiConversation,
+        tools: List<Llm.Tool>,
+        streaming: Boolean,
+    ): Flow<Llm.Update> {
+
+        val toolsByName = tools.associateBy { it.name }
+        val matchedTools = conversation.tools.mapNotNull { toolsByName[it.name] }
+
+        return chatInternal(conversation.mutable(), matchedTools, streaming)
     }
 
-    private fun chatInternal(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
+    private fun chatInternal(
+        conversation: Mutable<AiConversation>,
+        tools: List<Llm.Tool>,
+        streaming: Boolean,
+    ): Flow<Llm.Update> {
         return flow {
             suspend fun call(): List<OllamaModels.ChatResponse> {
                 return httpClient.chat(
                     conversation = conversation.value,
-                    tools = tools.map(),
+                    tools = tools
                 ).onEach {
 //                    println(it)
                 }.fold(emptyList()) { acc, msg ->
@@ -68,7 +79,7 @@ class OllamaLlm(
 
                 if (toolCalls.isNotEmpty()) {
                     toolCalls.forEach { toolCall ->
-                        processToolCall(conversation, toolCall)
+                        processToolCall(conversation, tools, toolCall)
                     }
                 } else {
                     val answer = parts
@@ -91,7 +102,7 @@ class OllamaLlm(
 
     private suspend fun HttpClient.chat(
         conversation: AiConversation,
-        tools: List<OllamaModels.Tool>,
+        tools: List<Llm.Tool>,
     ): Flow<OllamaModels.ChatResponse> {
 
         @Suppress("OPT_IN_USAGE")
@@ -116,7 +127,7 @@ class OllamaLlm(
                 model = model,
                 messages = messages,
                 stream = false,
-                tools = tools,
+                tools = tools.map(),
             )
 
             val bodyJson = json.encodeToString(OllamaModels.ChatRequest.serializer(), body)
@@ -153,6 +164,7 @@ class OllamaLlm(
 
     private suspend fun FlowCollector<Llm.Update>.processToolCall(
         conversation: Mutable<AiConversation>,
+        tools: List<Llm.Tool>,
         toolCall: OllamaModels.ChatResponse.ToolCall,
     ) {
         toolCall.function.let { function ->

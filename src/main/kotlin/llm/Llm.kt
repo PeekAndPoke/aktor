@@ -1,6 +1,7 @@
 package io.peekandpoke.aktor.llm
 
-import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
+import io.peekandpoke.aktor.shared.model.AiConversationModel.ToolRef
 import kotlinx.coroutines.flow.Flow
 
 interface Llm {
@@ -18,6 +19,22 @@ interface Llm {
 
             override fun describe(): String {
                 return "${name}(${parameters.joinToString(", ") { it.name }}) - $description"
+            }
+
+            override fun toToolRef(): ToolRef {
+                return ToolRef(
+                    name = name,
+                    description = description,
+                    parameters = parameters.associate {
+                        val description = listOfNotNull(
+                            it::class.simpleName,
+                            it.required.takeIf { !it }?.let { "[OPTIONAL]" },
+                            it.description,
+                        ).joinToString(" ")
+
+                        it.name to description
+                    }
+                )
             }
         }
 
@@ -56,6 +73,8 @@ interface Llm {
         suspend fun call(params: AiConversation.Message.ToolCall.Args): String
 
         fun describe(): String
+
+        fun toToolRef(): ToolRef
     }
 
     sealed interface Update {
@@ -78,10 +97,10 @@ interface Llm {
 
     fun chat(
         conversation: AiConversation,
+        tools: List<Tool>,
         streaming: Boolean,
     ): Flow<Update>
 
     val model: String
-    val tools: List<Tool>
 }
 

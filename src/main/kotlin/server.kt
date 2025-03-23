@@ -2,7 +2,6 @@ package io.peekandpoke.aktor
 
 import ch.qos.logback.classic.Level
 import de.peekandpoke.ktorfx.cluster.workers.launchWorkers
-import de.peekandpoke.ktorfx.core.kontainer
 import de.peekandpoke.ktorfx.core.lifecycle.lifeCycle
 import de.peekandpoke.ktorfx.insights.instrumentWithInsights
 import de.peekandpoke.ktorfx.logging.karango.addKarangoAppender
@@ -14,48 +13,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.peekandpoke.aktor.api.ApiApp
-import io.peekandpoke.aktor.examples.ExampleBots
-import io.peekandpoke.aktor.llm.ChatBot
 import io.peekandpoke.aktor.llm.mcp.client.McpClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-var bot: ChatBot? = null
-
 var mcp: McpClient? = null
-
-suspend fun ApplicationCall.getBot(): ChatBot {
-    bot?.let { return it }
-
-    val keys = kontainer.get(KeysConfig::class)
-    val exampleBots = kontainer.get(ExampleBots::class)
-
-    val mcpTools = try {
-        mcp?.listToolsBound() ?: error("Failed to list tools")
-    } catch (e: Exception) {
-        println("Failed to connect to MCP: $e")
-        e.printStackTrace()
-        emptyList()
-    }
-
-    val created = exampleBots.createOpenAiBot(
-        apiKey = keys.config.getString("OPENAI_API_KEY"),
-        model = "gpt-4o-mini",
-//            model = "gpt-4o",
-        streaming = true,
-        tools = mcpTools,
-    )
-
-//        val created = ExampleBot.createOllamaBot(
-//            config = config,
-//            model = OllamaModels.LLAMA_3_2_3B,
-//            streaming = false,
-//            tools = mcpTools,
-//        )
-
-    return created.also { bot = it }
-}
 
 @Suppress("unused")
 fun Application.module() = app.module(this) { app, config, init ->

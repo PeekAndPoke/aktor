@@ -2,7 +2,7 @@ package io.peekandpoke.aktor.llm.openai
 
 import com.aallam.openai.api.chat.*
 import com.aallam.openai.api.core.Parameters
-import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.llm.Llm
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put

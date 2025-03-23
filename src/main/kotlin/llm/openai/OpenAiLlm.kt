@@ -8,7 +8,7 @@ import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
-import io.peekandpoke.aktor.backend.AiConversation
+import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.shared.model.Mutable
 import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable
@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.*
 
 class OpenAiLlm(
     override val model: String,
-    override val tools: List<Llm.Tool>,
     private val authToken: String,
     private val client: OpenAI = createDefaultClient(authToken),
 ) : Llm, AutoCloseable {
@@ -35,19 +34,34 @@ class OpenAiLlm(
         client.close()
     }
 
-    override fun chat(conversation: AiConversation, streaming: Boolean): Flow<Llm.Update> {
-        return chatInternal(conversation.mutable(), streaming)
+    override fun chat(
+        conversation: AiConversation,
+        tools: List<Llm.Tool>,
+        streaming: Boolean,
+    ): Flow<Llm.Update> {
+
+        val toolsByName = tools.associateBy { it.name }
+        val matchedTools = conversation.tools.mapNotNull { toolsByName[it.name] }
+
+        return chatInternal(conversation.mutable(), matchedTools, streaming)
     }
 
-    private fun chatInternal(conversation: Mutable<AiConversation>, streaming: Boolean): Flow<Llm.Update> {
+    private fun chatInternal(
+        conversation: Mutable<AiConversation>,
+        tools: List<Llm.Tool>,
+        streaming: Boolean,
+    ): Flow<Llm.Update> {
         return if (streaming) {
-            chatStreaming(conversation)
+            chatStreaming(conversation, tools)
         } else {
-            chatNonStreaming(conversation)
+            chatNonStreaming(conversation, tools)
         }
     }
 
-    private fun chatStreaming(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
+    private fun chatStreaming(
+        conversation: Mutable<AiConversation>,
+        tools: List<Llm.Tool>,
+    ): Flow<Llm.Update> {
         val modelId = ModelId(model)
 
         return flow {
@@ -89,7 +103,9 @@ class OpenAiLlm(
 
                 // process tool calls
                 if (toolCalls.isNotEmpty()) {
-                    toolCalls.forEach { toolCall -> processToolCall(conversation, toolCall) }
+                    toolCalls.forEach { toolCall ->
+                        processToolCall(conversation, tools, toolCall)
+                    }
                 } else {
                     done = true
                 }
@@ -101,7 +117,10 @@ class OpenAiLlm(
         }
     }
 
-    private fun chatNonStreaming(conversation: Mutable<AiConversation>): Flow<Llm.Update> {
+    private fun chatNonStreaming(
+        conversation: Mutable<AiConversation>,
+        tools: List<Llm.Tool>,
+    ): Flow<Llm.Update> {
         val modelId = ModelId(model)
 
         return flow {
@@ -134,7 +153,7 @@ class OpenAiLlm(
                             )
                         }
                         .forEach { toolCall ->
-                            processToolCall(conversation, toolCall)
+                            processToolCall(conversation, tools, toolCall)
                         }
                 } else {
                     val answer = response.choices.first().message.content
@@ -159,6 +178,7 @@ class OpenAiLlm(
 
     private suspend fun FlowCollector<Llm.Update>.processToolCall(
         conversation: Mutable<AiConversation>,
+        tools: List<Llm.Tool>,
         toolCall: AiConversation.Message.ToolCall,
     ) {
         val fnName = toolCall.name

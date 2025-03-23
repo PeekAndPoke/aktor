@@ -16,8 +16,12 @@ import kotlinx.html.*
 @Suppress("FunctionName")
 fun Tag.AiConversationMessageView(
     message: AiConversationModel.Message,
+    conversation: AiConversationModel,
 ) = comp(
-    AiConversationMessageView.Props(message = message)
+    AiConversationMessageView.Props(
+        message = message,
+        conversation = conversation,
+    )
 ) {
     AiConversationMessageView(it)
 }
@@ -28,6 +32,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
 
     data class Props(
         val message: AiConversationModel.Message,
+        val conversation: AiConversationModel,
     )
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,64 +41,67 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
 
     override fun VDom.render() {
         when (val message = props.message) {
+            is AiConversationModel.Message.System -> message.render(this)
+            is AiConversationModel.Message.Assistant -> message.render(this)
+            is AiConversationModel.Message.Tool -> message.render(this)
+            is AiConversationModel.Message.User -> message.render(this)
+        }
+    }
 
-            is AiConversationModel.Message.System -> {
-                ui.fourteen.wide.left.floated.column {
-                    ui.orange.segment {
-                        renderLeftIcon { orange.robot }
-                        MarkdownView(message.content)
-                    }
+    private fun AiConversationModel.Message.System.render(flow: FlowContent) {
+        with(flow) {
+            ui.orange.segment {
+                renderLeftIcon { orange.robot }
+                MarkdownView(content)
+            }
+        }
+    }
+
+    private fun AiConversationModel.Message.Assistant.render(flow: FlowContent) {
+        with(flow) {
+            content?.takeIf { it.isNotBlank() }?.let { content ->
+                ui.green.segment {
+                    renderLeftIcon { green.robot }
+                    MarkdownView(content)
                 }
             }
 
-            is AiConversationModel.Message.Assistant -> {
+            toolCalls?.takeIf { it.isNotEmpty() }?.forEach { toolCall ->
+                ui.violet.segment {
+                    renderLeftIcon { violet.hammer }
 
-                ui.fourteen.wide.left.floated.column {
-                    message.content?.takeIf { it.isNotBlank() }?.let { content ->
-                        ui.green.segment {
-                            renderLeftIcon { green.robot }
-                            MarkdownView(content)
+                    details {
+                        summary {
+                            b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
                         }
-                    }
-
-                    message.toolCalls?.takeIf { it.isNotEmpty() }?.forEach { toolCall ->
-                        ui.violet.segment {
-                            renderLeftIcon { violet.hammer }
-
-                            details {
-                                summary {
-                                    b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
-                                }
-                                renderPre(toolCall.args.print())
-                            }
-                        }
+                        renderPre(toolCall.args.print())
                     }
                 }
             }
+        }
+    }
 
-            is AiConversationModel.Message.Tool -> {
-                ui.fourteen.wide.left.floated.column {
-                    ui.violet.segment {
-                        renderLeftIcon { violet.hammer }
+    private fun AiConversationModel.Message.Tool.render(flow: FlowContent) {
+        with(flow) {
+            ui.violet.segment {
+                renderLeftIcon { violet.hammer }
 
-                        details {
-                            summary {
-                                b { +"Tool Response: '${message.toolCall.name}' (${message.toolCall.id})" }
-                            }
-
-                            renderPre(message.content)
-                        }
+                details {
+                    summary {
+                        b { +"Tool Response: '${toolCall.name}' (${toolCall.id})" }
                     }
+
+                    renderPre(content)
                 }
             }
+        }
+    }
 
-            is AiConversationModel.Message.User -> {
-                ui.fourteen.wide.right.floated.column {
-                    ui.blue.segment {
-                        renderRightIcon { blue.user }
-                        MarkdownView(message.content)
-                    }
-                }
+    private fun AiConversationModel.Message.User.render(flow: FlowContent) {
+        with(flow) {
+            ui.blue.segment {
+                renderRightIcon { blue.user }
+                MarkdownView(content)
             }
         }
     }
