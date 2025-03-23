@@ -6,6 +6,7 @@ import de.peekandpoke.aktor.frontend.common.AiConversationView
 import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextArea
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextAreaComponent
+import de.peekandpoke.kraft.addons.semanticui.forms.old.select.SelectField
 import de.peekandpoke.kraft.components.*
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.dataLoader
@@ -13,13 +14,14 @@ import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import io.ktor.client.plugins.sse.*
-import io.peekandpoke.aktor.shared.model.AiConversationModel
-import io.peekandpoke.aktor.shared.model.AiConversationRequest
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationRequest
 import io.peekandpoke.aktor.shared.model.SseMessages
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 import kotlinx.serialization.json.Json
@@ -47,11 +49,23 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
 
     private var input by value("")
 
-    private var conversation = dataLoader {
-        Apis.conversations
+    private val conversation = dataLoader {
+        Apis.appUser.conversations
             .get(user = user.id, conversation = props.id)
             .map { it.data!! }
     }
+
+    private val llms = dataLoader {
+        Apis.llms.llms.list()
+            .map { it.data!! }
+            .onEach {
+                if (selectedLlm == null) {
+                    selectedLlm = it.firstOrNull()?.id
+                }
+            }
+    }
+
+    private var selectedLlm: String? by value(null)
 
     val textAreaRef = ComponentRef.Tracker<UiTextAreaComponent>()
 
@@ -67,7 +81,7 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
                 console.log("mounting ChatPage ...")
 
                 launch {
-                    sseSession = Apis.sse.connect(user.id)
+                    sseSession = Apis.appUser.sse.connect(user.id)
 
                     sseSession?.incoming?.collect { event ->
 //                        console.log("SSE: received event: ${event.data}")
@@ -116,11 +130,14 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
     }
 
     private suspend fun sendChat(message: String) = noDblClick.runBlocking {
-        val response = Apis.conversations
+        val response = Apis.appUser.conversations
             .send(
                 user = user.id,
                 conversation = props.id,
-                message = AiConversationRequest.Send(message),
+                message = AiConversationRequest.Send(
+                    llmId = selectedLlm,
+                    message = message,
+                ),
             ).map { it.data!! }
             .firstOrNull()
 
@@ -143,6 +160,8 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
                 ui.hidden.divider()
 
                 renderInputs()
+
+                ui.hidden.divider()
             }
         }
     }
@@ -169,16 +188,37 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
                 }
             }.track(textAreaRef)
 
-            val canSend = canSend()
+            ui.two.fields {
+                ui.field {
+                    val canSend = canSend()
+                    ui.fluid.givenNot(noDblClick.canRun) { loading }.button {
+                        if (canSend) {
+                            onClick {
+                                send()
+                            }
+                        }
 
-            ui.fluid.givenNot(noDblClick.canRun) { loading }.button {
-                if (canSend) {
-                    onClick {
-                        send()
+                        +"Send"
                     }
                 }
 
-                +"Send"
+                llms(this) {
+                    loading { +"Loading ..." }
+                    error { +"Error loading LLMs" }
+                    loaded { data ->
+
+                        SelectField(
+                            value = selectedLlm,
+                            onChange = { selectedLlm = it },
+                        ) {
+                            data.forEach { llm ->
+                                option(llm.id, llm.id) {
+                                    +llm.description
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

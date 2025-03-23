@@ -24,7 +24,7 @@ var mcp: McpClient? = null
 fun Application.module() = app.module(this) { app, config, init ->
 
     launch {
-        delay(5000)
+        delay(1000)
         try {
             mcp = McpClient(
                 name = "Play",

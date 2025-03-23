@@ -1,8 +1,8 @@
-package io.peekandpoke.aktor.shared.api
+package io.peekandpoke.aktor.shared.appuser.api
 
 import de.peekandpoke.ultra.common.remote.*
-import io.peekandpoke.aktor.shared.model.AiConversationModel
-import io.peekandpoke.aktor.shared.model.AiConversationRequest
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationRequest
 
 class AppUserConversationsApiClient(config: Config) : ApiClient(config) {
 

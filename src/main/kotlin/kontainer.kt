@@ -21,10 +21,13 @@ import io.peekandpoke.aktor.backend.aiconversation.AiConversationsRepo
 import io.peekandpoke.aktor.backend.appuser.AppUserServices
 import io.peekandpoke.aktor.backend.appuser.AppUsersRepo
 import io.peekandpoke.aktor.backend.appuser.api.AppUserApiFeature
+import io.peekandpoke.aktor.backend.llms.LlmRegistry
+import io.peekandpoke.aktor.backend.llms.LlmServices
+import io.peekandpoke.aktor.backend.llms.api.LlmApiFeature
 import io.peekandpoke.aktor.cli.CommandLineChatCli
 import io.peekandpoke.aktor.examples.ExampleBots
-import io.peekandpoke.aktor.llm.LlmRegistry
 import io.peekandpoke.aktor.llm.ollama.OllamaLlm
+import io.peekandpoke.aktor.llm.ollama.OllamaModels
 import io.peekandpoke.aktor.llm.openai.OpenAiLlm
 import io.peekandpoke.aktor.llm.tools.*
 import io.peekandpoke.crawl4ai.Crawl4aiClient
@@ -37,6 +40,10 @@ data class KeysConfig(val config: Config)
 inline val KontainerAware.appUsers: AppUserServices get() = kontainer.get()
 inline val ApplicationCall.appUsers: AppUserServices get() = kontainer.appUsers
 inline val RoutingContext.appUsers: AppUserServices get() = call.appUsers
+
+inline val KontainerAware.llms: LlmServices get() = kontainer.get()
+inline val ApplicationCall.llms: LlmServices get() = kontainer.llms
+inline val RoutingContext.llms: LlmServices get() = call.llms
 
 fun Route.installApiKontainer(app: App<AktorConfig>, insights: InsightsConfig?) = installKontainer { call ->
     app.kontainers.create {
@@ -93,10 +100,10 @@ fun createBlueprint(config: AktorConfig) = kontainer {
 
     // Apps
     singleton(ApiApp::class)
-    singleton(AppUserApiFeature::class)
 
-    // App services
+    // AppUser services
     singleton(AppUserServices::class)
+    singleton(AppUserApiFeature::class)
 
     singleton(AppUsersRepo::class)
     singleton(AppUsersRepo.Fixtures::class)
@@ -104,39 +111,53 @@ fun createBlueprint(config: AktorConfig) = kontainer {
     singleton(AiConversationsRepo::class)
     singleton(AiConversationsRepo.Fixtures::class)
 
-    // /////////////////////////////////////////////////////////////////////////////////
-
+    // Llm Services
+    singleton(LlmServices::class)
+    singleton(LlmApiFeature::class)
     singleton(LlmRegistry::class) { keys: KeysConfig ->
-
         val default = LlmRegistry.RegisteredLlm(
             id = "openai/gpt-4o-mini",
-            description = "OpenAI GPT-4 Mini",
+            description = "OpenAI GPT-4o mini",
             llm = OpenAiLlm(
                 model = "gpt-4o-mini",
                 authToken = keys.config.getString("OPENAI_API_KEY"),
             )
         )
 
-        LlmRegistry(default = default).plus(
-            id = "openai/gpt-4",
-            description = "OpenAI GPT-4",
-            llm = OpenAiLlm(
-                model = "gpt-4",
-                authToken = keys.config.getString("OPENAI_API_KEY"),
+        LlmRegistry(default = default)
+            .plus(
+                id = "openai/gpt-4o",
+                description = "OpenAI GPT-4o",
+                llm = OpenAiLlm(
+                    model = "gpt-4o",
+                    authToken = keys.config.getString("OPENAI_API_KEY"),
+                )
+            ).plus(
+                id = "openai/o3-mini",
+                description = "OpenAI o3-mini",
+                llm = OpenAiLlm(
+                    model = "o3-mini",
+                    authToken = keys.config.getString("OPENAI_API_KEY"),
+                )
+            ).plus(
+                id = "ollama/llama3.2:1b",
+                description = "Ollama Llama 3.2 1B",
+                llm = OllamaLlm(
+                    model = OllamaModels.LLAMA_3_2_1B,
+                )
+            ).plus(
+                id = "ollama/llama3.2:3b",
+                description = "Ollama Llama 3.2 3B",
+                llm = OllamaLlm(
+                    model = OllamaModels.LLAMA_3_2_3B,
+                )
+            ).plus(
+                id = "ollama/qwen2.5:7b",
+                description = "Ollama Qwen 2.5 7B",
+                llm = OllamaLlm(
+                    model = OllamaModels.QWEN_2_5_7B,
+                )
             )
-        ).plus(
-            id = "ollama/llama3.2:1b",
-            description = "Ollama Llama 3.2 1B",
-            llm = OllamaLlm(
-                model = "ollama/llama3.2:1b",
-            )
-        ).plus(
-            id = "ollama/llama3.2:3b",
-            description = "Ollama Llama 3.2 3B",
-            llm = OllamaLlm(
-                model = "ollama/llama3.2:3b",
-            )
-        )
     }
 
     // TODO: create kontainer module

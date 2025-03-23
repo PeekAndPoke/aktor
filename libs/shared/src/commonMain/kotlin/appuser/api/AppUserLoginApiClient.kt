@@ -1,11 +1,11 @@
-package io.peekandpoke.aktor.shared.api
+package io.peekandpoke.aktor.shared.appuser.api
 
 import de.peekandpoke.ultra.common.remote.ApiClient
 import de.peekandpoke.ultra.common.remote.ApiResponse
 import de.peekandpoke.ultra.common.remote.TypedApiEndpoint.Post
 import de.peekandpoke.ultra.common.remote.api
 import de.peekandpoke.ultra.common.remote.call
-import io.peekandpoke.aktor.shared.model.AppUserLoginResponse
+import io.peekandpoke.aktor.shared.appuser.model.AppUserLoginResponse
 import io.peekandpoke.aktor.shared.model.LoginWithPassword
 import kotlinx.coroutines.flow.Flow
 

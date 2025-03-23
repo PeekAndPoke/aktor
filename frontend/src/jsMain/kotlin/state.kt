@@ -6,7 +6,7 @@ import de.peekandpoke.kraft.streams.StreamSource
 import de.peekandpoke.kraft.streams.Unsubscribe
 import de.peekandpoke.kraft.streams.addons.persistInLocalStorage
 import de.peekandpoke.ultra.security.user.UserPermissions
-import io.peekandpoke.aktor.shared.model.AppUserModel
+import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 import io.peekandpoke.aktor.shared.model.LoginWithPassword
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
@@ -53,7 +53,7 @@ object AuthState : Stream<AuthState.Data> {
     override fun subscribeToStream(sub: (Data) -> Unit): Unsubscribe = streamSource.subscribeToStream(sub)
 
     suspend fun loginWithPassword(user: String, password: String): Data {
-        val response = Apis.login
+        val response = Apis.appUser.login
             .withPassword(LoginWithPassword(user = user, password = password))
             .retry(3)
             .map { it.data }

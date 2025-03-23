@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.shared.model
+package io.peekandpoke.aktor.shared.appuser.model
 
 import kotlinx.serialization.Serializable
 

@@ -9,7 +9,7 @@ import de.peekandpoke.kraft.components.key
 import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
-import io.peekandpoke.aktor.shared.model.AiConversationModel
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import kotlinx.html.*
 
 @Suppress("FunctionName")

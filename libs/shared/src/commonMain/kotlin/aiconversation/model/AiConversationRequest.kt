@@ -1,12 +1,11 @@
-package io.peekandpoke.aktor.shared.model
+package io.peekandpoke.aktor.shared.aiconversation.model
 
 import kotlinx.serialization.Serializable
 
-
 object AiConversationRequest {
-
     @Serializable
     data class Send(
+        val llmId: String?,
         val message: String,
     )
 

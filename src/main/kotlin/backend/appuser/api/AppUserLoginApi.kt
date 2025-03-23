@@ -13,10 +13,10 @@ import de.peekandpoke.ultra.security.jwt.JwtUserData
 import de.peekandpoke.ultra.security.user.UserPermissions
 import io.peekandpoke.aktor.appUsers
 import io.peekandpoke.aktor.backend.appuser.AppUsersRepo.Companion.asApiModel
-import io.peekandpoke.aktor.shared.api.AppUserLoginApiClient
-import io.peekandpoke.aktor.shared.model.AppUserLoginResponse
-import io.peekandpoke.aktor.shared.model.AppUserModel
-import io.peekandpoke.aktor.shared.model.AppUserRoles
+import io.peekandpoke.aktor.shared.appuser.api.AppUserLoginApiClient
+import io.peekandpoke.aktor.shared.appuser.model.AppUserLoginResponse
+import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
+import io.peekandpoke.aktor.shared.appuser.model.AppUserRoles
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours

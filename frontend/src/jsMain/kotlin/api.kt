@@ -9,9 +9,8 @@ import io.ktor.client.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.sse.*
 import io.ktor.serialization.kotlinx.json.*
-import io.peekandpoke.aktor.shared.api.AppUserConversationsApiClient
-import io.peekandpoke.aktor.shared.api.AppUserLoginApiClient
-import io.peekandpoke.aktor.shared.api.AppUserSseApiClient
+import io.peekandpoke.aktor.shared.appuser.api.AppUserApiClients
+import io.peekandpoke.aktor.shared.llms.api.LlmApiClients
 import kotlinx.serialization.json.Json
 
 class WebAppApis(appConfig: WebAppConfig, tokenProvider: () -> String?) {
@@ -45,9 +44,8 @@ class WebAppApis(appConfig: WebAppConfig, tokenProvider: () -> String?) {
         },
     )
 
-    val login = AppUserLoginApiClient(config)
-    val sse = AppUserSseApiClient(config)
-    val conversations = AppUserConversationsApiClient(config)
+    val appUser = AppUserApiClients(config)
+    val llms = LlmApiClients(config)
 }
 
 class JwtRequestInterceptor(private val token: () -> String?) : RequestInterceptor {

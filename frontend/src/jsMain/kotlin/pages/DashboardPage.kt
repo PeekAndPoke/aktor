@@ -18,7 +18,7 @@ import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.common.datetime.formatDdMmmYyyyHhMm
 import de.peekandpoke.ultra.common.ellipsis
-import io.peekandpoke.aktor.shared.model.AiConversationModel
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.css.*
@@ -39,7 +39,7 @@ class DashboardPage(ctx: NoProps) : PureComponent(ctx) {
     private val noDblClick = doubleClickProtection()
 
     val chats = dataLoader {
-        Apis.conversations
+        Apis.appUser.conversations
             .list(user = user.id)
             .map { it.data!! }
     }
@@ -47,7 +47,7 @@ class DashboardPage(ctx: NoProps) : PureComponent(ctx) {
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private suspend fun createChat(): AiConversationModel? = noDblClick.runBlocking {
-        val created = Apis.conversations
+        val created = Apis.appUser.conversations
             .create(user = user.id)
             .map { it.data!! }
             .firstOrNull()

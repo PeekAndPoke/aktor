@@ -11,7 +11,7 @@ import de.peekandpoke.ultra.common.reflection.kType
 import de.peekandpoke.ultra.vault.Repository
 import de.peekandpoke.ultra.vault.Storable
 import de.peekandpoke.ultra.vault.hooks.TimestampedHook
-import io.peekandpoke.aktor.shared.model.AppUserModel
+import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 
 class AppUsersRepo(
     driver: KarangoDriver,

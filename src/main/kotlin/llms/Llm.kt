@@ -1,7 +1,7 @@
 package io.peekandpoke.aktor.llm
 
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
-import io.peekandpoke.aktor.shared.model.AiConversationModel.ToolRef
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel.ToolRef
 import kotlinx.coroutines.flow.Flow
 
 interface Llm {

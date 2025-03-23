@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.shared.api
+package io.peekandpoke.aktor.shared.appuser.api
 
 import de.peekandpoke.ultra.common.remote.ApiClient
 import de.peekandpoke.ultra.common.remote.TypedApiEndpoint

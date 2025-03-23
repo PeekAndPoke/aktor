@@ -6,7 +6,7 @@ import de.peekandpoke.ktorfx.rest.docs.codeGen
 import de.peekandpoke.ktorfx.rest.docs.docs
 import io.ktor.server.sse.*
 import io.peekandpoke.aktor.api.SseSessions
-import io.peekandpoke.aktor.shared.api.AppUserSseApiClient
+import io.peekandpoke.aktor.shared.appuser.api.AppUserSseApiClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 

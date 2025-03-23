@@ -5,7 +5,7 @@ import de.peekandpoke.karango.Karango
 import de.peekandpoke.ultra.common.datetime.MpInstant
 import de.peekandpoke.ultra.common.replaceFirstByOrAdd
 import de.peekandpoke.ultra.vault.hooks.Timestamped
-import io.peekandpoke.aktor.shared.model.AiConversationModel
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import io.peekandpoke.aktor.utils.toJsonObject
 import io.peekandpoke.aktor.utils.unwrap
 import kotlinx.serialization.SerialName

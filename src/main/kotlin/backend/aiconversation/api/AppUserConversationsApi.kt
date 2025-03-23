@@ -19,10 +19,10 @@ import io.peekandpoke.aktor.backend.appuser.api.AppUserApiFeature
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.ChatBot
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.llm.LlmRegistry
+import io.peekandpoke.aktor.llms
 import io.peekandpoke.aktor.mcp
-import io.peekandpoke.aktor.shared.api.AppUserConversationsApiClient
-import io.peekandpoke.aktor.shared.model.AiConversationRequest
+import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationRequest
+import io.peekandpoke.aktor.shared.appuser.api.AppUserConversationsApiClient
 import io.peekandpoke.aktor.shared.model.SseMessages
 import kotlinx.serialization.json.Json
 
@@ -108,9 +108,11 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
             public()
         }.handle { params, body ->
 
-            val llm = kontainer.get<LlmRegistry>().getById("openai/gpt-4o-mini")
+            val llm = llms.registry.getByIdOrDefault(body.llmId)
             val bot = ChatBot(llm = llm.llm, streaming = true)
             val tools = getAllTools()
+
+            println("Sending message using llm ${llm.id}")
 
             var updated = params.conversation
 
