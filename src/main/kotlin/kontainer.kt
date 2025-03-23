@@ -61,7 +61,14 @@ fun Route.installApiKontainer(app: App<AktorConfig>, insights: InsightsConfig?) 
 }
 
 
+class GenericService<T>(
+    val x: T,
+)
+
+
 fun createBlueprint(config: AktorConfig) = kontainer {
+
+    singleton<GenericService<Int>> { GenericService<Int>(x = 42) }
 
     // Mount all KtorFx things
     ktorFx(

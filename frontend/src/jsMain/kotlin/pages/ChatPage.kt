@@ -4,10 +4,13 @@ import de.peekandpoke.aktor.frontend.Apis
 import de.peekandpoke.aktor.frontend.AuthState
 import de.peekandpoke.aktor.frontend.common.AiConversationView
 import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
+import de.peekandpoke.kraft.addons.semanticui.forms.UiCheckboxField
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextArea
 import de.peekandpoke.kraft.addons.semanticui.forms.UiTextAreaComponent
 import de.peekandpoke.kraft.addons.semanticui.forms.old.select.SelectField
 import de.peekandpoke.kraft.components.*
+import de.peekandpoke.kraft.semanticui.css
+import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
@@ -22,6 +25,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.css.Position
+import kotlinx.css.em
+import kotlinx.css.position
+import kotlinx.css.top
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 import kotlinx.serialization.json.Json
@@ -66,6 +73,8 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
     }
 
     private var selectedLlm: String? by value(null)
+
+    private var showToolCalls: Boolean by value(false)
 
     val textAreaRef = ComponentRef.Tracker<UiTextAreaComponent>()
 
@@ -149,19 +158,26 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
     override fun VDom.render() {
         JoinedPageTitle { listOf("Chat") }
 
-        ui.header H1 { +"Chat" }
-
         conversation(this) {
             error { +"Error loading conversation" }
             loading { +"Loading ..." }
             loaded { data ->
-                renderConversation(data)
 
-                ui.hidden.divider()
+                ui.grid {
+                    ui.twelve.wide.column {
+                        renderConversation(data)
 
-                renderInputs()
+                        ui.hidden.divider()
 
-                ui.hidden.divider()
+                        renderInputs()
+
+                        ui.hidden.divider()
+                    }
+
+                    ui.four.wide.column {
+                        renderSettings(data)
+                    }
+                }
             }
         }
     }
@@ -188,42 +204,70 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
                 }
             }.track(textAreaRef)
 
-            ui.two.fields {
-                ui.field {
-                    val canSend = canSend()
-                    ui.fluid.givenNot(noDblClick.canRun) { loading }.button {
-                        if (canSend) {
-                            onClick {
-                                send()
-                            }
-                        }
-
-                        +"Send"
+            ui.field {
+                val canSend = canSend()
+                ui.fluid.givenNot(noDblClick.canRun) { loading }.button {
+                    if (canSend) {
+                        onClick { send() }
                     }
-                }
-
-                llms(this) {
-                    loading { +"Loading ..." }
-                    error { +"Error loading LLMs" }
-                    loaded { data ->
-
-                        SelectField(
-                            value = selectedLlm,
-                            onChange = { selectedLlm = it },
-                        ) {
-                            data.forEach { llm ->
-                                option(llm.id, llm.id) {
-                                    +llm.description
-                                }
-                            }
-                        }
-                    }
+                    +"Send"
                 }
             }
         }
     }
 
     private fun FlowContent.renderConversation(conversation: AiConversationModel) {
-        AiConversationView(conversation)
+        AiConversationView(
+            conversation = conversation,
+            options = AiConversationView.Options(
+                showToolCalls = showToolCalls,
+            ),
+        )
+    }
+
+    private fun FlowContent.renderSettings(conversation: AiConversationModel) {
+
+        ui.form {
+            css {
+                position = Position.sticky
+                top = 2.em
+            }
+
+            ui.dividing.header { +"LLM" }
+
+            llms(this) {
+                loading { +"Loading ..." }
+                error { +"Error loading LLMs" }
+                loaded { data ->
+
+                    SelectField(
+                        value = selectedLlm,
+                        onChange = { selectedLlm = it },
+                    ) {
+                        data.forEach { llm ->
+                            option(llm.id, llm.id) {
+                                +llm.description
+                            }
+                        }
+                    }
+                }
+            }
+
+            ui.dividing.header { +"Tools" }
+
+            UiCheckboxField(::showToolCalls) {
+                label("Show tool calls")
+                toggle()
+            }
+
+            ui.list {
+                conversation.tools.forEach { tool ->
+                    noui.item {
+                        noui.header { +tool.name }
+                        noui.meta { +(tool.description.lines().firstOrNull { it.isNotBlank() } ?: "") }
+                    }
+                }
+            }
+        }
     }
 }

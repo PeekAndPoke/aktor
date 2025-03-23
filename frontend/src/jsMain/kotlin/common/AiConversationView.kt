@@ -1,5 +1,6 @@
 package de.peekandpoke.aktor.frontend.common
 
+import de.peekandpoke.aktor.frontend.common.AiConversationView.Options
 import de.peekandpoke.kraft.addons.styling.StyleSheet
 import de.peekandpoke.kraft.addons.styling.StyleSheets
 import de.peekandpoke.kraft.components.Component
@@ -15,8 +16,12 @@ import kotlinx.html.*
 @Suppress("FunctionName")
 fun Tag.AiConversationView(
     conversation: AiConversationModel,
+    options: Options,
 ) = comp(
-    AiConversationView.Props(conversation = conversation)
+    AiConversationView.Props(
+        conversation = conversation,
+        options = options,
+    )
 ) {
     AiConversationView(it)
 }
@@ -27,6 +32,11 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
 
     data class Props(
         val conversation: AiConversationModel,
+        val options: Options,
+    )
+
+    data class Options(
+        val showToolCalls: Boolean,
     )
 
     private object Style : StyleSheet() {
@@ -40,6 +50,7 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
 
     private val conversation get() = props.conversation
+    private val options get() = props.options
 
     fun HTMLTag.unsafeCss(
         /** @Language("css") **/
@@ -64,7 +75,20 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
                 )
             }
 
-            conversation.messages.forEach { message ->
+            val adjusted = conversation.messages
+                .mapNotNull { message ->
+                    when (message) {
+                        is AiConversationModel.Message.Assistant ->
+                            message.copy(toolCalls = message.toolCalls?.takeIf { options.showToolCalls })
+
+                        is AiConversationModel.Message.Tool ->
+                            message.takeIf { options.showToolCalls }
+
+                        else -> message
+                    }
+                }
+
+            adjusted.forEach { message ->
                 val isUser = message is AiConversationModel.Message.User
 
                 noui.row {
@@ -73,12 +97,12 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
 
                     if (isUser) {
                         ui.fourteen.wide.right.floated.column {
-                            AiConversationMessageView(message, conversation)
+                            AiConversationMessageView(message, conversation, options)
                         }
 
                     } else {
                         ui.fourteen.wide.left.floated.column {
-                            AiConversationMessageView(message, conversation)
+                            AiConversationMessageView(message, conversation, options)
                         }
                     }
                 }

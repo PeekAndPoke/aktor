@@ -18,15 +18,15 @@ import kotlinx.html.Tag
 import kotlinx.html.div
 
 @Suppress("FunctionName")
-fun Tag.AccountLayout(
+fun Tag.LoggedInLayout(
     inner: FlowContent.() -> Unit,
 ) = comp(
-    AccountLayout.Props(inner = inner)
+    LoggedInLayout.Props(inner = inner)
 ) {
-    AccountLayout(it)
+    LoggedInLayout(it)
 }
 
-class AccountLayout(ctx: Ctx<Props>) : Component<AccountLayout.Props>(ctx) {
+class LoggedInLayout(ctx: Ctx<Props>) : Component<LoggedInLayout.Props>(ctx) {
 
     //  PROPS  //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,9 +52,8 @@ class AccountLayout(ctx: Ctx<Props>) : Component<AccountLayout.Props>(ctx) {
                 marginLeft = 250.px
                 marginRight = 50.px
             }
-            ui.container {
-                props.inner(this)
-            }
+
+            props.inner(this)
         }
     }
 }

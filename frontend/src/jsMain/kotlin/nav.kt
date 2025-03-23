@@ -1,6 +1,6 @@
 package de.peekandpoke.aktor.frontend
 
-import de.peekandpoke.aktor.frontend.layout.AccountLayout
+import de.peekandpoke.aktor.frontend.layout.LoggedInLayout
 import de.peekandpoke.aktor.frontend.pages.ChatPage
 import de.peekandpoke.aktor.frontend.pages.DashboardPage
 import de.peekandpoke.aktor.frontend.pages.LoginPage
@@ -29,9 +29,9 @@ fun RouterBuilder.mountNav() {
     mount(Nav.login) { LoginPage() }
 
     using(isLoggedIn) {
-        mount(Nav.dashboard) { AccountLayout { DashboardPage() } }
-        mount(Nav.dashboardSlash) { AccountLayout { DashboardPage() } }
-        mount(Nav.chat) { AccountLayout { ChatPage(it["id"]) } }
+        mount(Nav.dashboard) { LoggedInLayout { DashboardPage() } }
+        mount(Nav.dashboardSlash) { LoggedInLayout { DashboardPage() } }
+        mount(Nav.chat) { LoggedInLayout { ChatPage(it["id"]) } }
     }
 
     catchAll {

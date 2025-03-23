@@ -11,6 +11,7 @@ import org.mariuszgromada.math.mxparser.Expression
 // https://github.com/mariuszgromada/MathParser.org-mXparser
 class MathParserTool {
 
+
     fun asLlmTool(): Llm.Tool {
         return Llm.Tool.Function(
             name = "math_parser",
