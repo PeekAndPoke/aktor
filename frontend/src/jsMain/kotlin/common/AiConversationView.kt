@@ -6,12 +6,13 @@ import de.peekandpoke.kraft.addons.styling.StyleSheets
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.components.key
-import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
-import kotlinx.html.*
+import kotlinx.html.HTMLTag
+import kotlinx.html.Tag
+import kotlinx.html.style
+import kotlinx.html.unsafe
 
 @Suppress("FunctionName")
 fun Tag.AiConversationView(
@@ -89,23 +90,7 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
                 }
 
             adjusted.forEach { message ->
-                val isUser = message is AiConversationModel.Message.User
-
-                noui.row {
-                    id = message.uuid
-                    key = message.uuid
-
-                    if (isUser) {
-                        ui.fourteen.wide.right.floated.column {
-                            AiConversationMessageView(message, conversation, options)
-                        }
-
-                    } else {
-                        ui.fourteen.wide.left.floated.column {
-                            AiConversationMessageView(message, conversation, options)
-                        }
-                    }
-                }
+                AiConversationMessageView(message)
             }
         }
     }

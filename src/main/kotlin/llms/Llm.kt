@@ -78,6 +78,10 @@ interface Llm {
     }
 
     sealed interface Update {
+        data class Start(
+            override val conversation: AiConversation,
+        ) : Update
+
         data class Response(
             override val conversation: AiConversation,
             val content: String?,

@@ -90,19 +90,10 @@ class CommandLineChatCli(
                         conversation = update.conversation
 
                         when (update) {
-                            is Llm.Update.Response -> {
-                                update.content?.let {
-                                    print(it)
-                                }
-                            }
-
-                            is Llm.Update.Stop -> {
-                                println()
-                            }
-
-                            is Llm.Update.Info -> {
-                                println(update.message)
-                            }
+                            is Llm.Update.Start -> Unit
+                            is Llm.Update.Response -> update.content?.let { print(it) }
+                            is Llm.Update.Stop -> println()
+                            is Llm.Update.Info -> println(update.message)
                         }
 
                         System.out.flush()

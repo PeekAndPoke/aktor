@@ -16,11 +16,9 @@ import kotlinx.html.*
 @Suppress("FunctionName")
 fun Tag.AiConversationMessageView(
     message: AiConversationModel.Message,
-    conversation: AiConversationModel,
 ) = comp(
     AiConversationMessageView.Props(
         message = message,
-        conversation = conversation,
     )
 ) {
     AiConversationMessageView(it)
@@ -32,7 +30,6 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
 
     data class Props(
         val message: AiConversationModel.Message,
-        val conversation: AiConversationModel,
     )
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,18 +38,20 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
 
     override fun VDom.render() {
         when (val message = props.message) {
+            is AiConversationModel.Message.User -> message.render(this)
             is AiConversationModel.Message.System -> message.render(this)
             is AiConversationModel.Message.Assistant -> message.render(this)
             is AiConversationModel.Message.Tool -> message.render(this)
-            is AiConversationModel.Message.User -> message.render(this)
         }
     }
 
     private fun AiConversationModel.Message.System.render(flow: FlowContent) {
         with(flow) {
-            ui.orange.segment {
-                renderLeftIcon { orange.robot }
-                MarkdownView(content)
+            renderLeftFloatedRow {
+                ui.orange.segment {
+                    renderLeftIcon { orange.robot }
+                    MarkdownView(content)
+                }
             }
         }
     }
@@ -60,21 +59,25 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
     private fun AiConversationModel.Message.Assistant.render(flow: FlowContent) {
         with(flow) {
             content?.takeIf { it.isNotBlank() }?.let { content ->
-                ui.green.segment {
-                    renderLeftIcon { green.robot }
-                    MarkdownView(content)
+                renderLeftFloatedRow {
+                    ui.green.segment {
+                        renderLeftIcon { green.robot }
+                        MarkdownView(content)
+                    }
                 }
             }
 
             toolCalls?.takeIf { it.isNotEmpty() }?.forEach { toolCall ->
-                ui.violet.segment {
-                    renderLeftIcon { violet.hammer }
+                renderLeftFloatedRow {
+                    ui.violet.segment {
+                        renderLeftIcon { violet.hammer }
 
-                    details {
-                        summary {
-                            b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
+                        details {
+                            summary {
+                                b { +"Tool call: '${toolCall.name}' (${toolCall.id})" }
+                            }
+                            renderPre(toolCall.args.print())
                         }
-                        renderPre(toolCall.args.print())
                     }
                 }
             }
@@ -83,15 +86,15 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
 
     private fun AiConversationModel.Message.Tool.render(flow: FlowContent) {
         with(flow) {
-            ui.violet.segment {
-                renderLeftIcon { violet.hammer }
-
-                details {
-                    summary {
-                        b { +"Tool Response: '${toolCall.name}' (${toolCall.id})" }
+            renderLeftFloatedRow {
+                ui.purple.segment {
+                    renderLeftIcon { purple.hammer }
+                    details {
+                        summary {
+                            b { +"Tool Response: '${toolCall.name}' (${toolCall.id})" }
+                        }
+                        renderPre(content)
                     }
-
-                    renderPre(content)
                 }
             }
         }
@@ -99,10 +102,24 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
 
     private fun AiConversationModel.Message.User.render(flow: FlowContent) {
         with(flow) {
-            ui.blue.segment {
-                renderRightIcon { blue.user }
-                MarkdownView(content)
+            renderRightFloatedRow {
+                ui.blue.segment {
+                    renderRightIcon { blue.user }
+                    MarkdownView(content)
+                }
             }
+        }
+    }
+
+    private fun FlowContent.renderLeftFloatedRow(content: DIV.() -> Unit) {
+        ui.fourteen.wide.left.floated.column {
+            content()
+        }
+    }
+
+    private fun FlowContent.renderRightFloatedRow(content: DIV.() -> Unit) {
+        ui.fourteen.wide.right.floated.column {
+            content()
         }
     }
 

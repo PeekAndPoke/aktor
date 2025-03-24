@@ -59,6 +59,11 @@ class OllamaLlm(
         streaming: Boolean,
     ): Flow<Llm.Update> {
         return flow {
+            // Emit an initial update so that the clients can update their view
+            emit(
+                Llm.Update.Start(conversation.value)
+            )
+
             suspend fun call(): List<OllamaModels.ChatResponse> {
                 return httpClient.chat(
                     conversation = conversation.value,

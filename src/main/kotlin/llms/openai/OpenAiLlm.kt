@@ -65,6 +65,11 @@ class OpenAiLlm(
         val modelId = ModelId(model)
 
         return flow {
+            // Emit an initial update so that the clients can update their view
+            emit(
+                Llm.Update.Start(conversation.value)
+            )
+
             fun call(): Flow<ChatCompletionChunk> {
                 // https://github.com/aallam/openai-kotlin/blob/main/guides/GettingStarted.md#chat
                 val request = ChatCompletionRequest(
@@ -124,6 +129,11 @@ class OpenAiLlm(
         val modelId = ModelId(model)
 
         return flow {
+            // Emit an initial update so that the clients can update their view
+            emit(
+                Llm.Update.Start(conversation.value)
+            )
+
             suspend fun call(): ChatCompletion {
                 // https://github.com/aallam/openai-kotlin/blob/main/guides/GettingStarted.md#chat
                 val request = ChatCompletionRequest(
