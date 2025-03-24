@@ -13,7 +13,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.peekandpoke.aktor.api.ApiApp
-import io.peekandpoke.aktor.llm.mcp.client.McpClient
+import io.peekandpoke.aktor.llms.mcp.client.McpClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json

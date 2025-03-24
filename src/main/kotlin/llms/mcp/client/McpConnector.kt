@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.mcp.client
+package io.peekandpoke.aktor.llms.mcp.client
 
 import io.modelcontextprotocol.kotlin.sdk.*
 import io.modelcontextprotocol.kotlin.sdk.shared.RequestOptions

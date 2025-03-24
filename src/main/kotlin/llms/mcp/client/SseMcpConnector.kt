@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.mcp.client
+package io.peekandpoke.aktor.llms.mcp.client
 
 import de.peekandpoke.ultra.common.ellipsis
 import io.ktor.client.*
@@ -10,9 +10,9 @@ import io.ktor.http.*
 import io.modelcontextprotocol.kotlin.sdk.*
 import io.modelcontextprotocol.kotlin.sdk.shared.DEFAULT_REQUEST_TIMEOUT
 import io.modelcontextprotocol.kotlin.sdk.shared.RequestOptions
-import io.peekandpoke.aktor.llm.mcp.McpProgressHandler
-import io.peekandpoke.aktor.llm.mcp.McpResponseHandler
-import io.peekandpoke.aktor.llm.mcp.client.McpConnector.Companion.toJson
+import io.peekandpoke.aktor.llms.mcp.McpProgressHandler
+import io.peekandpoke.aktor.llms.mcp.McpResponseHandler
+import io.peekandpoke.aktor.llms.mcp.client.McpConnector.Companion.toJson
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.future.await
@@ -157,7 +157,7 @@ class SseMcpConnector(
         val messageId = message.id
         val result = CompletableDeferred<T>()
 
-        LOGGER.debug("Sending request: ${request.method} with id $messageId")
+        LOGGER.trace("Sending request: ${request.method} with id $messageId")
 
         result.invokeOnCompletion {
             handlers.remove(messageId)
@@ -218,7 +218,7 @@ class SseMcpConnector(
     }
 
     private suspend fun send(message: JSONRPCMessage) {
-        LOGGER.debug("Sending: $message")
+        LOGGER.trace("Sending: $message")
         (state as? SenderState)?.send(message)
     }
 

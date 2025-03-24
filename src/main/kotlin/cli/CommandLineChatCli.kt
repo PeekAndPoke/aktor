@@ -7,7 +7,7 @@ import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.ChatBot
 import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.llm.mcp.client.McpClient
+import io.peekandpoke.aktor.llms.mcp.client.McpClient
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 

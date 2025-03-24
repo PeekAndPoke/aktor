@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.mcp.client
+package io.peekandpoke.aktor.llms.mcp.client
 
 import io.ktor.client.*
 import io.ktor.client.plugins.sse.*

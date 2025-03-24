@@ -14,6 +14,7 @@
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
         </encoder>
+
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -36,15 +37,21 @@
         </encoder>
     </appender>
 
-    <root level="TRACE">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
-    </root>
-
-    <logger name="io.peekandpoke" level="TRACE"/>
-    <logger name="de.peekandpoke" level="TRACE"/>
+    <logger name="io.peekandpoke" level="INFO"/>
+    <logger name="io.peekandpoke.aktor.llms.mcp" level="INFO"/>
+    <logger name="de.peekandpoke" level="INFO"/>
 
     <logger name="io.netty" level="INFO"/>
     <logger name="io.ktor.auth.jwt" level="WARN"/>
     <logger name="com.arangodb" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+    </root>
+
+
 </configuration>

@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.mcp
+package io.peekandpoke.aktor.llms.mcp
 
 import io.modelcontextprotocol.kotlin.sdk.JSONRPCResponse
 import io.modelcontextprotocol.kotlin.sdk.Progress
