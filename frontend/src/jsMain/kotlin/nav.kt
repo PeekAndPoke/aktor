@@ -5,7 +5,9 @@ import de.peekandpoke.aktor.frontend.pages.ChatPage
 import de.peekandpoke.aktor.frontend.pages.DashboardPage
 import de.peekandpoke.aktor.frontend.pages.LoginPage
 import de.peekandpoke.aktor.frontend.pages.NotFoundPage
-import de.peekandpoke.kraft.addons.routing.*
+import de.peekandpoke.kraft.addons.routing.Route1
+import de.peekandpoke.kraft.addons.routing.RouterBuilder
+import de.peekandpoke.kraft.addons.routing.Static
 
 object Nav {
     val login = Static("/login")
@@ -17,18 +19,11 @@ object Nav {
 }
 
 fun RouterBuilder.mountNav() {
-    val isLoggedIn: RouterMiddleware = routerMiddleware {
-        console.log("isLoggedIn", AuthState().loggedInUser)
-
-        if (AuthState().loggedInUser == null) {
-            AuthState.redirectAfterLoginUri = uri
-            redirectTo(Nav.login())
-        }
-    }
+    val authMiddleware = State.auth.routerMiddleWare(Nav.login())
 
     mount(Nav.login) { LoginPage() }
 
-    using(isLoggedIn) {
+    using(authMiddleware) {
         mount(Nav.dashboard) { LoggedInLayout { DashboardPage() } }
         mount(Nav.dashboardSlash) { LoggedInLayout { DashboardPage() } }
         mount(Nav.chat) { LoggedInLayout { ChatPage(it["id"]) } }

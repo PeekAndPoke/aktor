@@ -1,9 +1,9 @@
 package de.peekandpoke.aktor.frontend.pages
 
 import de.peekandpoke.aktor.frontend.Apis
-import de.peekandpoke.aktor.frontend.AuthState
 import de.peekandpoke.aktor.frontend.MainRouter
 import de.peekandpoke.aktor.frontend.Nav
+import de.peekandpoke.aktor.frontend.State
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
 import de.peekandpoke.kraft.components.comp
@@ -33,7 +33,7 @@ class DashboardPage(ctx: NoProps) : PureComponent(ctx) {
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private val auth by subscribingTo(AuthState)
+    private val auth by subscribingTo(State.auth)
     private val user get() = auth.user!!
 
     private val noDblClick = doubleClickProtection()

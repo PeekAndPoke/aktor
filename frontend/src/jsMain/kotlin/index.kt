@@ -30,9 +30,9 @@ val Config = WebAppConfig().let {
 val Modals: ModalsManager = ModalsManager()
 val Popups: PopupsManager = PopupsManager()
 
-val MainRouter: Router = createRouter()
+val Apis = WebAppApis(Config) { State.auth().token }
 
-val Apis = WebAppApis(Config) { AuthState().token }
+val MainRouter: Router = createRouter()
 
 fun main() {
     val mountPoint = document.getElementById("spa") as HTMLElement

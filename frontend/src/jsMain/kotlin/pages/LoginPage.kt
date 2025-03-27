@@ -1,8 +1,8 @@
 package de.peekandpoke.aktor.frontend.pages
 
-import de.peekandpoke.aktor.frontend.AuthState
 import de.peekandpoke.aktor.frontend.MainRouter
 import de.peekandpoke.aktor.frontend.Nav
+import de.peekandpoke.aktor.frontend.State
 import de.peekandpoke.kraft.addons.semanticui.forms.UiInputField
 import de.peekandpoke.kraft.addons.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.components.NoProps
@@ -37,15 +37,12 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
 
         errorMessage = null
 
-        val result = AuthState.loginWithPassword(user = user, password = password)
+        val result = State.auth.loginWithPassword(user = user, password = password)
+
+        console.log("Login result:", result)
 
         if (result.isLoggedIn) {
-            result.let {
-                when (val uri = AuthState.redirectAfterLoginUri) {
-                    null -> MainRouter.navToUri(Nav.dashboard())
-                    else -> MainRouter.navToUri(uri)
-                }
-            }
+            State.auth.redirectAfterLogin(MainRouter, Nav.dashboard())
         } else {
             errorMessage = "Login failed"
         }

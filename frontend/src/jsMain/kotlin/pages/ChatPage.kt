@@ -1,7 +1,7 @@
 package de.peekandpoke.aktor.frontend.pages
 
 import de.peekandpoke.aktor.frontend.Apis
-import de.peekandpoke.aktor.frontend.AuthState
+import de.peekandpoke.aktor.frontend.State
 import de.peekandpoke.aktor.frontend.common.AiConversationView
 import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
 import de.peekandpoke.kraft.addons.semanticui.forms.UiCheckboxField
@@ -51,7 +51,7 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private val auth by subscribingTo(AuthState)
+    private val auth by subscribingTo(State.auth)
     private val user get() = auth.user!!
 
     private var input by value("")

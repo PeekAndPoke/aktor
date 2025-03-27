@@ -157,7 +157,10 @@ class OpenMeteoCom(
     private val jsonPrinter = Json { prettyPrint = true }
 
     fun asLlmTools(): List<Llm.Tool> {
-        return listOf(asDailyForecastTool(), asHourlyForecastTool())
+        return listOf(
+            asDailyForecastTool(),
+            asHourlyForecastTool(),
+        )
     }
 
     fun asDailyForecastTool(): Llm.Tool {
@@ -273,7 +276,7 @@ class OpenMeteoCom(
         val todayPlus14 = kronos.zonedDateTimeNow(tz).atStartOfDay().plus(14.days)
         val startDT = startDate.atStartOfDay(tz)
         val start = Date(minOf(todayPlus14, startDT).toEpochMillis())
-        val end = Date(minOf(todayPlus14, startDT.plus(days.days)).toEpochMillis())
+        val end = Date(minOf(todayPlus14, startDT.plus((days - 1).days)).toEpochMillis())
 
         val forecast = om.forecast {
             this.startDate = start

@@ -1,8 +1,8 @@
 package de.peekandpoke.aktor.frontend.layout
 
-import de.peekandpoke.aktor.frontend.AuthState
 import de.peekandpoke.aktor.frontend.MainRouter
 import de.peekandpoke.aktor.frontend.Nav
+import de.peekandpoke.aktor.frontend.State
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
@@ -38,7 +38,7 @@ class LoggedInLayout(ctx: Ctx<Props>) : Component<LoggedInLayout.Props>(ctx) {
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private val auth by subscribingTo(AuthState)
+    private val auth by subscribingTo(State.auth)
     private val user get() = auth.user
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,10 @@ class LoggedInLayout(ctx: Ctx<Props>) : Component<LoggedInLayout.Props>(ctx) {
             }
 
             noui.item A {
-                onClick { AuthState.logout() }
+                onClick {
+                    MainRouter.navToUri(Nav.login())
+                    State.auth.logout()
+                }
                 icon.sign_out_alternate()
                 +"Logout"
             }

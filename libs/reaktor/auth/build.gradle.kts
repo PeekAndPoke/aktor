@@ -38,15 +38,11 @@ kotlin {
                 implementation(Deps.KotlinX.serialization_core)
                 implementation(Deps.KotlinX.serialization_json)
 
-                implementation(Deps.Ktor.Client.core)
-//                implementation(Deps.Ktor.Client.plugins)
-                implementation(Deps.Ktor.Client.content_negotiation)
-                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
-
                 implementation(Deps.KotlinLibs.uuid)
 
                 implementation(Deps.KotlinLibs.Ultra.common)
                 implementation(Deps.KotlinLibs.Ultra.security)
+                implementation(Deps.KotlinLibs.Kraft.core)
 
                 implementation(Deps.KotlinLibs.Karango.addons)
 
