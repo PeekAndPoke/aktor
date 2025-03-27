@@ -11,6 +11,7 @@ import io.ktor.client.plugins.sse.*
 import io.ktor.serialization.kotlinx.json.*
 import io.peekandpoke.aktor.shared.appuser.api.AppUserApiClients
 import io.peekandpoke.aktor.shared.llms.api.LlmApiClients
+import io.peekandpoke.reaktor.auth.api.AuthApiClient
 import kotlinx.serialization.json.Json
 
 class WebAppApis(appConfig: WebAppConfig, tokenProvider: () -> String?) {
@@ -43,6 +44,8 @@ class WebAppApis(appConfig: WebAppConfig, tokenProvider: () -> String?) {
             }
         },
     )
+
+    val auth = AuthApiClient("app-user", config)
 
     val appUser = AppUserApiClients(config)
     val llms = LlmApiClients(config)

@@ -1,5 +1,6 @@
 package de.peekandpoke.aktor.frontend.layout
 
+import de.peekandpoke.aktor.frontend.AuthState
 import de.peekandpoke.aktor.frontend.MainRouter
 import de.peekandpoke.aktor.frontend.Nav
 import de.peekandpoke.kraft.components.Component
@@ -7,6 +8,7 @@ import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
 import de.peekandpoke.kraft.components.onClick
 import de.peekandpoke.kraft.semanticui.css
+import de.peekandpoke.kraft.semanticui.icon
 import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
@@ -36,14 +38,29 @@ class LoggedInLayout(ctx: Ctx<Props>) : Component<LoggedInLayout.Props>(ctx) {
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private val auth by subscribingTo(AuthState)
+    private val user get() = auth.user
+
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     override fun VDom.render() {
+        val u = user ?: return
 
         ui.sidebar.vertical.visible.menu {
+
+            ui.basic.segment {
+                +u.name
+            }
+
             noui.item A {
                 onClick { MainRouter.navToUri(Nav.dashboard()) }
                 +"Dashboard"
+            }
+
+            noui.item A {
+                onClick { AuthState.logout() }
+                icon.sign_out_alternate()
+                +"Logout"
             }
         }
 

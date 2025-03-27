@@ -96,6 +96,8 @@ kotlin {
 
         implementation(project(":libs:ktorfx:all"))
 
+        implementation(project(":libs:reaktor:auth"))
+
 
         // TEST /////////////////////////////////////////////////////////
         testImplementation(Deps.Ktor.Server.Test.host)

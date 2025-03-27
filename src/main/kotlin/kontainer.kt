@@ -33,6 +33,10 @@ import io.peekandpoke.aktor.llm.tools.*
 import io.peekandpoke.crawl4ai.Crawl4aiClient
 import io.peekandpoke.geo.GeoModule
 import io.peekandpoke.geo.TimeShape
+import io.peekandpoke.reaktor.auth.AuthStorage
+import io.peekandpoke.reaktor.auth.ReaktorAuth
+import io.peekandpoke.reaktor.auth.db.karango.KarangoAuthRecordsRepo
+import io.peekandpoke.reaktor.auth.db.karango.KarangoAuthStorage
 import java.io.File
 
 data class KeysConfig(val config: Config)
@@ -68,10 +72,10 @@ fun createBlueprint(config: AktorConfig) = kontainer {
             jwt(
                 JwtConfig(
                     singingKey = config.auth.apiJwtSigningKey,
-                    permissionsNs = config.auth.apiJwtPermissionsNs,
+                    permissionsNs = "permissions",
                     userNs = "user",
-                    issuer = "https://api.jointhebase.co",
-                    audience = "api.jointhebase.co",
+                    issuer = "https://api.aktor.io",
+                    audience = "api.aktor.io",
                 )
             )
         },
@@ -85,6 +89,15 @@ fun createBlueprint(config: AktorConfig) = kontainer {
             useKarango()
         }
     )
+
+    module(ReaktorAuth)
+    // TODO: add config builder to ReaktorAuth() to enable karango storage
+    dynamic(AuthStorage::class, KarangoAuthStorage::class)
+    dynamic(KarangoAuthRecordsRepo::class)
+    dynamic(KarangoAuthRecordsRepo.Fixtures::class)
+
+    // Auth-Realms
+    dynamic(AppUserAuthenticationRealm::class)
 
     // Mount Karango
     karango(config = config.arangodb)

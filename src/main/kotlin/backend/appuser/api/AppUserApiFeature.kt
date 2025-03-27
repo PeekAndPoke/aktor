@@ -30,12 +30,10 @@ class AppUserApiFeature(converter: OutgoingConverter) : ApiFeature {
         Exposes api endpoints for app users.
     """.trimIndent()
 
-    val loginApi = AppUserLoginApi(converter)
     val sseApi = AppUserSseApi(converter)
     val conversationsApi = AppUserConversationsApi(converter)
 
     override fun getRouteGroups(): List<ApiRoutes> = listOf(
-        loginApi,
         sseApi,
         conversationsApi,
     )

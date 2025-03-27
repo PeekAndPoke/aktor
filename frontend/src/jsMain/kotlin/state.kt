@@ -7,11 +7,10 @@ import de.peekandpoke.kraft.streams.Unsubscribe
 import de.peekandpoke.kraft.streams.addons.persistInLocalStorage
 import de.peekandpoke.ultra.security.user.UserPermissions
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
-import io.peekandpoke.aktor.shared.model.LoginWithPassword
+import io.peekandpoke.reaktor.auth.model.LoginRequest
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.retry
 import kotlinx.serialization.Serializable
 import kotlin.js.Date
 
@@ -53,29 +52,35 @@ object AuthState : Stream<AuthState.Data> {
     override fun subscribeToStream(sub: (Data) -> Unit): Unsubscribe = streamSource.subscribeToStream(sub)
 
     suspend fun loginWithPassword(user: String, password: String): Data {
-        val response = Apis.appUser.login
-            .withPassword(LoginWithPassword(user = user, password = password))
-            .retry(3)
+        val response = Apis.auth
+            .login(LoginRequest.EmailAndPassword(email = user, password = password))
             .map { it.data }
-            .catch {
-                streamSource(Data.empty)
-            }
+            .catch { streamSource(Data.empty) }
             .firstOrNull()
 
         response?.let {
-            streamSource(
-                readJwt(it.token, it.user)
+            val data = readJwt(
+                token = it.token,
+                user = it.getTypedUser(AppUserModel.serializer())
             )
+
+            streamSource(data)
         }
 
         return streamSource()
+    }
+
+    fun logout() {
+        MainRouter.navToUri(Nav.login())
+        streamSource(Data.empty)
     }
 
     private fun readJwt(token: String, user: AppUserModel): Data {
         val claims = decodeJwtAsMap(token)
 
         // extract the permission from the token
-        val namespace = "https://api.jointhebase.co/auth"
+        // TODO: needs to be configurable
+        val namespace = "permissions"
 
         @Suppress("UNCHECKED_CAST")
         val permissions = UserPermissions(
@@ -85,7 +90,6 @@ object AuthState : Stream<AuthState.Data> {
             roles = (claims["$namespace/roles"] as? List<String> ?: emptyList()).toSet(),
             permissions = (claims["$namespace/permissions"] as? List<String> ?: emptyList()).toSet(),
         )
-
 
         val expDate = (claims["exp"] as? Int)?.let { Date(it.toLong() * 1000) }
 

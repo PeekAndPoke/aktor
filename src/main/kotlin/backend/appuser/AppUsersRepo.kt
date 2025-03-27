@@ -8,10 +8,14 @@ import de.peekandpoke.karango.vault.IndexBuilder
 import de.peekandpoke.karango.vault.KarangoDriver
 import de.peekandpoke.ktorfx.core.fixtures.RepoFixtureLoader
 import de.peekandpoke.ultra.common.reflection.kType
+import de.peekandpoke.ultra.security.password.PasswordHasher
 import de.peekandpoke.ultra.vault.Repository
 import de.peekandpoke.ultra.vault.Storable
 import de.peekandpoke.ultra.vault.hooks.TimestampedHook
+import io.peekandpoke.aktor.AppUserAuthenticationRealm
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
+import io.peekandpoke.reaktor.auth.AuthStorage
+import io.peekandpoke.reaktor.auth.domain.AuthRecord
 
 class AppUsersRepo(
     driver: KarangoDriver,
@@ -37,13 +41,30 @@ class AppUsersRepo(
 
     class Fixtures(
         repo: AppUsersRepo,
+        private val authRepo: AuthStorage.AuthRecordsRepo,
+        private val passwordHasher: PasswordHasher,
     ) : RepoFixtureLoader<AppUser>(repo = repo) {
 
-        val karsten = fix {
-            "karsten" to AppUser(
-                name = "Karsten",
-                email = "karsten.john.gerber@googlemail.com",
-            )
+        private val commonPassword = "s3cret"
+
+        val karsten = singleFix {
+            repo.insert(
+                "karsten", AppUser(
+                    name = "Karsten",
+                    email = "karsten.john.gerber@googlemail.com",
+                )
+            ).also { user ->
+                authRepo.insert(
+                    AuthRecord(
+                        realm = AppUserAuthenticationRealm.realm,
+                        ownerId = user._id,
+                        entry = AuthRecord.Entry.Password(
+                            hash = passwordHasher.hash(commonPassword)
+                        ),
+                        expiresAt = null,
+                    )
+                )
+            }
         }
     }
 

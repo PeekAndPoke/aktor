@@ -29,9 +29,13 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
     private var user by value("")
     private var password by value("")
 
+    private var errorMessage by value<String?>(null)
+
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private suspend fun login() = noDblClick.runBlocking {
+
+        errorMessage = null
 
         val result = AuthState.loginWithPassword(user = user, password = password)
 
@@ -43,7 +47,7 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
                 }
             }
         } else {
-            // TODO: show error
+            errorMessage = "Login failed"
         }
     }
 
@@ -52,7 +56,7 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
         ui.container {
             ui.header { +"Login" }
 
-            ui.form {
+            ui.form Form {
                 UiInputField(::user) {
                     label("User")
                 }
@@ -61,14 +65,17 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
                     label("Password")
                 }
 
-                ui.orange.fluid.button {
+                ui.orange.fluid.givenNot(noDblClick.canRun) { loading }.button Submit {
                     onClick {
-                        launch {
-                            login()
-                        }
+                        launch { login() }
                     }
                     +"Login"
                 }
+            }
+
+            errorMessage?.let { message ->
+                ui.divider()
+                ui.error.message { +message }
             }
         }
     }

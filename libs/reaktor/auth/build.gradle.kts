@@ -1,11 +1,12 @@
 @file:Suppress("PropertyName")
 
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import Deps.Test.configureJvmTests
 
 
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("com.google.devtools.ksp") version Deps.Ksp.version
     idea
 }
 
@@ -23,14 +24,6 @@ version = VERSION_NAME
 kotlin {
     js {
         browser {
-            binaries.executable()
-
-            // Add webpack configuration
-            commonWebpackConfig {
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).copy(
-                    port = 25867
-                )
-            }
         }
     }
 
@@ -45,12 +38,19 @@ kotlin {
                 implementation(Deps.KotlinX.serialization_core)
                 implementation(Deps.KotlinX.serialization_json)
 
-                implementation(Deps.KotlinLibs.uuid)
-                implementation(Deps.KotlinLibs.Ultra.security)
-                implementation(Deps.KotlinLibs.Kraft.core)
+                implementation(Deps.Ktor.Client.core)
+//                implementation(Deps.Ktor.Client.plugins)
+                implementation(Deps.Ktor.Client.content_negotiation)
+                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
 
-                implementation(project(":libs:shared"))
-                implementation(project(":libs:reaktor:auth"))
+                implementation(Deps.KotlinLibs.uuid)
+
+                implementation(Deps.KotlinLibs.Ultra.common)
+                implementation(Deps.KotlinLibs.Ultra.security)
+
+                implementation(Deps.KotlinLibs.Karango.addons)
+
+                implementation(project(":libs:ktorfx:rest"))
             }
         }
 
@@ -62,16 +62,6 @@ kotlin {
 
         jsMain {
             dependencies {
-                implementation(Deps.KotlinX.coroutines_core)
-
-                implementation(Deps.Ktor.Client.core)
-                implementation(Deps.Ktor.Client.content_negotiation)
-                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
-
-                implementation(Deps.KotlinLibs.Kraft.addons_marked)
-                implementation(Deps.KotlinLibs.Kraft.addons_pdfjs)
-                implementation(Deps.KotlinLibs.Kraft.addons_signaturepad)
-                implementation(Deps.KotlinLibs.Kraft.addons_sourcemappedstacktrace)
             }
         }
 
@@ -80,6 +70,26 @@ kotlin {
                 Deps.Test { jsTestDeps() }
             }
         }
+
+        jvmMain {
+            dependencies {
+                implementation(project(":libs:ktorfx:core"))
+                implementation(Deps.KotlinLibs.Karango.core)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                Deps.Test { jvmTestDeps() }
+            }
+        }
     }
 }
 
+dependencies {
+    add("kspJvm", Deps.KotlinLibs.Karango.ksp)
+}
+
+tasks {
+    configureJvmTests()
+}
