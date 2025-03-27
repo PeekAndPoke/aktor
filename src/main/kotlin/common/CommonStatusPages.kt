@@ -7,6 +7,7 @@ import de.peekandpoke.ktorfx.logging.logInternalError
 import de.peekandpoke.ktorfx.logging.logNotFound
 import de.peekandpoke.ktorfx.rest.apiRespond
 import de.peekandpoke.ultra.common.remote.ApiResponse
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
 import io.ktor.server.plugins.*
@@ -47,6 +48,7 @@ object CommonStatusPages {
                         // The client closed the connection. We ignore this and do not log anything
                         isClientError(cause) -> {
                             // we do nothing
+                            call.respond(HttpStatusCode.Gone, null)
                         }
 
                         cause is CouldNotConvertException -> {

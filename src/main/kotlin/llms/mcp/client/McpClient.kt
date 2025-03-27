@@ -31,8 +31,8 @@ class McpClient(
     companion object {
         fun ListToolsResult.asLlmTools(client: McpClient) = tools.map { tool ->
 
-            println("Tool: ${tool.name}")
-            println("inputSchema: ${tool.inputSchema}")
+//            println("Tool: ${tool.name}")
+//            println("inputSchema: ${tool.inputSchema}")
 
             val required = tool.inputSchema.required?.toSet() ?: emptySet()
 
