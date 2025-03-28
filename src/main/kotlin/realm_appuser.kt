@@ -12,6 +12,7 @@ import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 import io.peekandpoke.aktor.shared.appuser.model.AppUserRoles
 import io.peekandpoke.reaktor.auth.AuthSystem
 import io.peekandpoke.reaktor.auth.domain.AuthProvider
+import io.peekandpoke.reaktor.auth.model.LoginResponse
 import io.peekandpoke.reaktor.auth.provider.AuthWithEmailAndPasswordProvider
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -40,8 +41,10 @@ class AppUserAuthenticationRealm(
 
     override suspend fun loadUserByEmail(email: String) = appUserRepo.findByEmail(email)
 
-    override suspend fun generateJwt(user: Stored<AppUser>): String {
-        return deps.jwtGenerator.createJwt(
+    override suspend fun generateJwt(user: Stored<AppUser>): LoginResponse.Token {
+        val gen = deps.jwtGenerator
+
+        val token = gen.createJwt(
             user = JwtUserData(
                 id = user._id,
                 desc = user.value.name,
@@ -56,6 +59,12 @@ class AppUserAuthenticationRealm(
             // Expires
             withExpiresAt(Kronos.systemUtc.instantNow().plus(1.hours).jvm)
         }
+
+        return LoginResponse.Token(
+            token = token,
+            permissionsNs = gen.config.permissionsNs,
+            userNs = gen.config.userNs,
+        )
     }
 
     override suspend fun serializeUser(user: Stored<AppUser>): JsonObject {

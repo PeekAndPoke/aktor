@@ -30,7 +30,7 @@ val Config = WebAppConfig().let {
 val Modals: ModalsManager = ModalsManager()
 val Popups: PopupsManager = PopupsManager()
 
-val Apis = WebAppApis(Config) { State.auth().token }
+val Apis = WebAppApis(Config) { State.auth().token?.token }
 
 val MainRouter: Router = createRouter()
 

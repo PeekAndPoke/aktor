@@ -1,29 +1,22 @@
 package io.peekandpoke.reaktor.auth
 
-import de.peekandpoke.ultra.common.datetime.Kronos
 import de.peekandpoke.ultra.security.jwt.JwtGenerator
 import de.peekandpoke.ultra.security.password.PasswordHasher
 import de.peekandpoke.ultra.vault.Stored
 import io.peekandpoke.reaktor.auth.domain.AuthProvider
+import io.peekandpoke.reaktor.auth.model.AuthRealmModel
 import io.peekandpoke.reaktor.auth.model.LoginRequest
 import io.peekandpoke.reaktor.auth.model.LoginResponse
 import io.peekandpoke.reaktor.auth.provider.AuthWithEmailAndPasswordProvider
 import kotlinx.serialization.json.JsonObject
 
 class AuthSystem(
-    private val deps: Deps,
     private val realms: List<Realm<Any>>,
 ) {
     class Deps(
         val jwtGenerator: JwtGenerator,
-        val kronos: Kronos,
         val storage: AuthStorage,
         val passwordHasher: PasswordHasher,
-    )
-
-    class AuthCtx(
-        val auth: AuthSystem,
-        val realm: Realm<Any>,
     )
 
     interface Realm<USER> {
@@ -35,7 +28,7 @@ class AuthSystem(
 
         suspend fun loadUserByEmail(email: String): Stored<USER>?
 
-        suspend fun generateJwt(user: Stored<USER>): String
+        suspend fun generateJwt(user: Stored<USER>): LoginResponse.Token
 
         suspend fun serializeUser(user: Stored<USER>): JsonObject
 
@@ -52,6 +45,7 @@ class AuthSystem(
 
             val response = LoginResponse(
                 token = generateJwt(user),
+                realm = AuthRealmModel(id = id),
                 user = serializeUser(user),
             )
 

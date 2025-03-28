@@ -42,6 +42,8 @@ kotlin {
 
                 implementation(Deps.KotlinLibs.Ultra.common)
                 implementation(Deps.KotlinLibs.Ultra.security)
+                implementation(Deps.KotlinLibs.Ultra.slumber)
+
                 implementation(Deps.KotlinLibs.Kraft.core)
 
                 implementation(Deps.KotlinLibs.Karango.addons)

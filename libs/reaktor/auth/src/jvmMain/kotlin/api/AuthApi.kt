@@ -33,7 +33,7 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
 
                 ApiResponse.ok(response)
             } catch (e: AuthError) {
-                ApiResponse.badRequest<LoginResponse>().withInfo(e.message ?: "")
+                ApiResponse.forbidden<LoginResponse>().withInfo(e.message ?: "")
             }
         }
     }

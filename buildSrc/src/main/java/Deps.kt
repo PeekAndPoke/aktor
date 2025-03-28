@@ -42,8 +42,8 @@ object Deps {
     // ///////////////////////////////////////////////////////////////////////////////////////////
 
     object KotlinLibs {
-        private const val ultra_version = "0.84.0"
-        private const val kraft_version = "0.64.0"
+        private const val ultra_version = "0.85.1"
+        private const val kraft_version = "0.65.0"
 
         object Ultra {
             // https://search.maven.org/search?q=g:io.peekandpoke.ultra%20AND%20a:commonmp

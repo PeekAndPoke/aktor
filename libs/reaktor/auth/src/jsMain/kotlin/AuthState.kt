@@ -8,37 +8,37 @@ import de.peekandpoke.kraft.streams.StreamSource
 import de.peekandpoke.kraft.streams.Unsubscribe
 import de.peekandpoke.kraft.streams.addons.persistInLocalStorage
 import de.peekandpoke.ultra.security.user.UserPermissions
+import de.peekandpoke.ultra.slumber.JsonUtil.toJsonObject
 import io.peekandpoke.reaktor.auth.api.AuthApiClient
 import io.peekandpoke.reaktor.auth.model.LoginRequest
+import io.peekandpoke.reaktor.auth.model.LoginResponse
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
 import kotlin.js.Date
 
 inline fun <reified USER> authState(
     api: AuthApiClient,
-    jwtPermissionsNamespace: String = "permissions",
 ) = AuthState<USER>(
     userSerializer = serializer(),
     api = api,
-    jwtPermissionsNamespace = jwtPermissionsNamespace,
 )
 
 class AuthState<USER>(
     val userSerializer: KSerializer<USER>,
     val api: AuthApiClient,
-    val jwtPermissionsNamespace: String = "permissions",
 ) : Stream<AuthState.Data<USER>> {
 
     @Serializable
     data class Data<USER>(
-        val token: String?,
+        val token: LoginResponse.Token?,
         val tokenUserId: String?,
         val tokenExpires: String?,
-        val claims: String?,
+        val claims: JsonObject?,
         val user: USER?,
         val permissions: UserPermissions,
     ) {
@@ -105,20 +105,20 @@ class AuthState<USER>(
         streamSource(Data.empty())
     }
 
-    private fun readJwt(token: String, user: USER): Data<USER> {
-        val claims = decodeJwtAsMap(token)
+    private fun readJwt(token: LoginResponse.Token, user: USER): Data<USER> {
+        val claims = decodeJwtAsMap(token.token)
 
         // extract the permission from the token
-        val ns = jwtPermissionsNamespace
-
-        @Suppress("UNCHECKED_CAST")
-        val permissions = UserPermissions(
-            organisations = (claims["$ns/organisations"] as? List<String> ?: emptyList()).toSet(),
-            branches = (claims["$ns/branches"] as? List<String> ?: emptyList()).toSet(),
-            groups = (claims["$ns/groups"] as? List<String> ?: emptyList()).toSet(),
-            roles = (claims["$ns/roles"] as? List<String> ?: emptyList()).toSet(),
-            permissions = (claims["$ns/permissions"] as? List<String> ?: emptyList()).toSet(),
-        )
+        val permissions = token.permissionsNs.let { ns ->
+            @Suppress("UNCHECKED_CAST")
+            UserPermissions(
+                organisations = (claims["$ns/organisations"] as? List<String> ?: emptyList()).toSet(),
+                branches = (claims["$ns/branches"] as? List<String> ?: emptyList()).toSet(),
+                groups = (claims["$ns/groups"] as? List<String> ?: emptyList()).toSet(),
+                roles = (claims["$ns/roles"] as? List<String> ?: emptyList()).toSet(),
+                permissions = (claims["$ns/permissions"] as? List<String> ?: emptyList()).toSet(),
+            )
+        }
 
         val expDate = (claims["exp"] as? Int)?.let { Date(it.toLong() * 1000) }
 
@@ -128,9 +128,9 @@ class AuthState<USER>(
             token = token,
             tokenUserId = userId,
             tokenExpires = expDate?.toISOString(),
-            claims = claims.toString(),
-            user = user,
-            permissions = permissions
+            claims = claims.toJsonObject(),
+            permissions = permissions,
+            user = user
         )
     }
 }
