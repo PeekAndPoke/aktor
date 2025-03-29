@@ -6,11 +6,7 @@ import de.peekandpoke.kraft.addons.routing.RouterComponent
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.semanticui.css
 import de.peekandpoke.kraft.vdom.VDom
-import kotlinx.css.em
-import kotlinx.css.marginBottom
-import kotlinx.css.marginTop
 import kotlinx.html.Tag
 import kotlinx.html.div
 
@@ -31,14 +27,9 @@ class FrontendAppComponent(ctx: NoProps) : PureComponent(ctx) {
 
         ModalsStage(Modals)
         PopupsStage(Popups)
+//            FlashMessagesStage(Flash)
 
         div(classes = "app") {
-            css {
-                marginTop = 2.em
-                marginBottom = 2.em
-            }
-
-//            FlashMessagesStage(Flash)
             RouterComponent(router = MainRouter)
         }
     }
