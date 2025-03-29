@@ -7,7 +7,6 @@ import io.peekandpoke.reaktor.auth.model.AuthRealmModel
 import io.peekandpoke.reaktor.auth.model.LoginRequest
 import io.peekandpoke.reaktor.auth.model.LoginResponse
 import io.peekandpoke.reaktor.auth.provider.AuthProvider
-import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuthProvider
 import kotlinx.serialization.json.JsonObject
 
 class AuthSystem(
@@ -35,15 +34,12 @@ class AuthSystem(
         suspend fun serializeUser(user: Stored<USER>): JsonObject
 
         suspend fun login(request: LoginRequest): LoginResponse {
-            val user = when (request) {
-                is LoginRequest.EmailAndPassword -> {
-                    val provider = providers
-                        .filterIsInstance<EmailAndPasswordAuthProvider>().firstOrNull()
-                        ?: throw AuthError("Email and password authentication is not supported by this realm: $id")
 
-                    provider.login(realm = this, email = request.email, password = request.password)
-                }
-            }
+            val provider = providers.firstOrNull { it.id == request.provider }
+                ?: throw AuthError("Provider not found: ${request.provider}")
+
+            val user = provider.login<USER>(realm = this, request = request)
+                ?: throw AuthError("User not found")
 
             val response = LoginResponse(
                 token = generateJwt(user),

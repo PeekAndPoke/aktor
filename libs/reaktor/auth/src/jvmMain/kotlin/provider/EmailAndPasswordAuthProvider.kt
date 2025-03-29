@@ -5,21 +5,28 @@ import io.peekandpoke.reaktor.auth.AuthError
 import io.peekandpoke.reaktor.auth.AuthSystem
 import io.peekandpoke.reaktor.auth.domain.AuthRecord
 import io.peekandpoke.reaktor.auth.model.AuthProviderModel
+import io.peekandpoke.reaktor.auth.model.LoginRequest
 
 class EmailAndPasswordAuthProvider(
+    override val id: String,
     deps: Lazy<AuthSystem.Deps>,
 ) : AuthProvider {
 
+    companion object {
+        fun AuthProviderFactory.emailAndPassword(
+            id: String = "email-password",
+        ) = EmailAndPasswordAuthProvider(id = id, deps = deps)
+    }
+
     private val deps by deps
 
-    /**
-     * Tries to find a user with the [email] and checks for the [password] to be valid.
-     *
-     * The user will be return, when it is found and the password is correct.
-     *
-     * Otherwise [AuthError] will be thrown.
-     */
-    suspend fun <USER> login(realm: AuthSystem.Realm<USER>, email: String, password: String): Stored<USER> {
+    override suspend fun <USER> login(realm: AuthSystem.Realm<USER>, request: LoginRequest): Stored<USER> {
+
+        var typed = (request as? LoginRequest.EmailAndPassword)
+            ?: throw AuthError("Invalid credentials")
+
+        val email = typed.email
+        val password = typed.password
 
         if (email.isBlank() || password.isBlank()) {
             throw AuthError("Invalid credentials")
@@ -49,8 +56,8 @@ class EmailAndPasswordAuthProvider(
 
     override fun asApiModel(): AuthProviderModel {
         return AuthProviderModel(
+            id = id,
             type = AuthProviderModel.TYPE_EMAIL_PASSWORD,
-            config = emptyMap(),
         )
     }
 }

@@ -13,7 +13,9 @@ import io.peekandpoke.aktor.shared.appuser.model.AppUserRoles
 import io.peekandpoke.reaktor.auth.AuthSystem
 import io.peekandpoke.reaktor.auth.model.LoginResponse
 import io.peekandpoke.reaktor.auth.provider.AuthProvider
-import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuthProvider
+import io.peekandpoke.reaktor.auth.provider.AuthProviderFactory
+import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuthProvider.Companion.emailAndPassword
+import io.peekandpoke.reaktor.auth.provider.GoogleSsoAuthProvider.Companion.googleSso
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -22,7 +24,8 @@ import kotlin.time.Duration.Companion.hours
 class AppUserAuthenticationRealm(
     deps: Lazy<AuthSystem.Deps>,
     appUserRepo: Lazy<AppUsersRepo>,
-    authWithEmailAndPassword: EmailAndPasswordAuthProvider,
+    factory: Lazy<AuthProviderFactory>,
+    keys: Lazy<KeysConfig>,
 ) : AuthSystem.Realm<AppUser> {
     companion object {
         const val realm = "app-user"
@@ -30,11 +33,17 @@ class AppUserAuthenticationRealm(
 
     private val deps by deps
     private val appUserRepo by appUserRepo
+    private val factory by factory
+    private val keys by keys
 
     override val id: String = realm
 
     override val providers: List<AuthProvider> = listOf(
-        authWithEmailAndPassword,
+        this.factory.emailAndPassword(),
+        this.factory.googleSso(
+            googleClientId = this.keys.config.getString("GOOGLE_SSO_CLIENT_ID"),
+            googleClientSecret = this.keys.config.getString("GOOGLE_SSO_CLIENT_SECRET"),
+        )
     )
 
     override suspend fun loadUserById(id: String) = appUserRepo.findById(id)

@@ -91,9 +91,9 @@ class AuthState<USER>(
         redirectAfterLoginUri = null
     }
 
-    suspend fun loginWithPassword(user: String, password: String): Data<USER> {
+    suspend fun login(request: LoginRequest): Data<USER> {
         val response = api
-            .login(LoginRequest.EmailAndPassword(email = user, password = password))
+            .login(request)
             .map { it.data }
             .catch { streamSource(Data.empty()) }
             .firstOrNull()
