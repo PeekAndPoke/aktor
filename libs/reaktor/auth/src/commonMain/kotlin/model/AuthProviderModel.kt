@@ -12,5 +12,6 @@ data class AuthProviderModel(
     companion object {
         const val TYPE_EMAIL_PASSWORD = "email-password"
         const val TYPE_GOOGLE = "google"
+        const val TYPE_GITHUB = "github"
     }
 }

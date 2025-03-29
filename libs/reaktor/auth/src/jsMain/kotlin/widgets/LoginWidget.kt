@@ -3,6 +3,7 @@ package io.peekandpoke.reaktor.auth.widgets
 import de.peekandpoke.kraft.addons.semanticui.forms.UiInputField
 import de.peekandpoke.kraft.addons.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.components.*
+import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
@@ -12,10 +13,12 @@ import io.peekandpoke.reaktor.auth.AuthState
 import io.peekandpoke.reaktor.auth.model.AuthProviderModel
 import io.peekandpoke.reaktor.auth.model.AuthRealmModel
 import io.peekandpoke.reaktor.auth.model.LoginRequest
+import kotlinx.browser.window
 import kotlinx.coroutines.flow.map
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 import kotlinx.serialization.json.jsonPrimitive
+import org.w3c.dom.url.URLSearchParams
 
 @Suppress("FunctionName")
 fun <USER> Tag.LoginWidget(
@@ -31,6 +34,10 @@ fun <USER> Tag.LoginWidget(
 }
 
 class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USER>>(ctx) {
+
+    companion object {
+        const val authCallbackParam = "auth-callback"
+    }
 
     //  PROPS  //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +59,43 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
     private val noDblClick = doubleClickProtection()
 
-    private suspend fun login(request: LoginRequest) = noDblClick.runBlocking {
+    init {
+        realmLoader.value { realm ->
+            realm?.let {
+                val params = URLSearchParams(window.location.search)
+
+                if (params.has(authCallbackParam)) {
+                    val providerId = params.get(authCallbackParam)
+                    val provider = realm.providers.find { it.id == providerId }
+
+                    when (provider?.type) {
+                        AuthProviderModel.TYPE_GITHUB -> {
+                            params.get("code")?.let { code ->
+                                login(
+                                    LoginRequest.OAuth(provider = provider.id, token = code)
+                                )
+                            }
+                        }
+                    }
+
+                    // Remove the excess query params from the uri
+                    val parts = listOf(
+                        window.location.origin,
+                        window.location.pathname,
+                        window.location.hash
+                    )
+
+                    window.history.pushState(null, "", parts.joinToString(""))
+                }
+            }
+        }
+    }
+
+    private fun login(request: LoginRequest) = launch {
+        doLogin(request)
+    }
+
+    private suspend fun doLogin(request: LoginRequest) = noDblClick.runBlocking {
 
         errorMessage = null
 
@@ -69,7 +112,9 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         }
     }
 
+
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     override fun VDom.render() {
 
@@ -106,25 +151,27 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             }
         }
 
-        realm.providers.forEachIndexed { idx, provider ->
-            val renderer: (FlowContent.() -> Unit)? = when (provider.type) {
-                AuthProviderModel.TYPE_EMAIL_PASSWORD -> {
-                    { renderEmailPasswordForm(provider) }
-                }
+        ui.list {
+            realm.providers.forEachIndexed { idx, provider ->
+                when (provider.type) {
+                    AuthProviderModel.TYPE_EMAIL_PASSWORD -> noui.item {
+                        renderEmailPasswordForm(provider)
+                        dividerIfNotLast(idx)
+                    }
 
-                AuthProviderModel.TYPE_GOOGLE -> {
-                    { renderGoogleSso(provider) }
-                }
+                    AuthProviderModel.TYPE_GOOGLE -> noui.item {
+                        renderGoogleSso(provider)
+                    }
 
-                else -> {
-                    console.warn("LoginWidget: Unsupported login provider type: ${provider.type}")
-                    null
-                }
-            }
+                    AuthProviderModel.TYPE_GITHUB -> noui.item {
+                        renderGithubSso(provider)
+                    }
 
-            renderer?.let {
-                it()
-                dividerIfNotLast(idx)
+                    else -> {
+                        console.warn("LoginWidget: Unsupported login provider type: ${provider.type}")
+                        null
+                    }
+                }
             }
         }
     }
@@ -145,11 +192,9 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
             ui.orange.fluid.givenNot(noDblClick.canRun) { loading }.button Submit {
                 onClick {
-                    launch {
-                        login(
-                            LoginRequest.EmailAndPassword(provider = provider.id, email = email, password = password)
-                        )
-                    }
+                    login(
+                        LoginRequest.EmailAndPassword(provider = provider.id, email = email, password = password)
+                    )
                 }
                 +"Login"
             }
@@ -162,11 +207,33 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         console.log("Google client id", clientId)
 
         GoogleSignInButton(clientId = clientId) { token ->
-            launch {
-                login(
-                    LoginRequest.OAuth(provider = provider.id, token = token)
-                )
-            }
+            login(
+                LoginRequest.OAuth(provider = provider.id, token = token)
+            )
+        }
+    }
+
+    private fun FlowContent.renderGithubSso(provider: AuthProviderModel) {
+        val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
+
+        console.log("Google client id", clientId)
+
+        val parts = listOf(
+            window.location.origin,
+            window.location.pathname,
+            "?${authCallbackParam}=${provider.id}",
+            window.location.hash,
+        )
+
+        val callbackUrl = parts.joinToString("")
+
+        GithubSignInButton(
+            clientId = clientId,
+            callbackUrl = callbackUrl,
+        ) { token ->
+            login(
+                LoginRequest.OAuth(provider = provider.id, token = token)
+            )
         }
     }
 }

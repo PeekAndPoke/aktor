@@ -4,7 +4,7 @@ data class WebAppConfig(
     val orgId: String = "",
     val lang: String = "en",
     val fallbackLang: String = "en",
-    val title: String = "The Base WebApp | Local",
+    val title: String = "Aktor WebApp | Local",
     val environment: String = "dev",
     val wwwBaseUrl: String = "http://www.aktor.local:8081",
     val apiBaseUrl: String = "http://api.aktor.local:8081",

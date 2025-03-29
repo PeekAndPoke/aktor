@@ -71,8 +71,14 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(project(":libs:ktorfx:core"))
+                implementation(Deps.Ktor.Client.core)
+                implementation(Deps.Ktor.Client.content_negotiation)
+                implementation(Deps.Ktor.Common.serialization_kotlinx_json)
+
                 implementation(Deps.KotlinLibs.Karango.core)
+                implementation(project(":libs:ktorfx:core"))
+
+                implementation(Deps.JavaLibs.Google.api_client)
             }
         }
 
