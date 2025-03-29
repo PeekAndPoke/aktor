@@ -25,12 +25,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.css.Position
-import kotlinx.css.em
-import kotlinx.css.position
-import kotlinx.css.top
+import kotlinx.css.*
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
+import kotlinx.html.div
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -158,28 +156,36 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
     override fun VDom.render() {
         JoinedPageTitle { listOf("Chat") }
 
-        conversation(this) {
-            error { +"Error loading conversation" }
-            loading { +"Loading ..." }
-            loaded { data ->
+        div {
+            css {
+                marginTop = 2.em
+                marginBottom = 2.em
+            }
 
-                ui.grid {
-                    ui.twelve.wide.column {
-                        renderConversation(data)
+            conversation(this) {
+                loading { ui.basic.loading.segment() }
+                error { ui.segment { +"Error loading conversation" } }
+                loaded { data ->
 
-                        ui.hidden.divider()
+                    ui.grid {
+                        ui.twelve.wide.column {
+                            renderConversation(data)
 
-                        renderInputs()
+                            ui.hidden.divider()
 
-                        ui.hidden.divider()
-                    }
+                            renderInputs()
 
-                    ui.four.wide.column {
-                        renderSettings(data)
+                            ui.hidden.divider()
+                        }
+
+                        ui.four.wide.column {
+                            renderSettings(data)
+                        }
                     }
                 }
             }
         }
+
     }
 
     private fun FlowContent.renderInputs() {
