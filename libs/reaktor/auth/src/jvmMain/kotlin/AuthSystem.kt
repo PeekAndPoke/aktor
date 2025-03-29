@@ -3,11 +3,11 @@ package io.peekandpoke.reaktor.auth
 import de.peekandpoke.ultra.security.jwt.JwtGenerator
 import de.peekandpoke.ultra.security.password.PasswordHasher
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.reaktor.auth.domain.AuthProvider
 import io.peekandpoke.reaktor.auth.model.AuthRealmModel
 import io.peekandpoke.reaktor.auth.model.LoginRequest
 import io.peekandpoke.reaktor.auth.model.LoginResponse
-import io.peekandpoke.reaktor.auth.provider.AuthWithEmailAndPasswordProvider
+import io.peekandpoke.reaktor.auth.provider.AuthProvider
+import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuthProvider
 import kotlinx.serialization.json.JsonObject
 
 class AuthSystem(
@@ -20,8 +20,10 @@ class AuthSystem(
     )
 
     interface Realm<USER> {
+        /** Unique id of the realm */
         val id: String
 
+        /** Auth providers for this realm */
         val providers: List<AuthProvider>
 
         suspend fun loadUserById(id: String): Stored<USER>?
@@ -36,7 +38,7 @@ class AuthSystem(
             val user = when (request) {
                 is LoginRequest.EmailAndPassword -> {
                     val provider = providers
-                        .filterIsInstance<AuthWithEmailAndPasswordProvider>().firstOrNull()
+                        .filterIsInstance<EmailAndPasswordAuthProvider>().firstOrNull()
                         ?: throw AuthError("Email and password authentication is not supported by this realm: $id")
 
                     provider.login(realm = this, email = request.email, password = request.password)
@@ -45,12 +47,17 @@ class AuthSystem(
 
             val response = LoginResponse(
                 token = generateJwt(user),
-                realm = AuthRealmModel(id = id),
+                realm = asApiModel(),
                 user = serializeUser(user),
             )
 
             return response
         }
+
+        fun asApiModel(): AuthRealmModel = AuthRealmModel(
+            id = id,
+            providers = providers.map { it.asApiModel() }
+        )
     }
 
     init {
@@ -61,6 +68,10 @@ class AuthSystem(
         if (duplicatedRealms.isNotEmpty()) {
             throw error("Found duplicated authentication realms: $duplicatedRealms")
         }
+    }
+
+    fun getRealm(id: String): Realm<*>? {
+        return realms.firstOrNull { it.id == id }
     }
 
     suspend fun login(realm: String, request: LoginRequest): LoginResponse {

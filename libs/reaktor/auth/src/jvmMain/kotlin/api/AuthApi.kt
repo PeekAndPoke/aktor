@@ -14,6 +14,24 @@ import kotlin.random.Random
 
 class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
 
+    val getRealm = AuthApiClient.GetRealm.mount(AuthApiFeature.RealmParam::class) {
+        docs {
+            name = "Get realm"
+        }.codeGen {
+            funcName = "getRealm"
+        }.authorize {
+            public()
+        }.handle { params ->
+
+            // Let the bots wait a bit
+            val realm = reaktorAuth.getRealm(params.realm)
+
+            ApiResponse.okOrNotFound(
+                realm?.asApiModel()
+            )
+        }
+    }
+
     val login = AuthApiClient.Login.mount(AuthApiFeature.RealmParam::class) {
         docs {
             name = "Login"

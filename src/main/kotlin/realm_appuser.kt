@@ -11,9 +11,9 @@ import io.peekandpoke.aktor.backend.appuser.AppUsersRepo.Companion.asApiModel
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 import io.peekandpoke.aktor.shared.appuser.model.AppUserRoles
 import io.peekandpoke.reaktor.auth.AuthSystem
-import io.peekandpoke.reaktor.auth.domain.AuthProvider
 import io.peekandpoke.reaktor.auth.model.LoginResponse
-import io.peekandpoke.reaktor.auth.provider.AuthWithEmailAndPasswordProvider
+import io.peekandpoke.reaktor.auth.provider.AuthProvider
+import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuthProvider
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.hours
 class AppUserAuthenticationRealm(
     deps: Lazy<AuthSystem.Deps>,
     appUserRepo: Lazy<AppUsersRepo>,
-    authWithEmailAndPassword: AuthWithEmailAndPasswordProvider,
+    authWithEmailAndPassword: EmailAndPasswordAuthProvider,
 ) : AuthSystem.Realm<AppUser> {
     companion object {
         const val realm = "app-user"

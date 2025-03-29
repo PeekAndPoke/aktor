@@ -23,14 +23,17 @@ import kotlin.js.Date
 
 inline fun <reified USER> authState(
     api: AuthApiClient,
+    noinline router: () -> Router,
 ) = AuthState<USER>(
     userSerializer = serializer(),
     api = api,
+    router = router,
 )
 
 class AuthState<USER>(
     val userSerializer: KSerializer<USER>,
     val api: AuthApiClient,
+    val router: () -> Router,
 ) : Stream<AuthState.Data<USER>> {
 
     @Serializable
@@ -78,8 +81,14 @@ class AuthState<USER>(
         }
     }
 
-    fun redirectAfterLogin(router: Router, defaultUri: String) {
-        router.navToUri(redirectAfterLoginUri ?: defaultUri)
+    fun redirectAfterLogin(defaultUri: String) {
+        val target = redirectAfterLoginUri ?: defaultUri
+
+        console.log("redirecting to $target")
+
+        router().navToUri(redirectAfterLoginUri ?: defaultUri)
+
+        redirectAfterLoginUri = null
     }
 
     suspend fun loginWithPassword(user: String, password: String): Data<USER> {

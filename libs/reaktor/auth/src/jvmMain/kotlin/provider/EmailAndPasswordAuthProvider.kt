@@ -3,10 +3,10 @@ package io.peekandpoke.reaktor.auth.provider
 import de.peekandpoke.ultra.vault.Stored
 import io.peekandpoke.reaktor.auth.AuthError
 import io.peekandpoke.reaktor.auth.AuthSystem
-import io.peekandpoke.reaktor.auth.domain.AuthProvider
 import io.peekandpoke.reaktor.auth.domain.AuthRecord
+import io.peekandpoke.reaktor.auth.model.AuthProviderModel
 
-class AuthWithEmailAndPasswordProvider(
+class EmailAndPasswordAuthProvider(
     deps: Lazy<AuthSystem.Deps>,
 ) : AuthProvider {
 
@@ -45,5 +45,12 @@ class AuthWithEmailAndPasswordProvider(
         }
 
         throw AuthError("Invalid password")
+    }
+
+    override fun asApiModel(): AuthProviderModel {
+        return AuthProviderModel(
+            type = AuthProviderModel.TYPE_EMAIL_PASSWORD,
+            config = emptyMap(),
+        )
     }
 }

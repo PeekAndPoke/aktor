@@ -15,6 +15,7 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import java.io.IOException
 import kotlin.random.Random
@@ -47,6 +48,11 @@ object CommonStatusPages {
                     when {
                         // The client closed the connection. We ignore this and do not log anything
                         isClientError(cause) -> {
+                            // we do nothing
+                            call.respond(HttpStatusCode.Gone, null)
+                        }
+
+                        cause is CancellationException -> {
                             // we do nothing
                             call.respond(HttpStatusCode.Gone, null)
                         }

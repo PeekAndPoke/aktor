@@ -5,5 +5,8 @@ import io.peekandpoke.reaktor.auth.AuthState
 import io.peekandpoke.reaktor.auth.authState
 
 object State {
-    val auth: AuthState<AppUserModel> = authState<AppUserModel>(api = Apis.auth)
+    val auth: AuthState<AppUserModel> = authState<AppUserModel>(
+        api = Apis.auth,
+        router = { MainRouter },
+    )
 }

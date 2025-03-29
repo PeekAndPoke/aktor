@@ -6,7 +6,7 @@ import de.peekandpoke.ultra.kontainer.module
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.peekandpoke.reaktor.auth.api.AuthApiFeature
-import io.peekandpoke.reaktor.auth.provider.AuthWithEmailAndPasswordProvider
+import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuthProvider
 
 inline val KontainerAware.reaktorAuth: AuthSystem get() = kontainer.get()
 inline val ApplicationCall.reaktorAuth: AuthSystem get() = kontainer.reaktorAuth
@@ -18,7 +18,7 @@ val ReaktorAuth = module {
     dynamic(AuthSystem.Deps::class)
 
     // Providers
-    dynamic(AuthWithEmailAndPasswordProvider::class)
+    dynamic(EmailAndPasswordAuthProvider::class)
 
     // API
     singleton(AuthApiFeature::class)
