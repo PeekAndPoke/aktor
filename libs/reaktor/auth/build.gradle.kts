@@ -48,7 +48,7 @@ kotlin {
 
                 implementation(Deps.KotlinLibs.Karango.addons)
 
-                implementation(project(":libs:ktorfx:rest"))
+                implementation(Deps.KotlinLibs.Funktor.rest)
             }
         }
 
@@ -76,7 +76,7 @@ kotlin {
                 implementation(Deps.Ktor.Common.serialization_kotlinx_json)
 
                 implementation(Deps.KotlinLibs.Karango.core)
-                implementation(project(":libs:ktorfx:core"))
+                implementation(Deps.KotlinLibs.Funktor.core)
 
                 implementation(Deps.JavaLibs.Google.api_client)
             }

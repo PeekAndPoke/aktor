@@ -42,8 +42,7 @@ object Deps {
     // ///////////////////////////////////////////////////////////////////////////////////////////
 
     object KotlinLibs {
-        private const val ultra_version = "0.85.1"
-        private const val kraft_version = "0.65.0"
+        private const val ultra_version = "0.86.0"
 
         object Ultra {
             // https://search.maven.org/search?q=g:io.peekandpoke.ultra%20AND%20a:commonmp
@@ -58,18 +57,30 @@ object Deps {
 
         object Kraft {
             // https://central.sonatype.com/search?q=g%3Aio.peekandpoke.kraft++a%3Acore&smo=true
-            const val core = "io.peekandpoke.kraft:core:$kraft_version"
-            const val semanticui = "io.peekandpoke.kraft:semanticui:$kraft_version"
+            const val core = "io.peekandpoke.kraft:core:$ultra_version"
+            const val semanticui = "io.peekandpoke.kraft:semanticui:$ultra_version"
 
-            const val addons_chartjs = "io.peekandpoke.kraft:addons-chartjs:$kraft_version"
-            const val addons_konva = "io.peekandpoke.kraft:addons-konva:$kraft_version"
-            const val addons_marked = "io.peekandpoke.kraft:addons-marked:$kraft_version"
-            const val addons_nxcompile = "io.peekandpoke.kraft:addons-nxcompile:$kraft_version"
-            const val addons_pdfjs = "io.peekandpoke.kraft:addons-pdfjs:$kraft_version"
-            const val addons_prismjs = "io.peekandpoke.kraft:addons-prismjs:$kraft_version"
-            const val addons_signaturepad = "io.peekandpoke.kraft:addons-signaturepad:$kraft_version"
+            const val addons_chartjs = "io.peekandpoke.kraft:addons-chartjs:$ultra_version"
+            const val addons_konva = "io.peekandpoke.kraft:addons-konva:$ultra_version"
+            const val addons_marked = "io.peekandpoke.kraft:addons-marked:$ultra_version"
+            const val addons_nxcompile = "io.peekandpoke.kraft:addons-nxcompile:$ultra_version"
+            const val addons_pdfjs = "io.peekandpoke.kraft:addons-pdfjs:$ultra_version"
+            const val addons_prismjs = "io.peekandpoke.kraft:addons-prismjs:$ultra_version"
+            const val addons_signaturepad = "io.peekandpoke.kraft:addons-signaturepad:$ultra_version"
             const val addons_sourcemappedstacktrace =
-                "io.peekandpoke.kraft:addons-sourcemappedstacktrace:$kraft_version"
+                "io.peekandpoke.kraft:addons-sourcemappedstacktrace:$ultra_version"
+        }
+
+        object Funktor {
+            const val all = "io.peekandpoke.funktor:all:$ultra_version"
+            const val core = "io.peekandpoke.funktor:core:$ultra_version"
+            const val cluster = "io.peekandpoke.funktor:cluster:$ultra_version"
+            const val logging = "io.peekandpoke.funktor:logging:$ultra_version"
+            const val insights = "io.peekandpoke.funktor:insights:$ultra_version"
+            const val rest = "io.peekandpoke.funktor:rest:$ultra_version"
+            const val staticweb = "io.peekandpoke.funktor:staticweb:$ultra_version"
+            const val messaging = "io.peekandpoke.funktor:messaging:$ultra_version"
+            const val testing = "io.peekandpoke.funktor:testing:$ultra_version"
         }
 
         object Karango {

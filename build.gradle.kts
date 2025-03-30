@@ -94,7 +94,7 @@ kotlin {
         implementation(project(":utils:crawl4ai"))
         implementation(project(":utils:geo"))
 
-        implementation(project(":libs:ktorfx:all"))
+        implementation(Deps.KotlinLibs.Funktor.all)
 
         implementation(project(":libs:reaktor:auth"))
 
