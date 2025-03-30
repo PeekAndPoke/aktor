@@ -10,8 +10,7 @@ import de.peekandpoke.kraft.streams.addons.persistInLocalStorage
 import de.peekandpoke.ultra.security.user.UserPermissions
 import de.peekandpoke.ultra.slumber.JsonUtil.toJsonObject
 import io.peekandpoke.reaktor.auth.api.AuthApiClient
-import io.peekandpoke.reaktor.auth.model.LoginRequest
-import io.peekandpoke.reaktor.auth.model.LoginResponse
+import io.peekandpoke.reaktor.auth.model.*
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -39,6 +38,7 @@ class AuthState<USER>(
     @Serializable
     data class Data<USER>(
         val token: LoginResponse.Token?,
+        val realm: AuthRealmModel?,
         val tokenUserId: String?,
         val tokenExpires: String?,
         val claims: JsonObject?,
@@ -48,6 +48,7 @@ class AuthState<USER>(
         companion object {
             fun <USER> empty() = Data<USER>(
                 token = null,
+                realm = null,
                 tokenUserId = null,
                 tokenExpires = null,
                 claims = null,
@@ -72,6 +73,10 @@ class AuthState<USER>(
 
     override fun subscribeToStream(sub: (Data<USER>) -> Unit): Unsubscribe = streamSource.subscribeToStream(sub)
 
+    fun getPasswordPolicy(): PasswordPolicy {
+        return streamSource().realm?.passwordPolicy ?: PasswordPolicy.default
+    }
+
     fun routerMiddleWare(loginUri: String) = routerMiddleware {
         val auth = invoke()
 
@@ -84,9 +89,7 @@ class AuthState<USER>(
     fun redirectAfterLogin(defaultUri: String) {
         val target = redirectAfterLoginUri ?: defaultUri
 
-        console.log("redirecting to $target")
-
-        router().navToUri(redirectAfterLoginUri ?: defaultUri)
+        router().navToUri(target)
 
         redirectAfterLoginUri = null
     }
@@ -99,10 +102,8 @@ class AuthState<USER>(
             .firstOrNull()
 
         response?.let {
-            val data = readJwt(
-                token = it.token,
-                user = it.getTypedUser(userSerializer)
-            )
+            val user = it.getTypedUser(userSerializer)
+            val data = readJwt(response = it, user = user)
 
             streamSource(data)
         }
@@ -114,11 +115,24 @@ class AuthState<USER>(
         streamSource(Data.empty())
     }
 
-    private fun readJwt(token: LoginResponse.Token, user: USER): Data<USER> {
-        val claims = decodeJwtAsMap(token.token)
+    suspend fun requestAuthUpdate(request: AuthUpdateRequest): Boolean {
+        val auth = streamSource()
+
+        if (!auth.isLoggedIn) return false
+
+        val result = api.update(request)
+            .catch { /* noop */ }
+            .map { it.data!! }
+            .firstOrNull()
+
+        return result?.success == true
+    }
+
+    private fun readJwt(response: LoginResponse, user: USER): Data<USER> {
+        val claims = decodeJwtAsMap(response.token.token)
 
         // extract the permission from the token
-        val permissions = token.permissionsNs.let { ns ->
+        val permissions = response.token.permissionsNs.let { ns ->
             @Suppress("UNCHECKED_CAST")
             UserPermissions(
                 organisations = (claims["$ns/organisations"] as? List<String> ?: emptyList()).toSet(),
@@ -134,7 +148,8 @@ class AuthState<USER>(
         val userId = claims["sub"] as? String ?: ""
 
         return Data(
-            token = token,
+            token = response.token,
+            realm = response.realm,
             tokenUserId = userId,
             tokenExpires = expDate?.toISOString(),
             claims = claims.toJsonObject(),

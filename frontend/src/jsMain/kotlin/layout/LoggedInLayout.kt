@@ -49,6 +49,7 @@ class LoggedInLayout(ctx: Ctx<Props>) : Component<LoggedInLayout.Props>(ctx) {
         ui.sidebar.vertical.visible.menu {
 
             ui.basic.segment {
+                onClick { MainRouter.navToUri(Nav.profile()) }
                 +u.name
             }
 

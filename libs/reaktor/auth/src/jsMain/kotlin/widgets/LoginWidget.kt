@@ -188,6 +188,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
             UiPasswordField(::password) {
                 placeholder("Password")
+                revealPasswordIcon()
             }
 
             ui.orange.fluid.givenNot(noDblClick.canRun) { loading }.button Submit {

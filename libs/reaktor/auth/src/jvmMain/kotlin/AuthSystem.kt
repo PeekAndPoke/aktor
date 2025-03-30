@@ -3,9 +3,7 @@ package io.peekandpoke.reaktor.auth
 import de.peekandpoke.ultra.security.jwt.JwtGenerator
 import de.peekandpoke.ultra.security.password.PasswordHasher
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.reaktor.auth.model.AuthRealmModel
-import io.peekandpoke.reaktor.auth.model.LoginRequest
-import io.peekandpoke.reaktor.auth.model.LoginResponse
+import io.peekandpoke.reaktor.auth.model.*
 import io.peekandpoke.reaktor.auth.provider.AuthProvider
 import kotlinx.serialization.json.JsonObject
 
@@ -24,6 +22,9 @@ class AuthSystem(
 
         /** Auth providers for this realm */
         val providers: List<AuthProvider>
+
+        /** The password policy for this realm */
+        val passwordPolicy: PasswordPolicy get() = PasswordPolicy.default
 
         suspend fun loadUserById(id: String): Stored<USER>?
 
@@ -50,9 +51,22 @@ class AuthSystem(
             return response
         }
 
+        suspend fun update(request: AuthUpdateRequest): AuthUpdateResponse {
+            val provider = providers.firstOrNull { it.id == request.provider }
+                ?: throw AuthError("Provider not found: ${request.provider}")
+
+            val user = loadUserById(request.userId)
+                ?: throw AuthError("User not found: ${request.userId}")
+
+            val result = provider.update(realm = this, user = user, request = request)
+
+            return result
+        }
+
         fun asApiModel(): AuthRealmModel = AuthRealmModel(
             id = id,
-            providers = providers.map { it.asApiModel() }
+            providers = providers.map { it.asApiModel() },
+            passwordPolicy = passwordPolicy,
         )
     }
 
@@ -66,15 +80,19 @@ class AuthSystem(
         }
     }
 
-    fun getRealm(id: String): Realm<*>? {
+    fun getRealmOrNull(id: String): Realm<*>? {
         return realms.firstOrNull { it.id == id }
     }
 
+    fun getRealm(id: String): Realm<*> {
+        return getRealmOrNull(id) ?: throw AuthError("Realm not found: $id")
+    }
+
     suspend fun login(realm: String, request: LoginRequest): LoginResponse {
+        return getRealm(realm).login(request)
+    }
 
-        val r = realms.firstOrNull { it.id == realm }
-            ?: throw AuthError("Realm not found: $realm")
-
-        return r.login(request)
+    suspend fun update(realm: String, request: AuthUpdateRequest): AuthUpdateResponse {
+        return getRealm(realm).update(request)
     }
 }

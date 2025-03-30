@@ -4,5 +4,7 @@ open class AuthError(message: String, cause: Throwable? = null) : Throwable(mess
 
     companion object {
         fun invalidCredentials(cause: Throwable? = null) = AuthError("Invalid credentials", cause)
+
+        fun weekPassword(cause: Throwable? = null) = AuthError("Weak password", cause)
     }
 }

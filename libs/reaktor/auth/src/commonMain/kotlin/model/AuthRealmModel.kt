@@ -6,4 +6,5 @@ import kotlinx.serialization.Serializable
 data class AuthRealmModel(
     val id: String,
     val providers: List<AuthProviderModel>,
+    val passwordPolicy: PasswordPolicy,
 )

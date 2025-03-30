@@ -185,7 +185,6 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
                 }
             }
         }
-
     }
 
     private fun FlowContent.renderInputs() {
