@@ -1,10 +1,12 @@
 # General
 
-1. Move KRAFT to Mono-repo Ultra
-2. Move KtorFx to Mono-repo Ultra
-3. Move Utlra::common.datetime to Ultra::datetime
-4. Move Kraft::core.streams to Ultra::streams
-5. rename all packages to `io.peekandpoke...`
+- [DONE] Move KRAFT to Mono-repo Ultra
+- [DONE] KtorFx to Mono-repo Ultra
+- rename `de.peekandpoke.ktorfx` to `de.peekandpoke.funktor`
+- [ ] Move Utlra::common.datetime to Ultra::datetime
+- [ ] Move Kraft::core.streams to Ultra::streams-
+
+- [BAD IDEA] rename all packages to `io.peekandpoke...`
 
 # Aktor
 
