@@ -1,5 +1,8 @@
-package io.peekandpoke.reaktor.auth.widgets
+package de.peekandpoke.funktor.auth.widgets
 
+import de.peekandpoke.funktor.auth.AuthState
+import de.peekandpoke.funktor.auth.model.AuthProviderModel
+import de.peekandpoke.funktor.auth.model.AuthUpdateRequest
 import de.peekandpoke.kraft.addons.forms.formController
 import de.peekandpoke.kraft.addons.forms.validation.given
 import de.peekandpoke.kraft.addons.forms.validation.strings.notEmpty
@@ -12,9 +15,6 @@ import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
-import io.peekandpoke.reaktor.auth.AuthState
-import io.peekandpoke.reaktor.auth.model.AuthProviderModel
-import io.peekandpoke.reaktor.auth.model.AuthUpdateRequest
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 

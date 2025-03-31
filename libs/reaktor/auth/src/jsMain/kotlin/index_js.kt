@@ -1,1 +1,1 @@
-package io.peekandpoke.reaktor.auth
+package de.peekandpoke.funktor.auth

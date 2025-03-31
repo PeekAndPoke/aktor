@@ -1,5 +1,8 @@
-package io.peekandpoke.reaktor.auth.db.karango
+package de.peekandpoke.funktor.auth.db.karango
 
+import de.peekandpoke.funktor.auth.AuthStorage
+import de.peekandpoke.funktor.auth.domain.*
+import de.peekandpoke.funktor.core.fixtures.RepoFixtureLoader
 import de.peekandpoke.karango.aql.DESC
 import de.peekandpoke.karango.aql.EQ
 import de.peekandpoke.karango.aql.FOR
@@ -7,15 +10,12 @@ import de.peekandpoke.karango.aql.RETURN
 import de.peekandpoke.karango.vault.EntityRepository
 import de.peekandpoke.karango.vault.IndexBuilder
 import de.peekandpoke.karango.vault.KarangoDriver
-import de.peekandpoke.ktorfx.core.fixtures.RepoFixtureLoader
 import de.peekandpoke.ultra.common.reflection.kType
 import de.peekandpoke.ultra.vault.Repository
 import de.peekandpoke.ultra.vault.Stored
 import de.peekandpoke.ultra.vault.hooks.TimestampedHook
 import de.peekandpoke.ultra.vault.slumber._type
 import de.peekandpoke.ultra.vault.slumber.ts
-import io.peekandpoke.reaktor.auth.AuthStorage
-import io.peekandpoke.reaktor.auth.domain.*
 
 class KarangoAuthRecordsRepo(
     driver: KarangoDriver,

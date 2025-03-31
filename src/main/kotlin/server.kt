@@ -1,10 +1,10 @@
 package io.peekandpoke.aktor
 
 import ch.qos.logback.classic.Level
-import de.peekandpoke.ktorfx.cluster.workers.launchWorkers
-import de.peekandpoke.ktorfx.core.lifecycle.lifeCycle
-import de.peekandpoke.ktorfx.insights.instrumentWithInsights
-import de.peekandpoke.ktorfx.logging.karango.addKarangoAppender
+import de.peekandpoke.funktor.cluster.workers.launchWorkers
+import de.peekandpoke.funktor.core.lifecycle.lifeCycle
+import de.peekandpoke.funktor.insights.instrumentWithInsights
+import de.peekandpoke.funktor.logging.karango.addKarangoAppender
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*

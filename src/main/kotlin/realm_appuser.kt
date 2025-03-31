@@ -1,5 +1,11 @@
 package io.peekandpoke.aktor
 
+import de.peekandpoke.funktor.auth.AuthSystem
+import de.peekandpoke.funktor.auth.model.LoginResponse
+import de.peekandpoke.funktor.auth.provider.AuthProvider
+import de.peekandpoke.funktor.auth.provider.EmailAndPasswordAuth
+import de.peekandpoke.funktor.auth.provider.GithubSsoAuth
+import de.peekandpoke.funktor.auth.provider.GoogleSsoAuth
 import de.peekandpoke.ultra.common.datetime.Kronos
 import de.peekandpoke.ultra.common.datetime.jvm
 import de.peekandpoke.ultra.security.jwt.JwtUserData
@@ -11,12 +17,6 @@ import io.peekandpoke.aktor.backend.appuser.AppUsersRepo
 import io.peekandpoke.aktor.backend.appuser.AppUsersRepo.Companion.asApiModel
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 import io.peekandpoke.aktor.shared.appuser.model.AppUserRoles
-import io.peekandpoke.reaktor.auth.AuthSystem
-import io.peekandpoke.reaktor.auth.model.LoginResponse
-import io.peekandpoke.reaktor.auth.provider.AuthProvider
-import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuth
-import io.peekandpoke.reaktor.auth.provider.GithubSsoAuth
-import io.peekandpoke.reaktor.auth.provider.GoogleSsoAuth
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject

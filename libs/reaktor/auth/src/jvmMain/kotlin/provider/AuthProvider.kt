@@ -1,12 +1,12 @@
-package io.peekandpoke.reaktor.auth.provider
+package de.peekandpoke.funktor.auth.provider
 
+import de.peekandpoke.funktor.auth.AuthError
+import de.peekandpoke.funktor.auth.AuthSystem
+import de.peekandpoke.funktor.auth.model.AuthProviderModel
+import de.peekandpoke.funktor.auth.model.AuthUpdateRequest
+import de.peekandpoke.funktor.auth.model.AuthUpdateResponse
+import de.peekandpoke.funktor.auth.model.LoginRequest
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.reaktor.auth.AuthError
-import io.peekandpoke.reaktor.auth.AuthSystem
-import io.peekandpoke.reaktor.auth.model.AuthProviderModel
-import io.peekandpoke.reaktor.auth.model.AuthUpdateRequest
-import io.peekandpoke.reaktor.auth.model.AuthUpdateResponse
-import io.peekandpoke.reaktor.auth.model.LoginRequest
 
 interface AuthProvider {
     /**

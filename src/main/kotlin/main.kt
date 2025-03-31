@@ -1,9 +1,9 @@
 package io.peekandpoke.aktor
 
-import de.peekandpoke.ktorfx.core.AppKontainers
-import de.peekandpoke.ktorfx.core.ktorFxApp
+import de.peekandpoke.funktor.core.AppKontainers
+import de.peekandpoke.funktor.core.funktorApp
 
-val app = ktorFxApp<AktorConfig>(
+val app = funktorApp<AktorConfig>(
     kontainers = { config ->
         AppKontainers(
             createBlueprint(config)

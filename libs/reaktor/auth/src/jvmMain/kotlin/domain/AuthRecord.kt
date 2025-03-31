@@ -1,4 +1,4 @@
-package io.peekandpoke.reaktor.auth.domain
+package de.peekandpoke.funktor.auth.domain
 
 import de.peekandpoke.karango.Karango
 import de.peekandpoke.ultra.common.datetime.MpInstant

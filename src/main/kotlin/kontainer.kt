@@ -2,13 +2,17 @@ package io.peekandpoke.aktor
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import de.peekandpoke.funktor.auth.AuthStorage
+import de.peekandpoke.funktor.auth.ReaktorAuth
+import de.peekandpoke.funktor.auth.db.karango.KarangoAuthRecordsRepo
+import de.peekandpoke.funktor.auth.db.karango.KarangoAuthStorage
+import de.peekandpoke.funktor.core.App
+import de.peekandpoke.funktor.core.installKontainer
+import de.peekandpoke.funktor.core.kontainer
+import de.peekandpoke.funktor.core.model.InsightsConfig
+import de.peekandpoke.funktor.funktor
+import de.peekandpoke.funktor.rest.auth.jwtUserProvider
 import de.peekandpoke.karango.karango
-import de.peekandpoke.ktorfx.core.App
-import de.peekandpoke.ktorfx.core.installKontainer
-import de.peekandpoke.ktorfx.core.kontainer
-import de.peekandpoke.ktorfx.core.model.InsightsConfig
-import de.peekandpoke.ktorfx.ktorFx
-import de.peekandpoke.ktorfx.rest.auth.jwtUserProvider
 import de.peekandpoke.ultra.common.datetime.Kronos
 import de.peekandpoke.ultra.kontainer.KontainerAware
 import de.peekandpoke.ultra.kontainer.kontainer
@@ -33,10 +37,6 @@ import io.peekandpoke.aktor.llm.tools.*
 import io.peekandpoke.crawl4ai.Crawl4aiClient
 import io.peekandpoke.geo.GeoModule
 import io.peekandpoke.geo.TimeShape
-import io.peekandpoke.reaktor.auth.AuthStorage
-import io.peekandpoke.reaktor.auth.ReaktorAuth
-import io.peekandpoke.reaktor.auth.db.karango.KarangoAuthRecordsRepo
-import io.peekandpoke.reaktor.auth.db.karango.KarangoAuthStorage
 import java.io.File
 
 data class KeysConfig(val config: Config)
@@ -66,7 +66,7 @@ fun Route.installApiKontainer(app: App<AktorConfig>, insights: InsightsConfig?) 
 
 fun createBlueprint(config: AktorConfig) = kontainer {
     // Mount all KtorFx things
-    ktorFx(
+    funktor(
         config = config,
         rest = {
             jwt(

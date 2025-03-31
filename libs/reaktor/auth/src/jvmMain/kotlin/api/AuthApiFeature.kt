@@ -1,8 +1,8 @@
-package io.peekandpoke.reaktor.auth.api
+package de.peekandpoke.funktor.auth.api
 
-import de.peekandpoke.ktorfx.core.broker.OutgoingConverter
-import de.peekandpoke.ktorfx.rest.ApiFeature
-import de.peekandpoke.ktorfx.rest.ApiRoutes
+import de.peekandpoke.funktor.core.broker.OutgoingConverter
+import de.peekandpoke.funktor.rest.ApiFeature
+import de.peekandpoke.funktor.rest.ApiRoutes
 
 class AuthApiFeature(converter: OutgoingConverter) : ApiFeature {
 

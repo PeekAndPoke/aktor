@@ -1,7 +1,7 @@
-package io.peekandpoke.reaktor.auth
+package de.peekandpoke.funktor.auth
 
+import de.peekandpoke.funktor.auth.domain.AuthRecord
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.reaktor.auth.domain.AuthRecord
 
 interface AuthStorage {
     interface AuthRecordsRepo {

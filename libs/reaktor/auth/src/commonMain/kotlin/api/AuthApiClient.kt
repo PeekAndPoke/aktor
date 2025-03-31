@@ -1,7 +1,7 @@
-package io.peekandpoke.reaktor.auth.api
+package de.peekandpoke.funktor.auth.api
 
+import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.ultra.common.remote.*
-import io.peekandpoke.reaktor.auth.model.*
 import kotlinx.coroutines.flow.Flow
 
 class AuthApiClient(private val realm: String, config: Config) : ApiClient(config) {

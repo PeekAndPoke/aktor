@@ -1,15 +1,15 @@
-package io.peekandpoke.reaktor.auth.api
+package de.peekandpoke.funktor.auth.api
 
-import de.peekandpoke.ktorfx.core.broker.OutgoingConverter
-import de.peekandpoke.ktorfx.core.user
-import de.peekandpoke.ktorfx.rest.ApiRoutes
-import de.peekandpoke.ktorfx.rest.docs.codeGen
-import de.peekandpoke.ktorfx.rest.docs.docs
+import de.peekandpoke.funktor.auth.AuthError
+import de.peekandpoke.funktor.auth.model.AuthUpdateResponse
+import de.peekandpoke.funktor.auth.model.LoginResponse
+import de.peekandpoke.funktor.auth.reaktorAuth
+import de.peekandpoke.funktor.core.broker.OutgoingConverter
+import de.peekandpoke.funktor.core.user
+import de.peekandpoke.funktor.rest.ApiRoutes
+import de.peekandpoke.funktor.rest.docs.codeGen
+import de.peekandpoke.funktor.rest.docs.docs
 import de.peekandpoke.ultra.common.remote.ApiResponse
-import io.peekandpoke.reaktor.auth.AuthError
-import io.peekandpoke.reaktor.auth.model.AuthUpdateResponse
-import io.peekandpoke.reaktor.auth.model.LoginResponse
-import io.peekandpoke.reaktor.auth.reaktorAuth
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 

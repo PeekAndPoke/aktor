@@ -1,11 +1,11 @@
 package io.peekandpoke.aktor.common
 
-import de.peekandpoke.ktorfx.core.broker.CouldNotConvertException
-import de.peekandpoke.ktorfx.core.config.AppConfig
-import de.peekandpoke.ktorfx.core.kontainerOrNull
-import de.peekandpoke.ktorfx.logging.logInternalError
-import de.peekandpoke.ktorfx.logging.logNotFound
-import de.peekandpoke.ktorfx.rest.apiRespond
+import de.peekandpoke.funktor.core.broker.CouldNotConvertException
+import de.peekandpoke.funktor.core.config.AppConfig
+import de.peekandpoke.funktor.core.kontainerOrNull
+import de.peekandpoke.funktor.logging.logInternalError
+import de.peekandpoke.funktor.logging.logNotFound
+import de.peekandpoke.funktor.rest.apiRespond
 import de.peekandpoke.ultra.common.remote.ApiResponse
 import io.ktor.http.*
 import io.ktor.server.application.*

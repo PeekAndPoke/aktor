@@ -1,4 +1,4 @@
-package io.peekandpoke.reaktor.auth.widgets
+package de.peekandpoke.funktor.auth.widgets
 
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx

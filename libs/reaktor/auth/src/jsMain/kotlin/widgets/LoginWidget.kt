@@ -1,5 +1,9 @@
-package io.peekandpoke.reaktor.auth.widgets
+package de.peekandpoke.funktor.auth.widgets
 
+import de.peekandpoke.funktor.auth.AuthState
+import de.peekandpoke.funktor.auth.model.AuthProviderModel
+import de.peekandpoke.funktor.auth.model.AuthRealmModel
+import de.peekandpoke.funktor.auth.model.LoginRequest
 import de.peekandpoke.kraft.addons.semanticui.forms.UiInputField
 import de.peekandpoke.kraft.addons.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.components.*
@@ -9,10 +13,6 @@ import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
-import io.peekandpoke.reaktor.auth.AuthState
-import io.peekandpoke.reaktor.auth.model.AuthProviderModel
-import io.peekandpoke.reaktor.auth.model.AuthRealmModel
-import io.peekandpoke.reaktor.auth.model.LoginRequest
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.map
 import kotlinx.html.FlowContent

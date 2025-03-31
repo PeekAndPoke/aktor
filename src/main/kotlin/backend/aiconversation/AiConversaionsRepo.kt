@@ -1,10 +1,10 @@
 package io.peekandpoke.aktor.backend.aiconversation
 
+import de.peekandpoke.funktor.core.fixtures.RepoFixtureLoader
 import de.peekandpoke.karango.aql.*
 import de.peekandpoke.karango.vault.EntityRepository
 import de.peekandpoke.karango.vault.IndexBuilder
 import de.peekandpoke.karango.vault.KarangoDriver
-import de.peekandpoke.ktorfx.core.fixtures.RepoFixtureLoader
 import de.peekandpoke.ultra.common.reflection.kType
 import de.peekandpoke.ultra.vault.Database
 import de.peekandpoke.ultra.vault.Repository

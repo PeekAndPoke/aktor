@@ -1,5 +1,7 @@
-package io.peekandpoke.reaktor.auth
+package de.peekandpoke.funktor.auth
 
+import de.peekandpoke.funktor.auth.api.AuthApiClient
+import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.kraft.addons.routing.Router
 import de.peekandpoke.kraft.addons.routing.routerMiddleware
 import de.peekandpoke.kraft.jsbridges.decodeJwtAsMap
@@ -9,8 +11,6 @@ import de.peekandpoke.kraft.streams.Unsubscribe
 import de.peekandpoke.kraft.streams.addons.persistInLocalStorage
 import de.peekandpoke.ultra.security.user.UserPermissions
 import de.peekandpoke.ultra.slumber.JsonUtil.toJsonObject
-import io.peekandpoke.reaktor.auth.api.AuthApiClient
-import io.peekandpoke.reaktor.auth.model.*
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map

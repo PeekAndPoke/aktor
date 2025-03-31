@@ -1,4 +1,4 @@
-package io.peekandpoke.reaktor.auth.widgets
+package de.peekandpoke.funktor.auth.widgets
 
 import com.benasher44.uuid.uuid4
 import de.peekandpoke.kraft.components.Component

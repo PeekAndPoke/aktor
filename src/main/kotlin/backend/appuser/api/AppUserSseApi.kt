@@ -1,9 +1,9 @@
 package io.peekandpoke.aktor.backend.appuser.api
 
-import de.peekandpoke.ktorfx.core.broker.OutgoingConverter
-import de.peekandpoke.ktorfx.rest.ApiRoutes
-import de.peekandpoke.ktorfx.rest.docs.codeGen
-import de.peekandpoke.ktorfx.rest.docs.docs
+import de.peekandpoke.funktor.core.broker.OutgoingConverter
+import de.peekandpoke.funktor.rest.ApiRoutes
+import de.peekandpoke.funktor.rest.docs.codeGen
+import de.peekandpoke.funktor.rest.docs.docs
 import io.ktor.server.sse.*
 import io.peekandpoke.aktor.api.SseSessions
 import io.peekandpoke.aktor.shared.appuser.api.AppUserSseApiClient

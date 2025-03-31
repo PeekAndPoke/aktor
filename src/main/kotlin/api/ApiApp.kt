@@ -1,11 +1,11 @@
 package io.peekandpoke.aktor.api
 
-import de.peekandpoke.ktorfx.core.broker.fallback
-import de.peekandpoke.ktorfx.core.config.AppConfig
-import de.peekandpoke.ktorfx.core.methodAndUrl
-import de.peekandpoke.ktorfx.rest.ApiFeature
-import de.peekandpoke.ktorfx.rest.apiRespond
-import de.peekandpoke.ktorfx.rest.handle
+import de.peekandpoke.funktor.core.broker.fallback
+import de.peekandpoke.funktor.core.config.AppConfig
+import de.peekandpoke.funktor.core.methodAndUrl
+import de.peekandpoke.funktor.rest.ApiFeature
+import de.peekandpoke.funktor.rest.apiRespond
+import de.peekandpoke.funktor.rest.handle
 import de.peekandpoke.ultra.security.jwt.JwtAnonymous
 import de.peekandpoke.ultra.security.jwt.JwtGenerator
 import io.ktor.server.application.*

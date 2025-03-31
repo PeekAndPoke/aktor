@@ -1,5 +1,9 @@
-package io.peekandpoke.reaktor.auth.provider
+package de.peekandpoke.funktor.auth.provider
 
+import de.peekandpoke.funktor.auth.AuthError
+import de.peekandpoke.funktor.auth.AuthSystem
+import de.peekandpoke.funktor.auth.model.AuthProviderModel
+import de.peekandpoke.funktor.auth.model.LoginRequest
 import de.peekandpoke.ultra.vault.Stored
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -7,10 +11,6 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.peekandpoke.reaktor.auth.AuthError
-import io.peekandpoke.reaktor.auth.AuthSystem
-import io.peekandpoke.reaktor.auth.model.AuthProviderModel
-import io.peekandpoke.reaktor.auth.model.LoginRequest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive

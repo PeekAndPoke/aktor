@@ -1,14 +1,14 @@
-package io.peekandpoke.reaktor.auth
+package de.peekandpoke.funktor.auth
 
-import de.peekandpoke.ktorfx.core.kontainer
+import de.peekandpoke.funktor.auth.api.AuthApiFeature
+import de.peekandpoke.funktor.auth.provider.EmailAndPasswordAuth
+import de.peekandpoke.funktor.auth.provider.GithubSsoAuth
+import de.peekandpoke.funktor.auth.provider.GoogleSsoAuth
+import de.peekandpoke.funktor.core.kontainer
 import de.peekandpoke.ultra.kontainer.KontainerAware
 import de.peekandpoke.ultra.kontainer.module
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import io.peekandpoke.reaktor.auth.api.AuthApiFeature
-import io.peekandpoke.reaktor.auth.provider.EmailAndPasswordAuth
-import io.peekandpoke.reaktor.auth.provider.GithubSsoAuth
-import io.peekandpoke.reaktor.auth.provider.GoogleSsoAuth
 
 inline val KontainerAware.reaktorAuth: AuthSystem get() = kontainer.get()
 inline val ApplicationCall.reaktorAuth: AuthSystem get() = kontainer.reaktorAuth

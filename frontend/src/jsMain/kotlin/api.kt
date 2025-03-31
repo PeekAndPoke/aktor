@@ -1,5 +1,6 @@
 package de.peekandpoke.aktor.frontend
 
+import de.peekandpoke.funktor.auth.api.AuthApiClient
 import de.peekandpoke.ultra.common.remote.ApiClient.Config
 import de.peekandpoke.ultra.common.remote.RemoteRequest
 import de.peekandpoke.ultra.common.remote.RemoteResponse
@@ -11,7 +12,6 @@ import io.ktor.client.plugins.sse.*
 import io.ktor.serialization.kotlinx.json.*
 import io.peekandpoke.aktor.shared.appuser.api.AppUserApiClients
 import io.peekandpoke.aktor.shared.llms.api.LlmApiClients
-import io.peekandpoke.reaktor.auth.api.AuthApiClient
 import kotlinx.serialization.json.Json
 
 class WebAppApis(appConfig: WebAppConfig, tokenProvider: () -> String?) {

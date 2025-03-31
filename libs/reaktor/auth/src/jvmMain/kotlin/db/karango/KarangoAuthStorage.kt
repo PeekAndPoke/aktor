@@ -1,6 +1,6 @@
-package io.peekandpoke.reaktor.auth.db.karango
+package de.peekandpoke.funktor.auth.db.karango
 
-import io.peekandpoke.reaktor.auth.AuthStorage
+import de.peekandpoke.funktor.auth.AuthStorage
 
 class KarangoAuthStorage(
     override val authRecordsRepo: KarangoAuthRecordsRepo,

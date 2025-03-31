@@ -1,14 +1,14 @@
-package io.peekandpoke.reaktor.auth.provider
+package de.peekandpoke.funktor.auth.provider
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.apache.v2.ApacheHttpTransport
 import com.google.api.client.json.gson.GsonFactory
+import de.peekandpoke.funktor.auth.AuthError
+import de.peekandpoke.funktor.auth.AuthSystem
+import de.peekandpoke.funktor.auth.model.AuthProviderModel
+import de.peekandpoke.funktor.auth.model.LoginRequest
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.reaktor.auth.AuthError
-import io.peekandpoke.reaktor.auth.AuthSystem
-import io.peekandpoke.reaktor.auth.model.AuthProviderModel
-import io.peekandpoke.reaktor.auth.model.LoginRequest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.security.GeneralSecurityException

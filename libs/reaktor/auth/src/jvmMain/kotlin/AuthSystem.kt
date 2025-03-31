@@ -1,10 +1,10 @@
-package io.peekandpoke.reaktor.auth
+package de.peekandpoke.funktor.auth
 
+import de.peekandpoke.funktor.auth.model.*
+import de.peekandpoke.funktor.auth.provider.AuthProvider
 import de.peekandpoke.ultra.security.jwt.JwtGenerator
 import de.peekandpoke.ultra.security.password.PasswordHasher
 import de.peekandpoke.ultra.vault.Stored
-import io.peekandpoke.reaktor.auth.model.*
-import io.peekandpoke.reaktor.auth.provider.AuthProvider
 import kotlinx.serialization.json.JsonObject
 
 class AuthSystem(

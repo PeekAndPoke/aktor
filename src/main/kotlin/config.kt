@@ -1,15 +1,15 @@
 package io.peekandpoke.aktor
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import de.peekandpoke.funktor.core.config.AppConfig
+import de.peekandpoke.funktor.core.config.funktor.FunktorConfig
+import de.peekandpoke.funktor.core.config.ktor.KtorConfig
+import de.peekandpoke.funktor.core.model.InsightsConfig
 import de.peekandpoke.karango.config.ArangoDbConfig
-import de.peekandpoke.ktorfx.core.config.AppConfig
-import de.peekandpoke.ktorfx.core.config.ktor.KtorConfig
-import de.peekandpoke.ktorfx.core.config.ktorfx.KtorFxConfig
-import de.peekandpoke.ktorfx.core.model.InsightsConfig
 
 data class AktorConfig(
     override val ktor: KtorConfig,
-    override val ktorFx: KtorFxConfig = KtorFxConfig(),
+    override val funktor: FunktorConfig = FunktorConfig(),
     val auth: AuthConfig,
     val arangodb: ArangoDbConfig,
     val api: ApiConfig,
