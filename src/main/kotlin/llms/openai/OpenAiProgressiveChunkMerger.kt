@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.openai
+package io.peekandpoke.aktor.llms.openai
 
 import com.aallam.openai.api.chat.ChatChunk
 import com.aallam.openai.api.chat.ChatCompletionChunk

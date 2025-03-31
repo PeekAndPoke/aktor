@@ -22,7 +22,7 @@ allprojects {
     repositories {
         mavenCentral()
         maven { setUrl("https://jitpack.io") }
-        mavenLocal()
+//        mavenLocal()
     }
 }
 
@@ -71,7 +71,13 @@ kotlin {
         implementation(Deps.Ktor.Common.serialization_jackson)
 
         implementation("com.typesafe:config:1.4.3")
+
+        // OpenAI-Client
+        // https://central.sonatype.com/artifact/com.aallam.openai/openai-client
         implementation("com.aallam.openai:openai-client:4.0.1")
+        // Anthropic Client
+        // https://central.sonatype.com/artifact/com.anthropic/anthropic-java
+        implementation("com.anthropic:anthropic-java:1.0.0")
 
         // https://github.com/open-meteo/open-meteo-api-kotlin/wiki/Installation
         implementation("com.open-meteo:open-meteo-api-kotlin:0.7.1-beta.1")

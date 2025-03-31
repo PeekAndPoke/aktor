@@ -3,8 +3,8 @@ package io.peekandpoke.aktor.examples
 import io.peekandpoke.aktor.llm.ChatBot
 import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.llm.ollama.OllamaLlm
-import io.peekandpoke.aktor.llm.openai.OpenAiLlm
 import io.peekandpoke.aktor.llm.tools.*
+import io.peekandpoke.aktor.llms.openai.OpenAiLlm
 
 class ExampleBots(
     exchangeRateApiCom: ExchangeRateApiCom,

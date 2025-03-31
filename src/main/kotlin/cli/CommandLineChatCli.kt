@@ -55,7 +55,7 @@ class CommandLineChatCli(
             streaming = true,
         )
 
-        println("Chatting with model: ${bot.llm.model}")
+        println("Chatting with model: ${bot.llm.getModelName()}")
 
         println("Available tools:")
         conversation.tools.forEach { tool ->

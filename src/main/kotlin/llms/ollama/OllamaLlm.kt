@@ -17,7 +17,7 @@ import java.net.HttpURLConnection.setFollowRedirects
 import kotlin.time.Duration.Companion.seconds
 
 class OllamaLlm(
-    override val model: String,
+    private val model: String,
     private val baseUrl: String = "http://127.0.0.1:11434",
     private val httpClient: HttpClient = createDefaultHttpClient(),
 ) : Llm, AutoCloseable {
@@ -36,10 +36,13 @@ class OllamaLlm(
         }
     }
 
+    override fun getModelName(): String {
+        return model
+    }
+
     override fun close() {
         httpClient.close()
     }
-
 
     override fun chat(
         conversation: AiConversation,

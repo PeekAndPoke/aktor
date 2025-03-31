@@ -1,13 +1,9 @@
-package io.peekandpoke.aktor.llm.openai
+package io.peekandpoke.aktor.llms.openai
 
 import com.aallam.openai.api.chat.*
 import com.aallam.openai.api.core.Parameters
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.llm.Llm
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
 
 class OpenAiMapper {
     operator fun <T> invoke(block: OpenAiMapper.() -> T) = block()
@@ -20,39 +16,9 @@ class OpenAiMapper {
                 function = FunctionTool(
                     name = tool.name,
                     description = tool.description,
-                    parameters = Parameters.buildJsonObject {
-                        put("type", "object")
-                        putJsonObject("properties") {
-                            tool.parameters.forEach { p ->
-                                when (p) {
-                                    is Llm.Tool.StringParam -> putJsonObject(p.name) {
-                                        put("type", "string")
-                                        put("description", p.description)
-                                    }
-
-                                    is Llm.Tool.NumberParam -> putJsonObject(p.name) {
-                                        put("type", "number")
-                                        put("description", p.description)
-                                    }
-
-                                    is Llm.Tool.IntegerParam -> putJsonObject(p.name) {
-                                        put("type", "integer")
-                                        put("description", p.description)
-                                    }
-
-                                    is Llm.Tool.BooleanParam -> putJsonObject(p.name) {
-                                        put("type", "boolean")
-                                        put("description", p.description)
-                                    }
-                                }
-                            }
-                        }
-                        putJsonArray("required") {
-                            tool.parameters.filter { it.required }.forEach { p ->
-                                add(p.name)
-                            }
-                        }
-                    }
+                    parameters = Parameters(
+                        tool.createJsonSchema()
+                    ),
                 ),
             )
         }

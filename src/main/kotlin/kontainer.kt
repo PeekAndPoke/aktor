@@ -32,12 +32,14 @@ import io.peekandpoke.aktor.cli.CommandLineChatCli
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llm.ollama.OllamaLlm
 import io.peekandpoke.aktor.llm.ollama.OllamaModels
-import io.peekandpoke.aktor.llm.openai.OpenAiLlm
 import io.peekandpoke.aktor.llm.tools.*
+import io.peekandpoke.aktor.llms.anthropic.AnthropicLlm
+import io.peekandpoke.aktor.llms.openai.OpenAiLlm
 import io.peekandpoke.crawl4ai.Crawl4aiClient
 import io.peekandpoke.geo.GeoModule
 import io.peekandpoke.geo.TimeShape
 import java.io.File
+import com.anthropic.models.messages.Model as AnthropicModel
 
 data class KeysConfig(val config: Config)
 
@@ -149,6 +151,13 @@ fun createBlueprint(config: AktorConfig) = kontainer {
                 llm = OpenAiLlm(
                     model = "o3-mini",
                     authToken = keys.config.getString("OPENAI_API_KEY"),
+                )
+            ).plus(
+                id = "anthropic/claude-3.5-sonnet",
+                description = "Anthropic Claude 3.5 Sonnet",
+                llm = AnthropicLlm(
+                    model = AnthropicModel.CLAUDE_3_5_SONNET_LATEST,
+                    authToken = keys.config.getString("ANTHROPIC_API_KEY"),
                 )
             ).plus(
                 id = "ollama/llama3.2:1b",

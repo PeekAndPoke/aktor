@@ -185,7 +185,7 @@ class OpenMeteoCom(
                 ),
                 Llm.Tool.StringParam(
                     name = "start_date",
-                    description = "The start date of the forecast (yyyy-MM-dd) defaults to today",
+                    description = "The start date of the forecast (yyyy-MM-dd) (defaults to today)",
                     required = false,
                 ),
                 Llm.Tool.IntegerParam(
@@ -201,7 +201,7 @@ class OpenMeteoCom(
                 val tz = timeshape.getTimeZone(lat = lat, lng = lng)
 
                 val startDate = params.getString("start_date")
-                    ?.let { MpLocalDate.tryParse(it) ?: error("Invalid start_date '$it'") }
+                    ?.let { MpLocalDate.tryParse(it) ?: error("Invalid start_date: $it") }
                     ?: kronos.localDateNow(tz)
 
                 val days = params.getInt("days") ?: 7
@@ -234,17 +234,19 @@ class OpenMeteoCom(
                 ),
                 Llm.Tool.StringParam(
                     name = "date",
-                    description = "The date of the forecast",
-                    required = true,
+                    description = "The date of the forecast (yyyy-MM-dd) (defaults to today)",
+                    required = false,
                 )
             ),
             fn = { params ->
                 val lat = params.getDouble("lat") ?: error("Missing parameter 'lat'")
                 val lng = params.getDouble("lng") ?: error("Missing parameter 'lng'")
 
+                val tz = timeshape.getTimeZone(lat = lat, lng = lng)
+
                 val date = params.getString("date")
-                    ?.let { MpLocalDate.tryParse(it) ?: error("Invalid date '$it'") }
-                    ?: error("Missing parameter 'date'")
+                    ?.let { MpLocalDate.tryParse(it) ?: error("Invalid date: $it") }
+                    ?: kronos.localDateNow(tz)
 
                 getHourlyForecast(lat = lat, lng = lng, date = date)
             }

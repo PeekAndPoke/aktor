@@ -41,6 +41,13 @@
 2. updates from SSE will flow into the central storage
 3. Should sending messages also go through this storage?
 
+## More TOOLs or MCPs
+
+### OpenStreetMap
+
+1. Search geo-coordinates for City names etc
+2. Reverse geo-search
+
 ## Integrate online LLM-Providers
 
 1. Deepseek API

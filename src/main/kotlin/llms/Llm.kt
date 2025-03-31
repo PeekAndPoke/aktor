@@ -3,6 +3,7 @@ package io.peekandpoke.aktor.llm
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel.ToolRef
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.json.*
 
 interface Llm {
 
@@ -35,6 +36,40 @@ interface Llm {
                         it.name to description
                     }
                 )
+            }
+
+            fun createJsonSchema(): JsonObject = buildJsonObject {
+                put("type", "object")
+                putJsonObject("properties") {
+                    parameters.forEach { p ->
+                        when (p) {
+                            is StringParam -> putJsonObject(p.name) {
+                                put("type", "string")
+                                put("description", p.description)
+                            }
+
+                            is NumberParam -> putJsonObject(p.name) {
+                                put("type", "number")
+                                put("description", p.description)
+                            }
+
+                            is IntegerParam -> putJsonObject(p.name) {
+                                put("type", "integer")
+                                put("description", p.description)
+                            }
+
+                            is BooleanParam -> putJsonObject(p.name) {
+                                put("type", "boolean")
+                                put("description", p.description)
+                            }
+                        }
+                    }
+                }
+                putJsonArray("required") {
+                    parameters.filter { it.required }.forEach { p ->
+                        add(p.name)
+                    }
+                }
             }
         }
 
@@ -105,6 +140,6 @@ interface Llm {
         streaming: Boolean,
     ): Flow<Update>
 
-    val model: String
+    fun getModelName(): String
 }
 

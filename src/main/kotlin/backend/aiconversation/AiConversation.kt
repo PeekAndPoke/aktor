@@ -106,7 +106,7 @@ data class AiConversation(
 
                     fun ofMap(params: Map<String, Any?>?): Args {
                         return Args(
-                            params?.toJsonObject() ?: emptyMap()
+                            params ?: emptyMap()
                         )
                     }
                 }
@@ -115,7 +115,7 @@ data class AiConversation(
 
                 fun print(): String = Json.encodeToString(params.toJsonObject())
 
-                fun getString(name: String): String? = params[name].toString()
+                fun getString(name: String): String? = params[name]?.toString()
 
                 fun getDouble(name: String): Double? = getString(name)?.toDoubleOrNull()
 
