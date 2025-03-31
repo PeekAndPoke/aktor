@@ -17,14 +17,14 @@
 
 # Kraft
 
-- [ ] move val Modals: ModalsManager into Kraft.initialize(): Kraft
-- [ ] move val Popups: PopupsManager into Kraft.initialize(): Kraft
-- [ ] move val FlashMessage: FlashMessagesManager into Kraft.initialize(): Kraft
 - [ ] create a builder callback for Kraft.initialize() to configure the behaviour of the managers
-- [ ] then in the apps main component mount it via Kraft(this: FlowContent)
-  - [ ] mount the Modals stage
-  - [ ] mount the Popups stage
-  - [ ] mount the FlashMessages stage
+- [x] move val Modals: ModalsManager into Kraft.initialize(): Kraft
+- [x] move val Popups: PopupsManager into Kraft.initialize(): Kraft
+- [x] move val FlashMessage: FlashMessagesManager into Kraft.initialize(): Kraft
+- [x] then in the apps main component mount it via Kraft(this: FlowContent)
+  - [x] mount the Modals stage
+  - [x] mount the Popups stage
+  - [x] mount the FlashMessages stage
 
 # Aktor
 

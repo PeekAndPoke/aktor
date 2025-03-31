@@ -52,8 +52,8 @@ class ProfilePage(ctx: NoProps) : PureComponent(ctx) {
 
                         ChangePasswordWidget(State.auth) {
                             when (it) {
-                                true -> kraft.toast.info("Password changed successfully")
-                                false -> kraft.toast.error("Failed to change password")
+                                true -> kraft.toasts.info("Password changed successfully")
+                                false -> kraft.toasts.error("Failed to change password")
                             }
                         }
                     }

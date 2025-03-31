@@ -2,9 +2,10 @@ package de.peekandpoke.aktor.frontend
 
 import de.peekandpoke.aktor.frontend.state.AppState
 import de.peekandpoke.funktor.auth.authState
-import de.peekandpoke.kraft.Kraft
 import de.peekandpoke.kraft.addons.routing.Router
 import de.peekandpoke.kraft.addons.routing.router
+import de.peekandpoke.kraft.addons.toasts.ToastsStage
+import de.peekandpoke.kraft.kraftApp
 import de.peekandpoke.kraft.vdom.VDomEngine
 import de.peekandpoke.kraft.vdom.preact.PreactVDomEngine
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
@@ -15,7 +16,13 @@ import org.w3c.dom.HTMLElement
 val win = window.asDynamic()
 
 // Initialize kraft and external dependencies like timezones //////////////////
-val kraft: Kraft = Kraft.initialize()
+val kraft = kraftApp {
+    toasts {
+        stageOptions = ToastsStage.Options(
+            positioning = { top.right }
+        )
+    }
+}
 
 // Initialize config //////////////////////////////////////////////////////////
 
