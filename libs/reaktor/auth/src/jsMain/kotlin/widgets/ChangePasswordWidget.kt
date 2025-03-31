@@ -21,8 +21,12 @@ import kotlinx.html.Tag
 @Suppress("FunctionName")
 fun <USER> Tag.ChangePasswordWidget(
     state: AuthState<USER>,
+    onUpdate: (success: Boolean) -> Unit = {},
 ) = comp(
-    ChangePasswordWidget.Props(state = state)
+    ChangePasswordWidget.Props(
+        state = state,
+        onUpdate = onUpdate,
+    )
 ) {
     ChangePasswordWidget(it)
 }
@@ -33,6 +37,7 @@ class ChangePasswordWidget<USER>(ctx: Ctx<Props<USER>>) : Component<ChangePasswo
 
     data class Props<USER>(
         val state: AuthState<USER>,
+        val onUpdate: (success: Boolean) -> Unit,
     )
 
     private sealed interface State {
@@ -49,7 +54,6 @@ class ChangePasswordWidget<USER>(ctx: Ctx<Props<USER>>) : Component<ChangePasswo
     private val provider get() = auth().realm?.providers?.first { it.type == AuthProviderModel.TYPE_EMAIL_PASSWORD }
     private val userId get() = auth().tokenUserId
 
-    private var oldPassword by value("")
     private var newPassword by value("")
 
     private var state: State by value(
@@ -63,12 +67,10 @@ class ChangePasswordWidget<USER>(ctx: Ctx<Props<USER>>) : Component<ChangePasswo
     private val noDblClick = doubleClickProtection()
 
     private suspend fun updatePassword() = noDblClick.runBlocking {
-
         val result = auth.requestAuthUpdate(
             AuthUpdateRequest.SetPassword(
                 provider = provider?.id ?: "",
                 userId = userId ?: "",
-                oldPassword = oldPassword,
                 newPassword = newPassword,
             )
         )
@@ -76,6 +78,8 @@ class ChangePasswordWidget<USER>(ctx: Ctx<Props<USER>>) : Component<ChangePasswo
         if (result) {
             state = State.Done
         }
+
+        props.onUpdate(result)
     }
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,12 +116,6 @@ class ChangePasswordWidget<USER>(ctx: Ctx<Props<USER>>) : Component<ChangePasswo
                 }
             }
 
-            UiPasswordField(::oldPassword) {
-                label("Current Password")
-                revealPasswordIcon()
-
-                accepts(notEmpty())
-            }
             UiPasswordField(::newPassword) {
                 label("New Password")
                 revealPasswordIcon()

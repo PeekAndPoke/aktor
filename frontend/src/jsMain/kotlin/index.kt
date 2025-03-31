@@ -1,12 +1,13 @@
 package de.peekandpoke.aktor.frontend
 
+import de.peekandpoke.aktor.frontend.state.AppState
+import de.peekandpoke.funktor.auth.authState
 import de.peekandpoke.kraft.Kraft
-import de.peekandpoke.kraft.addons.modal.ModalsManager
-import de.peekandpoke.kraft.addons.popups.PopupsManager
 import de.peekandpoke.kraft.addons.routing.Router
 import de.peekandpoke.kraft.addons.routing.router
 import de.peekandpoke.kraft.vdom.VDomEngine
 import de.peekandpoke.kraft.vdom.preact.PreactVDomEngine
+import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.w3c.dom.HTMLElement
@@ -27,10 +28,11 @@ val Config = WebAppConfig().let {
     console.log("Config", this)
 }
 
-val Modals: ModalsManager = ModalsManager()
-val Popups: PopupsManager = PopupsManager()
+val Apis: WebAppApis = WebAppApis(Config) { State.auth().token?.token }
 
-val Apis = WebAppApis(Config) { State.auth().token?.token }
+val State: AppState = AppState(
+    auth = authState<AppUserModel>(api = Apis.auth, router = { MainRouter }),
+)
 
 val MainRouter: Router = createRouter()
 

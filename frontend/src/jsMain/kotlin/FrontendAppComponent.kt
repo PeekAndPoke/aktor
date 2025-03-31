@@ -1,7 +1,5 @@
 package de.peekandpoke.aktor.frontend
 
-import de.peekandpoke.kraft.addons.modal.ModalsStage
-import de.peekandpoke.kraft.addons.popups.PopupsStage
 import de.peekandpoke.kraft.addons.routing.RouterComponent
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
@@ -25,12 +23,10 @@ class FrontendAppComponent(ctx: NoProps) : PureComponent(ctx) {
 
         console.log("rendering app ...")
 
-        ModalsStage(Modals)
-        PopupsStage(Popups)
-//            FlashMessagesStage(Flash)
-
-        div(classes = "app") {
-            RouterComponent(router = MainRouter)
+        kraft.mount(this) {
+            div(classes = "app") {
+                RouterComponent(router = MainRouter)
+            }
         }
     }
 }

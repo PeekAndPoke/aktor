@@ -11,7 +11,6 @@ sealed interface AuthUpdateRequest {
     data class SetPassword(
         override val provider: String,
         override val userId: String,
-        val oldPassword: String,
         val newPassword: String,
     ) : AuthUpdateRequest
 

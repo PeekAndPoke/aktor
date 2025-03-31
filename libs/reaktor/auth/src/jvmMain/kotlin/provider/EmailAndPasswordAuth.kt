@@ -81,10 +81,6 @@ class EmailAndPasswordAuth(
                 realm.passwordPolicy.matches(request.newPassword).takeIf { it == true }
                     ?: throw AuthError.weekPassword()
 
-                // 2. Check for old password to be correct
-                validateCurrentPassword(realm, user, request.oldPassword).takeIf { it == true }
-                    ?: throw AuthError.invalidCredentials()
-
                 // 3. Write new password entry into database
                 deps.storage.authRecordsRepo.insert(
                     AuthRecord(
@@ -96,6 +92,8 @@ class EmailAndPasswordAuth(
                         expiresAt = null,
                     )
                 )
+
+                // TODO: send email that the password was changed
 
                 AuthUpdateResponse(success = true)
             }

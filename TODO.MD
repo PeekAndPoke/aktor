@@ -2,11 +2,29 @@
 
 - [DONE] Move KRAFT to Mono-repo Ultra
 - [DONE] KtorFx to Mono-repo Ultra
-- rename `de.peekandpoke.ktorfx` to `de.peekandpoke.funktor`
+- [DONE] rename `de.peekandpoke.ktorfx` to `de.peekandpoke.funktor`
+- [ ] create reusable FunktorUi (see thebase-web admin)
 - [ ] Move Utlra::common.datetime to Ultra::datetime
-- [ ] Move Kraft::core.streams to Ultra::streams-
+- [ ] Move Kraft::core.streams to Ultra::streams
 
 - [BAD IDEA] rename all packages to `io.peekandpoke...`
+
+# Funktor
+
+## Auth
+
+- [ ] Send email when password was changed
+
+# Kraft
+
+- [ ] move val Modals: ModalsManager into Kraft.initialize(): Kraft
+- [ ] move val Popups: PopupsManager into Kraft.initialize(): Kraft
+- [ ] move val FlashMessage: FlashMessagesManager into Kraft.initialize(): Kraft
+- [ ] create a builder callback for Kraft.initialize() to configure the behaviour of the managers
+- [ ] then in the apps main component mount it via Kraft(this: FlowContent)
+  - [ ] mount the Modals stage
+  - [ ] mount the Popups stage
+  - [ ] mount the FlashMessages stage
 
 # Aktor
 

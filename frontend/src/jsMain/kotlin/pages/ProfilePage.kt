@@ -1,6 +1,7 @@
 package de.peekandpoke.aktor.frontend.pages
 
 import de.peekandpoke.aktor.frontend.State
+import de.peekandpoke.aktor.frontend.kraft
 import de.peekandpoke.funktor.auth.widgets.ChangePasswordWidget
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
@@ -49,7 +50,12 @@ class ProfilePage(ctx: NoProps) : PureComponent(ctx) {
                     noui.content {
                         ui.header { +"Change Password" }
 
-                        ChangePasswordWidget(State.auth)
+                        ChangePasswordWidget(State.auth) {
+                            when (it) {
+                                true -> kraft.toast.info("Password changed successfully")
+                                false -> kraft.toast.error("Failed to change password")
+                            }
+                        }
                     }
                 }
             }
