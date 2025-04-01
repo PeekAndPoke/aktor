@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 @Serializable
-data class LoginResponse(
+data class AuthLoginResponse(
     val token: Token,
     val realm: AuthRealmModel,
     val user: JsonObject,

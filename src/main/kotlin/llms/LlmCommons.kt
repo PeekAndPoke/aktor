@@ -1,7 +1,6 @@
 package io.peekandpoke.aktor.llms
 
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
-import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.shared.model.Mutable
 import kotlinx.coroutines.flow.FlowCollector
 

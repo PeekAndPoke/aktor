@@ -1,6 +1,6 @@
 package io.peekandpoke.aktor.backend.llms
 
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 import io.peekandpoke.aktor.shared.llms.model.RegisteredLlmModel
 
 class LlmRegistry(

@@ -1,8 +1,9 @@
 package de.peekandpoke.funktor.auth.api
 
 import de.peekandpoke.funktor.auth.AuthError
+import de.peekandpoke.funktor.auth.model.AuthLoginResponse
+import de.peekandpoke.funktor.auth.model.AuthRecoveryResponse
 import de.peekandpoke.funktor.auth.model.AuthUpdateResponse
-import de.peekandpoke.funktor.auth.model.LoginResponse
 import de.peekandpoke.funktor.auth.reaktorAuth
 import de.peekandpoke.funktor.core.broker.OutgoingConverter
 import de.peekandpoke.funktor.core.user
@@ -41,14 +42,14 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
             public()
         }.handle { params, body ->
             // Let the bots wait a bit
-            delay(Random.nextLong(250, 500))
+            letTheBotsWait()
 
             try {
                 reaktorAuth
                     .login(params.realm, body)
                     .let { ApiResponse.ok(it) }
             } catch (e: AuthError) {
-                ApiResponse.forbidden<LoginResponse>().withInfo(e.message ?: "")
+                ApiResponse.forbidden<AuthLoginResponse>().withInfo(e.message ?: "")
             }
         }
     }
@@ -62,7 +63,7 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
             public()
         }.handle { params, body ->
             // Let the bots wait a bit
-            delay(Random.nextLong(250, 500))
+            letTheBotsWait()
 
             // Check if the current user is able to do the update
             if (user.record.userId != body.userId) {
@@ -74,8 +75,37 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
                     .update(params.realm, body)
                     .let { ApiResponse.ok(it) }
             } catch (e: AuthError) {
-                ApiResponse.forbidden<AuthUpdateResponse>().withInfo(e.message ?: "")
+                ApiResponse.badRequest<AuthUpdateResponse>(
+                    AuthUpdateResponse.failed
+                ).withInfo(e.message ?: "")
             }
         }
+    }
+
+    val recover = AuthApiClient.Recover.mount(AuthApiFeature.RealmParam::class) {
+        docs {
+            name = "Recover"
+        }.codeGen {
+            funcName = "recover"
+        }.authorize {
+            public()
+        }.handle { params, body ->
+            // Let the bots wait a bit
+            letTheBotsWait()
+
+            try {
+                reaktorAuth
+                    .recover(params.realm, body)
+                    .let { ApiResponse.ok(it) }
+            } catch (e: AuthError) {
+                ApiResponse.badRequest<AuthRecoveryResponse>(
+                    AuthRecoveryResponse.failed
+                ).withInfo(e.message ?: "")
+            }
+        }
+    }
+
+    private suspend fun letTheBotsWait() {
+        delay(Random.nextLong(250, 500))
     }
 }

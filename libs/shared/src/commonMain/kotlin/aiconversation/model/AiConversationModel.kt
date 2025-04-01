@@ -1,10 +1,10 @@
 package io.peekandpoke.aktor.shared.aiconversation.model
 
-import com.benasher44.uuid.uuid4
 import de.peekandpoke.ultra.common.datetime.MpInstant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
 data class AiConversationModel(
@@ -15,17 +15,6 @@ data class AiConversationModel(
     val createdAt: MpInstant,
     val updatedAt: MpInstant,
 ) {
-    companion object {
-        val empty = AiConversationModel(
-            id = "",
-            ownerId = "",
-            messages = emptyList(),
-            tools = emptyList(),
-            createdAt = MpInstant.now(),
-            updatedAt = MpInstant.now(),
-        )
-    }
-
     data class MessageStats(
         val numTotal: Int,
         val numSystem: Int,
@@ -46,29 +35,30 @@ data class AiConversationModel(
         @Serializable
         @SerialName("system")
         data class System(
-            override val uuid: String = uuid4().toString(),
+            override val uuid: String,
             val content: String,
         ) : Message
 
         @Serializable
         @SerialName("assistant")
         data class Assistant(
-            override val uuid: String = uuid4().toString(),
-            val content: String? = null,
-            val toolCalls: List<ToolCall>? = null,
+            override val uuid: String,
+            val content: String?,
+            val toolCalls: List<ToolCall>?,
+            val rawResponse: JsonElement? = null,
         ) : Message
 
         @Serializable
         @SerialName("user")
         data class User(
-            override val uuid: String = uuid4().toString(),
+            override val uuid: String,
             val content: String,
         ) : Message
 
         @Serializable
         @SerialName("tool")
         data class Tool(
-            override val uuid: String = uuid4().toString(),
+            override val uuid: String,
             val content: String,
             val toolCall: ToolCall,
         ) : Message

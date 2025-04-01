@@ -43,6 +43,8 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
             crossOrigin = "anonymous"
             referrerPolicy = "no-referrer"
         }
+
+        private val renderCache = mutableMapOf<String, String>()
     }
 
     //  PROPS  //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,21 +83,24 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
     private suspend fun process() {
 //        console.log("raw", props.markdown)
 
-        // Modify markdown for remarkMath
-        val cleaned = props.markdown
-            .replace("\\\\[", "$$")
-            .replace("\\\\]", "$$")
-            .replace("\\[", "$$")
-            .replace("\\]", "$$")
-            .replace("\\\\(", "$")
-            .replace("\\\\)", "$")
-            .replace("\\(", "$")
-            .replace("\\)", "$")
+        rendered = renderCache.getOrPut(props.markdown) {
+            // Modify markdown for remarkMath
+            val cleaned = props.markdown
+                .replace("\\\\[", "$$")
+                .replace("\\\\]", "$$")
+                .replace("\\[", "$$")
+                .replace("\\]", "$$")
+                .replace("\\\\(", "$")
+                .replace("\\\\)", "$")
+                .replace("\\(", "$")
+                .replace("\\)", "$")
 
-        try {
-            rendered = pipeline!!(cleaned).await().value
-        } catch (e: Exception) {
-            console.error("Failed to render markdown", e)
+            try {
+                pipeline!!(cleaned).await().value
+            } catch (e: Exception) {
+                console.error("Failed to render markdown", e)
+                props.markdown
+            }
         }
     }
 

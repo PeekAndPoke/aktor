@@ -1,10 +1,10 @@
 package io.peekandpoke.aktor.examples
 
-import io.peekandpoke.aktor.llm.ChatBot
-import io.peekandpoke.aktor.llm.Llm
-import io.peekandpoke.aktor.llm.ollama.OllamaLlm
-import io.peekandpoke.aktor.llm.tools.*
+import io.peekandpoke.aktor.llms.ChatBot
+import io.peekandpoke.aktor.llms.Llm
+import io.peekandpoke.aktor.llms.ollama.OllamaLlm
 import io.peekandpoke.aktor.llms.openai.OpenAiLlm
+import io.peekandpoke.aktor.llms.tools.*
 
 class ExampleBots(
     exchangeRateApiCom: ExchangeRateApiCom,

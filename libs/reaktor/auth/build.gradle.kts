@@ -48,6 +48,7 @@ kotlin {
 
                 implementation(Deps.KotlinLibs.Karango.addons)
 
+                implementation(Deps.KotlinLibs.Funktor.messaging)
                 implementation(Deps.KotlinLibs.Funktor.rest)
             }
         }

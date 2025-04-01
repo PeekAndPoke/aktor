@@ -16,14 +16,20 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
 
         val Login = TypedApiEndpoint.Post(
             uri = "$base/{realm}/login",
-            body = LoginRequest.serializer(),
-            response = LoginResponse.serializer().api(),
+            body = AuthLoginRequest.serializer(),
+            response = AuthLoginResponse.serializer().api(),
         )
 
         val Update = TypedApiEndpoint.Put(
             uri = "$base/{realm}/update",
             body = AuthUpdateRequest.serializer(),
             response = AuthUpdateResponse.serializer().api(),
+        )
+
+        val Recover = TypedApiEndpoint.Put(
+            uri = "$base/{realm}/recover",
+            body = AuthRecoveryRequest.serializer(),
+            response = AuthRecoveryResponse.serializer().api(),
         )
     }
 
@@ -33,7 +39,7 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
         )
     )
 
-    fun login(request: LoginRequest): Flow<ApiResponse<LoginResponse>> = call(
+    fun login(request: AuthLoginRequest): Flow<ApiResponse<AuthLoginResponse>> = call(
         Login(
             "realm" to realm,
             body = request,
@@ -42,6 +48,13 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
 
     fun update(request: AuthUpdateRequest): Flow<ApiResponse<AuthUpdateResponse>> = call(
         Update(
+            "realm" to realm,
+            body = request,
+        )
+    )
+
+    fun recover(request: AuthRecoveryRequest): Flow<ApiResponse<AuthRecoveryResponse>> = call(
+        Recover(
             "realm" to realm,
             body = request,
         )

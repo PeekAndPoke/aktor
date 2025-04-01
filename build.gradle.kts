@@ -22,7 +22,7 @@ allprojects {
     repositories {
         mavenCentral()
         maven { setUrl("https://jitpack.io") }
-//        mavenLocal()
+        mavenLocal()
     }
 }
 

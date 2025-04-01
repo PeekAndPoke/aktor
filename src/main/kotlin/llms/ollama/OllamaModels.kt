@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.ollama
+package io.peekandpoke.aktor.llms.ollama
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -5,8 +5,8 @@ import de.peekandpoke.ultra.kontainer.Kontainer
 import io.peekandpoke.aktor.KeysConfig
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.examples.ExampleBots
-import io.peekandpoke.aktor.llm.ChatBot
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.ChatBot
+import io.peekandpoke.aktor.llms.Llm
 import io.peekandpoke.aktor.llms.mcp.client.McpClient
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking

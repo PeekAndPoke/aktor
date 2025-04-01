@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.ollama
+package io.peekandpoke.aktor.llms.ollama
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -8,7 +8,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 import io.peekandpoke.aktor.shared.model.Mutable
 import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable
 import kotlinx.coroutines.flow.*

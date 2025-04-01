@@ -3,10 +3,12 @@ package de.peekandpoke.funktor.auth.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AuthUpdateResponse(
+data class AuthRecoveryResponse(
     val success: Boolean,
 ) {
     companion object {
-        val failed = AuthUpdateResponse(success = false)
+        val success = AuthRecoveryResponse(success = true)
+
+        val failed = AuthRecoveryResponse(success = false)
     }
 }

@@ -1,12 +1,12 @@
 package de.peekandpoke.funktor.auth.provider
 
 import de.peekandpoke.funktor.auth.AuthError
+import de.peekandpoke.funktor.auth.AuthRealm
 import de.peekandpoke.funktor.auth.AuthSystem
 import de.peekandpoke.funktor.auth.domain.AuthRecord
-import de.peekandpoke.funktor.auth.model.AuthProviderModel
-import de.peekandpoke.funktor.auth.model.AuthUpdateRequest
-import de.peekandpoke.funktor.auth.model.AuthUpdateResponse
-import de.peekandpoke.funktor.auth.model.LoginRequest
+import de.peekandpoke.funktor.auth.findLatestRecordBy
+import de.peekandpoke.funktor.auth.model.*
+import de.peekandpoke.ultra.logging.Log
 import de.peekandpoke.ultra.vault.Stored
 
 
@@ -22,6 +22,7 @@ import de.peekandpoke.ultra.vault.Stored
  */
 class EmailAndPasswordAuth(
     override val id: String,
+    private val log: Log,
     deps: Lazy<AuthSystem.Deps>,
 ) : AuthProvider {
     /**
@@ -33,10 +34,14 @@ class EmailAndPasswordAuth(
      *
      * @param deps Lazily loaded dependencies required for creating instances of the provider.
      */
-    class Factory(private val deps: Lazy<AuthSystem.Deps>) {
+    class Factory(
+        private val deps: Lazy<AuthSystem.Deps>,
+        private val log: Log,
+    ) {
         operator fun invoke(id: String = "email-password") = EmailAndPasswordAuth(
             id = id,
             deps = deps,
+            log = log,
         )
     }
 
@@ -45,9 +50,9 @@ class EmailAndPasswordAuth(
     /**
      * {@inheritDoc}
      */
-    override suspend fun <USER> login(realm: AuthSystem.Realm<USER>, request: LoginRequest): Stored<USER> {
+    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER> {
 
-        var typed: LoginRequest.EmailAndPassword = (request as? LoginRequest.EmailAndPassword)
+        var typed: AuthLoginRequest.EmailAndPassword = (request as? AuthLoginRequest.EmailAndPassword)
             ?: throw AuthError.invalidCredentials()
 
         val email = typed.email.takeIf { it.isNotBlank() }
@@ -69,7 +74,7 @@ class EmailAndPasswordAuth(
      * {@inheritDoc}
      */
     override suspend fun <USER> update(
-        realm: AuthSystem.Realm<USER>,
+        realm: AuthRealm<USER>,
         user: Stored<USER>,
         request: AuthUpdateRequest,
     ): AuthUpdateResponse {
@@ -82,18 +87,19 @@ class EmailAndPasswordAuth(
                     ?: throw AuthError.weekPassword()
 
                 // 3. Write new password entry into database
-                deps.storage.authRecordsRepo.insert(
-                    AuthRecord(
+                deps.storage.createRecord {
+                    AuthRecord.Password(
                         realm = realm.id,
                         ownerId = user._id,
-                        entry = AuthRecord.Entry.Password(
-                            hash = deps.passwordHasher.hash(request.newPassword)
-                        ),
-                        expiresAt = null,
+                        hash = deps.passwordHasher.hash(request.newPassword),
                     )
-                )
+                }
 
-                // TODO: send email that the password was changed
+                val emailResult = realm.messaging.sendPasswordChangedEmail(user)
+
+                if (emailResult.success == false) {
+                    log.warning("Sending 'Password Changed' failed for user ${user._id} ${realm.getUserEmail(user)}")
+                }
 
                 AuthUpdateResponse(success = true)
             }
@@ -104,21 +110,46 @@ class EmailAndPasswordAuth(
         return result
     }
 
+    override suspend fun <USER> recover(
+        realm: AuthRealm<USER>,
+        request: AuthRecoveryRequest,
+    ): AuthRecoveryResponse {
+
+        @Suppress("REDUNDANT_ELSE_IN_WHEN")
+        return when (request) {
+            is AuthRecoveryRequest.ResetPassword -> {
+
+                val user = realm.loadUserByEmail(request.email)
+                    ?: return AuthRecoveryResponse.failed
+
+                val token = deps.random.getToken()
+
+                // TODO: write recovery token into db
+                // TODO: send email with recovery token
+                // TODO: build ui-endpoint to handle the token
+                // TODO: add additional LoginRequest.WithOnetimeToken()
+                // TODO: handle this one above in the login method
+
+                AuthRecoveryResponse.success
+            }
+
+            else -> AuthRecoveryResponse.failed
+        }
+
+    }
+
     private suspend fun <USER> validateCurrentPassword(
-        realm: AuthSystem.Realm<USER>,
+        realm: AuthRealm<USER>,
         user: Stored<USER>,
         password: String,
     ): Boolean {
-        val record = deps.storage.authRecordsRepo.findLatestBy(
+        val record = deps.storage.findLatestRecordBy(
+            type = AuthRecord.Password,
             realm = realm.id,
-            type = AuthRecord.Entry.Password.serialName,
             owner = user._id,
         ) ?: return false
 
-        val entry = (record.value.entry as? AuthRecord.Entry.Password)
-            ?: return false
-
-        return deps.passwordHasher.check(plaintext = password, hash = entry.hash)
+        return deps.passwordHasher.check(plaintext = password, hash = record.value.hash)
     }
 
     override fun asApiModel(): AuthProviderModel {

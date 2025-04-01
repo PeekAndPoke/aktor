@@ -5,6 +5,7 @@ import de.peekandpoke.funktor.core.config.AppConfig
 import de.peekandpoke.funktor.core.config.funktor.FunktorConfig
 import de.peekandpoke.funktor.core.config.ktor.KtorConfig
 import de.peekandpoke.funktor.core.model.InsightsConfig
+import de.peekandpoke.funktor.messaging.senders.aws.AwsSesConfig
 import de.peekandpoke.karango.config.ArangoDbConfig
 
 data class AktorConfig(
@@ -13,6 +14,7 @@ data class AktorConfig(
     val auth: AuthConfig,
     val arangodb: ArangoDbConfig,
     val api: ApiConfig,
+    val aws: AwsConfig,
 ) : AppConfig {
 
     data class AuthConfig(
@@ -25,5 +27,9 @@ data class AktorConfig(
     data class ApiConfig(
         val baseUrl: String,
         val insights: InsightsConfig = InsightsConfig(),
+    )
+
+    data class AwsConfig(
+        val ses: AwsSesConfig,
     )
 }

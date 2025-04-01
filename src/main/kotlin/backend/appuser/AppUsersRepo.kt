@@ -13,8 +13,8 @@ import de.peekandpoke.ultra.common.reflection.kType
 import de.peekandpoke.ultra.security.password.PasswordHasher
 import de.peekandpoke.ultra.vault.Repository
 import de.peekandpoke.ultra.vault.Storable
+import de.peekandpoke.ultra.vault.Stored
 import de.peekandpoke.ultra.vault.hooks.TimestampedHook
-import io.peekandpoke.aktor.AppUserAuthenticationRealm
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 
 class AppUsersRepo(
@@ -41,11 +41,21 @@ class AppUsersRepo(
 
     class Fixtures(
         repo: AppUsersRepo,
-        private val authRepo: AuthStorage.AuthRecordsRepo,
+        private val authStorage: AuthStorage,
         private val passwordHasher: PasswordHasher,
     ) : RepoFixtureLoader<AppUser>(repo = repo) {
 
         private val commonPassword = "s3cret"
+
+        private suspend fun Stored<AppUser>.createPassword(password: String = commonPassword) {
+            authStorage.createRecord {
+                AuthRecord.Password(
+                    realm = AppUserRealm.realm,
+                    ownerId = _id,
+                    hash = passwordHasher.hash(password)
+                )
+            }
+        }
 
         val karsten = singleFix {
             repo.insert(
@@ -53,18 +63,7 @@ class AppUsersRepo(
                     name = "Karsten",
                     email = "karsten.john.gerber@googlemail.com",
                 )
-            ).also { user ->
-                authRepo.insert(
-                    AuthRecord(
-                        realm = AppUserAuthenticationRealm.realm,
-                        ownerId = user._id,
-                        entry = AuthRecord.Entry.Password(
-                            hash = passwordHasher.hash(commonPassword)
-                        ),
-                        expiresAt = null,
-                    )
-                )
-            }
+            ).also { user -> user.createPassword() }
         }
     }
 

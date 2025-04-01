@@ -1,11 +1,8 @@
 package de.peekandpoke.funktor.auth.provider
 
 import de.peekandpoke.funktor.auth.AuthError
-import de.peekandpoke.funktor.auth.AuthSystem
-import de.peekandpoke.funktor.auth.model.AuthProviderModel
-import de.peekandpoke.funktor.auth.model.AuthUpdateRequest
-import de.peekandpoke.funktor.auth.model.AuthUpdateResponse
-import de.peekandpoke.funktor.auth.model.LoginRequest
+import de.peekandpoke.funktor.auth.AuthRealm
+import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.ultra.vault.Stored
 
 interface AuthProvider {
@@ -22,19 +19,31 @@ interface AuthProvider {
      * Otherwise [AuthError] will be thrown.
      */
     suspend fun <USER> login(
-        realm: AuthSystem.Realm<USER>,
-        request: LoginRequest,
+        realm: AuthRealm<USER>,
+        request: AuthLoginRequest,
     ): Stored<USER>?
 
     /**
      * Updates specific things about the authentication setup of the user
      */
     suspend fun <USER> update(
-        realm: AuthSystem.Realm<USER>,
+        realm: AuthRealm<USER>,
         user: Stored<USER>,
         request: AuthUpdateRequest,
     ): AuthUpdateResponse {
         return AuthUpdateResponse(
+            success = false,
+        )
+    }
+
+    /**
+     * Account recovery
+     */
+    suspend fun <USER> recover(
+        realm: AuthRealm<USER>,
+        request: AuthRecoveryRequest,
+    ): AuthRecoveryResponse {
+        return AuthRecoveryResponse(
             success = false,
         )
     }

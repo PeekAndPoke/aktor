@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm.tools
+package io.peekandpoke.aktor.llms.tools
 
 import com.openmeteo.api.Forecast
 import com.openmeteo.api.OpenMeteo
@@ -14,7 +14,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.jackson.*
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 import io.peekandpoke.aktor.utils.append
 import io.peekandpoke.geo.TimeShape
 import kotlinx.serialization.json.*

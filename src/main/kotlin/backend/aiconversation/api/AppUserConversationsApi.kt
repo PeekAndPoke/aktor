@@ -17,9 +17,9 @@ import io.peekandpoke.aktor.backend.aiconversation.aiConversations
 import io.peekandpoke.aktor.backend.appuser.AppUser
 import io.peekandpoke.aktor.backend.appuser.api.AppUserApiFeature
 import io.peekandpoke.aktor.examples.ExampleBots
-import io.peekandpoke.aktor.llm.ChatBot
-import io.peekandpoke.aktor.llm.Llm
 import io.peekandpoke.aktor.llms
+import io.peekandpoke.aktor.llms.ChatBot
+import io.peekandpoke.aktor.llms.Llm
 import io.peekandpoke.aktor.mcp
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationRequest
 import io.peekandpoke.aktor.shared.appuser.api.AppUserConversationsApiClient
@@ -33,7 +33,7 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
         val conversation: Stored<AiConversation>,
     ) : AppUserApiFeature.AppUserAware
 
-    val list = AppUserConversationsApiClient.Companion.List.mount(AppUserApiFeature.SearchForAppUserParam::class) {
+    val list = AppUserConversationsApiClient.List.mount(AppUserApiFeature.SearchForAppUserParam::class) {
         docs {
             name = "List"
         }.codeGen {
@@ -48,18 +48,20 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
                 epp = params.epp,
             )
 
-            ApiResponse.Companion.ok(
-                Paged(
-                    items = found.map { it.asApiModel() },
-                    page = params.page,
-                    epp = params.epp,
-                    fullItemCount = found.fullCount
-                )
+            val result = Paged(
+                items = found.map { it.asApiModel() },
+                page = params.page,
+                epp = params.epp,
+                fullItemCount = found.fullCount
+            )
+
+            ApiResponse.ok(
+                result
             )
         }
     }
 
-    val create = AppUserConversationsApiClient.Companion.Create.mount(AppUserApiFeature.AppUserParam::class) {
+    val create = AppUserConversationsApiClient.Create.mount(AppUserApiFeature.AppUserParam::class) {
         docs {
             name = "Create"
         }.codeGen {
@@ -84,7 +86,7 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
         }
     }
 
-    val get = AppUserConversationsApiClient.Companion.Get.mount(GetConversationParam::class) {
+    val get = AppUserConversationsApiClient.Get.mount(GetConversationParam::class) {
         docs {
             name = "get"
         }.codeGen {
@@ -99,7 +101,7 @@ class AppUserConversationsApi(converter: OutgoingConverter) : ApiRoutes("convers
         }
     }
 
-    val send = AppUserConversationsApiClient.Companion.Send.mount(GetConversationParam::class) {
+    val send = AppUserConversationsApiClient.Send.mount(GetConversationParam::class) {
         docs {
             name = "send"
         }.codeGen {

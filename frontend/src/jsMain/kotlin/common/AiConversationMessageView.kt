@@ -1,17 +1,21 @@
 package de.peekandpoke.aktor.frontend.common
 
 import de.peekandpoke.aktor.frontend.common.markdown.MarkdownView
+import de.peekandpoke.aktor.frontend.kraft
+import de.peekandpoke.kraft.addons.popups.PopupsManager
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.semanticui.SemanticIconFn
-import de.peekandpoke.kraft.semanticui.css
-import de.peekandpoke.kraft.semanticui.icon
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.components.onClick
+import de.peekandpoke.kraft.semanticui.*
 import de.peekandpoke.kraft.vdom.VDom
+import de.peekandpoke.ultra.common.model.tuple
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import kotlinx.css.*
 import kotlinx.html.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import org.w3c.dom.events.MouseEvent
 
 @Suppress("FunctionName")
 fun Tag.AiConversationMessageView(
@@ -26,13 +30,25 @@ fun Tag.AiConversationMessageView(
 
 class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessageView.Props>(ctx) {
 
+    companion object {
+        val prettyJson = Json { prettyPrint = true }
+    }
+
     //  PROPS  //////////////////////////////////////////////////////////////////////////////////////////////////
 
     data class Props(
         val message: AiConversationModel.Message,
     )
 
+    private enum class ViewType {
+        Formatted,
+        Plain,
+        Raw,
+    }
+
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private var selectedViewType by value(ViewType.Formatted)
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +66,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
             renderLeftFloatedRow {
                 ui.orange.segment {
                     renderLeftIcon { orange.robot }
-                    MarkdownView(content)
+                    renderContent(content, null)
                 }
             }
         }
@@ -62,7 +78,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                 renderLeftFloatedRow {
                     ui.green.segment {
                         renderLeftIcon { green.robot }
-                        MarkdownView(content)
+                        renderContent(content, rawResponse)
                     }
                 }
             }
@@ -105,7 +121,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
             renderRightFloatedRow {
                 ui.blue.segment {
                     renderRightIcon { blue.user }
-                    MarkdownView(content)
+                    renderContent(content, null)
                 }
             }
         }
@@ -123,7 +139,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
         }
     }
 
-    private fun HtmlBlockTag.renderPre(content: String) {
+    private fun FlowContent.renderPre(content: String) {
         pre {
             css {
                 maxHeight = 50.vh
@@ -137,12 +153,31 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
         }
     }
 
+    private fun FlowContent.renderContent(content: String, raw: JsonElement?) {
+        when (selectedViewType) {
+            ViewType.Formatted -> MarkdownView(content)
+            ViewType.Plain -> +content
+            ViewType.Raw -> when (raw) {
+                null -> +"No raw data"
+                else -> {
+                    val json = prettyJson.encodeToString(JsonElement.serializer(), raw)
+
+                    renderPre(json)
+                }
+            }
+        }
+    }
+
     private fun DIV.renderLeftIcon(iconFn: SemanticIconFn) {
         icon.circular.inverted.iconFn().then {
             css {
                 position = Position.absolute
                 top = (-12).px
                 left = (-12).px
+            }
+
+            onClick {
+                onClickIcon(it, PopupsManager.Positioning.BottomLeft)
             }
         }
     }
@@ -153,6 +188,36 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
                 position = Position.absolute
                 top = (-12).px
                 right = (-12).px
+            }
+
+            onClick {
+                onClickIcon(it, PopupsManager.Positioning.BottomRight)
+            }
+        }
+    }
+
+    private fun onClickIcon(evt: MouseEvent, pos: PopupsManager.Positioning) {
+        kraft.popups.showContextMenu(evt, pos) {
+            ui.vertical.menu {
+                noui.item {
+                    val options = listOf(
+                        tuple(ViewType.Formatted, "Formatted", semanticIcon { markdown }),
+                        tuple(ViewType.Plain, "Plain", semanticIcon { font }),
+                        tuple(ViewType.Raw, "Raw", semanticIcon { code }),
+                    )
+
+                    options.forEach { (viewType, text, iconFn) ->
+                        ui.given(selectedViewType == viewType) { blue }
+                            .givenNot(selectedViewType == viewType) { basic }
+                            .icon.button {
+                                onClick {
+                                    selectedViewType = viewType
+                                }
+                                title = text
+                                icon.iconFn().render()
+                            }
+                    }
+                }
             }
         }
     }

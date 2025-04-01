@@ -1,6 +1,6 @@
-package io.peekandpoke.aktor.llm.tools
+package io.peekandpoke.aktor.llms.tools
 
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 import org.mariuszgromada.math.mxparser.Argument
 import org.mariuszgromada.math.mxparser.Expression
 

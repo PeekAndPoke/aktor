@@ -1,9 +1,9 @@
-package io.peekandpoke.aktor.llm.tools
+package io.peekandpoke.aktor.llms.tools
 
 import de.peekandpoke.ultra.common.datetime.MpClosedLocalDateRange
 import de.peekandpoke.ultra.common.datetime.MpLocalDate
 import de.peekandpoke.ultra.common.remote.buildUri
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 import io.peekandpoke.crawl4ai.Crawl4aiClient
 import io.peekandpoke.crawl4ai.Crawl4aiModels
 import kotlinx.serialization.json.buildJsonObject

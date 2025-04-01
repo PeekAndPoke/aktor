@@ -1,4 +1,4 @@
-package io.peekandpoke.aktor.llm
+package io.peekandpoke.aktor.llms
 
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel.ToolRef

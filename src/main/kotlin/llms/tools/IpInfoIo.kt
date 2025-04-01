@@ -1,10 +1,10 @@
-package io.peekandpoke.aktor.llm.tools
+package io.peekandpoke.aktor.llms.tools
 
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 import java.net.HttpURLConnection.setFollowRedirects
 import kotlin.time.Duration.Companion.seconds
 

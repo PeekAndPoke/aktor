@@ -1,22 +1,24 @@
 package de.peekandpoke.funktor.auth.widgets
 
 import de.peekandpoke.funktor.auth.AuthState
-import de.peekandpoke.funktor.auth.model.AuthProviderModel
-import de.peekandpoke.funktor.auth.model.AuthRealmModel
-import de.peekandpoke.funktor.auth.model.LoginRequest
+import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.kraft.addons.semanticui.forms.UiInputField
 import de.peekandpoke.kraft.addons.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.components.*
+import de.peekandpoke.kraft.semanticui.icon
 import de.peekandpoke.kraft.semanticui.noui
 import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
+import de.peekandpoke.ultra.common.model.Message
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.map
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
+import kotlinx.html.a
+import kotlinx.html.div
 import kotlinx.serialization.json.jsonPrimitive
 import org.w3c.dom.url.URLSearchParams
 
@@ -46,12 +48,28 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         val onLoginSuccessUri: String,
     )
 
+    private sealed interface DisplayState {
+        data class Login(
+            val email: String = "",
+            val password: String = "",
+            val message: Message? = null,
+        ) : DisplayState
+
+        data class RecoverPassword(
+            val email: String = "",
+            val provider: AuthProviderModel,
+            val message: Message? = null,
+        ) : DisplayState
+
+        fun withMessage(message: Message?) = when (this) {
+            is Login -> copy(message = message)
+            is RecoverPassword -> copy(message = message)
+        }
+    }
+
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private var email by value("")
-    private var password by value("")
-
-    private var errorMessage by value<String?>(null)
+    private var displayState: DisplayState by value(DisplayState.Login())
 
     val realmLoader = dataLoader {
         props.state.api.getRealm().map { it.data!! }
@@ -62,6 +80,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
     init {
         realmLoader.value { realm ->
             realm?.let {
+                // Handle any callback params ... f.e. from Github-OAuth
                 val params = URLSearchParams(window.location.search)
 
                 if (params.has(authCallbackParam)) {
@@ -72,7 +91,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                         AuthProviderModel.TYPE_GITHUB -> {
                             params.get("code")?.let { code ->
                                 login(
-                                    LoginRequest.OAuth(provider = provider.id, token = code)
+                                    AuthLoginRequest.OAuth(provider = provider.id, token = code)
                                 )
                             }
                         }
@@ -91,27 +110,29 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         }
     }
 
-    private fun login(request: LoginRequest) = launch {
-        doLogin(request)
-    }
-
-    private suspend fun doLogin(request: LoginRequest) = noDblClick.runBlocking {
-
-        errorMessage = null
-
-        val result = props.state.login(request)
-
-        console.log("Login result:", result)
-
-        if (result.isLoggedIn) {
-            props.state.redirectAfterLogin(
-                props.onLoginSuccessUri
-            )
-        } else {
-            errorMessage = "Login failed"
+    private fun login(request: AuthLoginRequest) {
+        launch {
+            doLogin(request)
         }
     }
 
+    private suspend fun doLogin(request: AuthLoginRequest) = noDblClick.runBlocking {
+        displayState = displayState.withMessage(message = null)
+
+        val result = props.state.login(request)
+
+        if (result.isLoggedIn) {
+            props.state.redirectAfterLogin(props.onLoginSuccessUri)
+        } else {
+            displayState = displayState.withMessage(message = Message.error("Login failed"))
+        }
+    }
+
+    private suspend fun recover(request: AuthRecoveryRequest): AuthRecoveryResponse? {
+        return noDblClick.runBlocking {
+            props.state.recover(request)
+        }
+    }
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -132,18 +153,26 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             }
 
             loaded { realm ->
-                renderContent(realm)
+                when (val s = displayState) {
+                    is DisplayState.Login -> renderLoginState(s, realm)
+                    is DisplayState.RecoverPassword -> renderRecoverPasswordState(s)
+                }
             }
         }
     }
 
-    private fun FlowContent.renderContent(realm: AuthRealmModel) {
+    private fun FlowContent.renderMessage(message: Message?) = when (message?.type) {
+        null -> Unit
+        Message.Type.info -> ui.info.message { +message.text }
+        Message.Type.warning -> ui.warning.message { +message.text }
+        Message.Type.error -> ui.error.message { +message.text }
+    }
 
-        errorMessage?.let {
-            ui.error.message {
-                +it
-            }
-        }
+    private fun FlowContent.renderLoginState(state: DisplayState.Login, realm: AuthRealmModel) {
+
+        ui.header { +"Login" }
+
+        renderMessage(state.message)
 
         fun dividerIfNotLast(idx: Int) {
             if (idx < realm.providers.size - 1) {
@@ -155,7 +184,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             realm.providers.forEachIndexed { idx, provider ->
                 when (provider.type) {
                     AuthProviderModel.TYPE_EMAIL_PASSWORD -> noui.item {
-                        renderEmailPasswordForm(provider)
+                        renderEmailPasswordForm(state, provider)
                         dividerIfNotLast(idx)
                     }
 
@@ -176,28 +205,47 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         }
     }
 
-    private fun FlowContent.renderEmailPasswordForm(provider: AuthProviderModel) {
+    private fun FlowContent.renderEmailPasswordForm(state: DisplayState.Login, provider: AuthProviderModel) {
         ui.form Form {
             onSubmit { evt ->
                 evt.preventDefault()
             }
 
-            UiInputField(::email) {
-                placeholder("User")
+            UiInputField(state.email, { displayState = state.copy(email = it) }) {
+                placeholder("Email")
             }
 
-            UiPasswordField(::password) {
+            UiPasswordField(state.password, { displayState = state.copy(password = it) }) {
                 placeholder("Password")
                 revealPasswordIcon()
             }
 
-            ui.orange.fluid.givenNot(noDblClick.canRun) { loading }.button Submit {
-                onClick {
-                    login(
-                        LoginRequest.EmailAndPassword(provider = provider.id, email = email, password = password)
-                    )
+            ui.field {
+                ui.orange.fluid.givenNot(noDblClick.canRun) { loading }.button Submit {
+                    onClick {
+                        login(
+                            AuthLoginRequest.EmailAndPassword(
+                                provider = provider.id,
+                                email = state.email,
+                                password = state.password,
+                            )
+                        )
+                    }
+                    +"Login"
                 }
-                +"Login"
+            }
+
+            ui.field {
+                a {
+                    onClick { evt ->
+                        evt.preventDefault()
+                        displayState = DisplayState.RecoverPassword(
+                            email = state.email,
+                            provider = provider,
+                        )
+                    }
+                    +"Forgot Password?"
+                }
             }
         }
     }
@@ -205,11 +253,11 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
     private fun FlowContent.renderGoogleSso(provider: AuthProviderModel) {
         val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
 
-        console.log("Google client id", clientId)
+//        console.log("Google client id", clientId)
 
         GoogleSignInButton(clientId = clientId) { token ->
             login(
-                LoginRequest.OAuth(provider = provider.id, token = token)
+                AuthLoginRequest.OAuth(provider = provider.id, token = token)
             )
         }
     }
@@ -217,7 +265,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
     private fun FlowContent.renderGithubSso(provider: AuthProviderModel) {
         val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
 
-        console.log("Google client id", clientId)
+//        console.log("Google client id", clientId)
 
         val parts = listOf(
             window.location.origin,
@@ -233,8 +281,62 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             callbackUrl = callbackUrl,
         ) { token ->
             login(
-                LoginRequest.OAuth(provider = provider.id, token = token)
+                AuthLoginRequest.OAuth(provider = provider.id, token = token)
             )
+        }
+    }
+
+    private fun FlowContent.renderRecoverPasswordState(state: DisplayState.RecoverPassword) {
+
+        div {
+            onClick {
+                displayState = DisplayState.Login(email = state.email)
+            }
+            icon.angle_left {}
+            +"Back"
+        }
+
+        ui.hidden.divider {}
+
+        renderMessage(state.message)
+
+        ui.form Form {
+            onSubmit { evt ->
+                evt.preventDefault()
+            }
+
+            ui.header {
+                +"Enter your email to recover your password"
+            }
+
+            UiInputField(state.email, { displayState = state.copy(email = it) }) {
+                placeholder("Email")
+            }
+
+            ui.field {
+                ui.orange.fluid.givenNot(noDblClick.canRun) { loading }.button Submit {
+                    onClick {
+                        launch {
+                            val result = recover(
+                                AuthRecoveryRequest.ResetPassword(
+                                    provider = state.provider.id,
+                                    email = state.email,
+                                )
+                            )
+
+                            displayState = when (result?.success) {
+                                true -> DisplayState.Login(
+                                    email = state.email,
+                                    message = Message.info("Recovery email sent. Please check your inbox."),
+                                )
+
+                                else -> state.copy(message = Message.error("Recovery not possible"))
+                            }
+                        }
+                    }
+                    +"Recover Password"
+                }
+            }
         }
     }
 }

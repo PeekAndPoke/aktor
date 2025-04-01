@@ -48,8 +48,8 @@ class KarangoAuthRecordsRepo(
     override fun IndexBuilder<AuthRecord>.buildIndexes() {
         persistentIndex {
             field { realm }
-            field { entry._type }
             field { ownerId }
+            field { _type }
         }
 
         ttlIndex {
@@ -57,16 +57,12 @@ class KarangoAuthRecordsRepo(
         }
     }
 
-    override suspend fun insert(record: AuthRecord): Stored<AuthRecord> {
-        return super.insert(record)
-    }
-
     override suspend fun findLatestBy(realm: String, type: String, owner: String): Stored<AuthRecord>? {
         return findFirst {
             FOR(repo) { r ->
                 FILTER(r.realm EQ realm)
-                FILTER(r.entry._type EQ type)
                 FILTER(r.ownerId EQ owner)
+                FILTER(r._type EQ type)
 
                 SORT(r.createdAt.ts.DESC)
 

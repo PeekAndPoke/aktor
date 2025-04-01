@@ -18,6 +18,8 @@ val ReaktorAuth = module {
     // Facade
     dynamic(AuthSystem::class)
     dynamic(AuthSystem.Deps::class)
+    // Services
+    instance(AuthRandom())
     // Provider Factories
     dynamic(EmailAndPasswordAuth.Factory::class)
     dynamic(GoogleSsoAuth.Factory::class)

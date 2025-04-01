@@ -1,9 +1,9 @@
 package de.peekandpoke.funktor.auth.provider
 
 import de.peekandpoke.funktor.auth.AuthError
-import de.peekandpoke.funktor.auth.AuthSystem
+import de.peekandpoke.funktor.auth.AuthRealm
+import de.peekandpoke.funktor.auth.model.AuthLoginRequest
 import de.peekandpoke.funktor.auth.model.AuthProviderModel
-import de.peekandpoke.funktor.auth.model.LoginRequest
 import de.peekandpoke.ultra.vault.Stored
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -40,8 +40,8 @@ class GithubSsoAuth(
         }
     }
 
-    override suspend fun <USER> login(realm: AuthSystem.Realm<USER>, request: LoginRequest): Stored<USER>? {
-        val typed = (request as? LoginRequest.OAuth)
+    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER>? {
+        val typed = (request as? AuthLoginRequest.OAuth)
             ?: throw AuthError.invalidCredentials()
 
         // see https://medium.com/@r.sadatshokouhi/implementing-sso-in-react-with-github-oauth2-4d8dbf02e607

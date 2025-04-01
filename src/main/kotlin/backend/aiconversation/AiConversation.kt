@@ -10,6 +10,7 @@ import io.peekandpoke.aktor.utils.toJsonObject
 import io.peekandpoke.aktor.utils.unwrap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
@@ -47,13 +48,16 @@ data class AiConversation(
             override val uuid: String = uuid4().toString(),
             val content: String? = null,
             val toolCalls: List<ToolCall>? = null,
+            val rawResponse: JsonElement? = null,
         ) : Message {
-            fun appendContent(content: String?) = copy(content = this.content.orEmpty() + content.orEmpty())
+            fun appendContent(content: String?) =
+                copy(content = this.content.orEmpty() + content.orEmpty())
 
             override fun asApiModel() = AiConversationModel.Message.Assistant(
                 uuid = uuid,
                 content = content,
                 toolCalls = toolCalls?.map { it.asApiModel() },
+                rawResponse = rawResponse,
             )
         }
 

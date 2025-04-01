@@ -5,9 +5,9 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.apache.v2.ApacheHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import de.peekandpoke.funktor.auth.AuthError
-import de.peekandpoke.funktor.auth.AuthSystem
+import de.peekandpoke.funktor.auth.AuthRealm
+import de.peekandpoke.funktor.auth.model.AuthLoginRequest
 import de.peekandpoke.funktor.auth.model.AuthProviderModel
-import de.peekandpoke.funktor.auth.model.LoginRequest
 import de.peekandpoke.ultra.vault.Stored
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -29,8 +29,8 @@ class GoogleSsoAuth(
         )
     }
 
-    override suspend fun <USER> login(realm: AuthSystem.Realm<USER>, request: LoginRequest): Stored<USER>? {
-        val typed = (request as? LoginRequest.OAuth)
+    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER>? {
+        val typed = (request as? AuthLoginRequest.OAuth)
             ?: throw AuthError.invalidCredentials()
 
         val verifier = GoogleIdTokenVerifier

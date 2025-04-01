@@ -9,7 +9,7 @@ import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 import io.peekandpoke.aktor.llms.LlmCommons
 import io.peekandpoke.aktor.shared.model.Mutable
 import io.peekandpoke.aktor.shared.model.Mutable.Companion.mutable

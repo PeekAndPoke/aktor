@@ -87,8 +87,6 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
                                 opacity = 0.95
                             }
 
-                            ui.header { +"Login" }
-
                             LoginWidget(
                                 state = State.auth,
                                 onLoginSuccessUri = Nav.dashboard(),

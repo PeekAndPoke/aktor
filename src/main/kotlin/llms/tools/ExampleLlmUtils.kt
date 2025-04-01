@@ -1,7 +1,7 @@
-package io.peekandpoke.aktor.llm.tools
+package io.peekandpoke.aktor.llms.tools
 
 import de.peekandpoke.ultra.common.datetime.Kronos
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 
 object ExampleLlmUtils {
 

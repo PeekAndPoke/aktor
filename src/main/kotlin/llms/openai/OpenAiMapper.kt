@@ -3,7 +3,7 @@ package io.peekandpoke.aktor.llms.openai
 import com.aallam.openai.api.chat.*
 import com.aallam.openai.api.core.Parameters
 import io.peekandpoke.aktor.backend.aiconversation.AiConversation
-import io.peekandpoke.aktor.llm.Llm
+import io.peekandpoke.aktor.llms.Llm
 
 class OpenAiMapper {
     operator fun <T> invoke(block: OpenAiMapper.() -> T) = block()
