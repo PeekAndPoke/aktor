@@ -103,13 +103,12 @@ fun createBlueprint(config: AktorConfig) = kontainer {
     // Mount Karango
     karango(config = config.arangodb)
 
-    // singleton
-    singleton(KeysConfig::class) {
+    // Keys config
+    instance(
         KeysConfig(
-            ConfigFactory.parseFile(File("./config/keys.env"))
+            ConfigFactory.parseFile(File("./config/keys.env.conf"))
         )
-    }
-
+    )
 
     // Apps
     singleton(ApiApp::class)
