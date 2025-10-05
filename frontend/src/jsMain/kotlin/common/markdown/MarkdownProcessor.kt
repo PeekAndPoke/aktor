@@ -7,18 +7,61 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asDeferred
 import kotlin.js.Promise
 
-typealias MarkdownRenderer = (String) -> Deferred<UnifiedModule.UnifiedResult>
+typealias MarkdownRenderer = (String) -> Deferred<String>
 
 object MarkdownProcessor {
 
     private var pipelineCounter = 0
     private val queue = SimpleAsyncQueue()
 
+    private val sanitizeConfig = js {
+        tagNames = arrayOf(
+            // Standard HTML tags
+            "h1", "h2", "h3", "h4", "h5", "h6",
+            "p", "br", "strong", "em", "code", "pre",
+            "ul", "ol", "li", "blockquote",
+            "a", "img", "div", "span",
+
+            // SVG tags (safe subset)
+            "svg", "path", "circle", "rect", "line", "polyline", "polygon",
+            "ellipse", "g", "text", "tspan", "defs", "use", "symbol",
+            "marker", "linearGradient", "radialGradient", "stop"
+        )
+
+        attributes = js {
+            // Standard HTML attributes
+            `*` = arrayOf("className", "id")
+            a = arrayOf("href", "title", "target", "rel")
+            img = arrayOf("src", "alt", "title", "width", "height")
+            code = arrayOf("className", "data-lang")
+            pre = arrayOf("className")
+            span = arrayOf("style") // For KaTeX
+            div = arrayOf("style") // For KaTeX/Mermaid
+
+            // SVG attributes (safe subset)
+            svg = arrayOf("width", "height", "viewBox", "xmlns", "className")
+            path = arrayOf("d", "fill", "stroke", "strokeWidth", "className")
+            circle = arrayOf("cx", "cy", "r", "fill", "stroke", "strokeWidth", "className")
+            rect = arrayOf("x", "y", "width", "height", "fill", "stroke", "strokeWidth", "className")
+            line = arrayOf("x1", "y1", "x2", "y2", "stroke", "strokeWidth", "className")
+            g = arrayOf("fill", "stroke", "transform", "className")
+            text = arrayOf("x", "y", "fill", "fontSize", "textAnchor", "className")
+            use = arrayOf("href", "x", "y", "width", "height")
+        }
+
+        // Remove dangerous protocols
+        protocols = js {
+            href = arrayOf("http", "https", "mailto")
+            src = arrayOf("http", "https", "data")
+        }
+    }
+
+
     fun getMarkdownRenderer(): MarkdownRenderer {
 
         return { input ->
 
-            val deferred = CompletableDeferred<UnifiedModule.UnifiedResult>()
+            val deferred = CompletableDeferred<String>()
 
             queue.add {
                 val pipeline = createNewMarkdownPipeline()
@@ -27,7 +70,10 @@ object MarkdownProcessor {
 //                console.log("rendering", input)
                     val result = pipeline.process(input).asDeferred().await()
 //                console.log("rendered", result.value)
-                    deferred.complete(result)
+
+                    val value = result.value
+
+                    deferred.complete(value)
                 } catch (e: Exception) {
                     deferred.completeExceptionally(e)
                 }
@@ -67,59 +113,24 @@ object MarkdownProcessor {
         val rehypeSanitize = rehypeSanitizeLoader.await()
         val rehypeStringify = rehypeStringifyLoader.await()
 
-//        fun createSafePlugin(plugin: dynamic): dynamic {
-//            fun wrapper(vararg args: dynamic): dynamic {
-//                console.log("plugin options", args)
-//                val wrapped = plugin.call(null, args)
-//
-//                val fn: (tree: dynamic, file: dynamic) -> dynamic = { tree, file ->
-//                    val promise = wrapped(tree, file)
-//
-//                    when (promise) {
-//                        is Promise<*> -> promise.catch { error -> tree }
-//                        else -> promise
-//                    }
-//                }
-//
-//                return fn
-//            }
-//
-//            return ::wrapper
-//        }
-
-//    console.log("Unified", unified)
-//    console.log("Remark Parse", remarkParse)
-//    console.log("Remark Gfm", remarkGfm)
-//    console.log("Remark Math", remarkMath)
-//    console.log("Remark Rehype", remarkRehype)
-//    console.log("mermaid", mermaid)
-//    console.log("rehype-mermaid", rehypeMermaid)
-//    console.log("rehype-katex", rehypeKatex)
-//    console.log("rehype-parse", rehypeParse)
-//    console.log("rehype-format", rehypeFormat)
-//    console.log("rehype-stringify", rehypeStringify)
-
-//    mermaid.module.default.initialize(
-//        js {
-//            startOnLoad = true
-//        }
-//    )
-
         val pipeline = unified.unified()
             .use(remarkParse.default)
             .use(remarkGfm.default)
             .use(remarkMath.default)
             .use(remarkRehype.default)
+            // IMPORTANT: sanitize is required to prevent XSS attacks BEFORE rehype-stringify
+            .use(rehypeSanitize.default)
             .use(
                 rehypeMermaid.default,
                 js {
                     // https://github.com/remcohaszing/rehype-mermaid/blob/main/README.md?plain=1#L226
                     strategy = "img-png"
+//                    strategy = "inline-svg"
                     // We need a fresh prefix everytime, otherwise rendering fails
                     prefix = "mermaid-${pipelineCounter}"
                     // Since we sometimes have partial code, we need to catch the errors
                     errorFallback = { element: dynamic, diagram: dynamic, error: dynamic, file: dynamic ->
-                        console.info("Failed to render mermaid", error, file)
+                        console.warn("Failed to render mermaid", error, file)
                         // return
                         element
                     }
@@ -127,15 +138,8 @@ object MarkdownProcessor {
             )
             .use(rehypeHighlight.default, js { ignoreMissing = true })
             .use(rehypeKatex.default)
-            // IMPORTANT: sanitize is required to prevent XSS attacks BEFORE rehype-stringify
-            .use(rehypeSanitize.default)
             .use(rehypeStringify.default)
 
         return pipeline
     }
 }
-
-
-
-
-

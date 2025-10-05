@@ -12,6 +12,19 @@ if (devServer) {
 
     // History fallback so that reloads work properly
     devServer.historyApiFallback = true
+
+    // Disable logging options
+    devServer.client = {
+        logging: 'none'  // Disables client-side logging
+    }
+    devServer.devMiddleware = {
+        stats: 'none'    // Disables webpack build stats
+    }
+
+    // Remove static directories that should not be watched
+    // Otherwise we get frontend reloads f.e. when log entries are written
+    devServer.static = devServer.static
+        .filter(it => it.includes("build"))
 }
 
 console.log(config)

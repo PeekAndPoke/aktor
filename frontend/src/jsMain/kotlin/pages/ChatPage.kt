@@ -16,6 +16,7 @@ import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.html.css
 import de.peekandpoke.ultra.html.onClick
 import de.peekandpoke.ultra.html.onKeyDown
+import de.peekandpoke.ultra.html.onSubmit
 import de.peekandpoke.ultra.semanticui.noui
 import de.peekandpoke.ultra.semanticui.ui
 import io.ktor.client.plugins.sse.*
@@ -24,6 +25,7 @@ import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationRequest
 import io.peekandpoke.aktor.shared.model.SseMessages
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -126,10 +128,9 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
     fun canSend() = noDblClick.canRun && input.isNotBlank()
 
     private fun send() {
-        val message = input.trim()
-
         if (canSend()) {
             launch {
+                val message = input.trim()
                 sendChat(message)
                 input = ""
                 delay(300.milliseconds)
@@ -148,7 +149,10 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
                     message = message,
                 ),
             ).map { it.data!! }
+            .catch { console.error("Error sending chat message", it) }
             .firstOrNull()
+
+        console.log("Response, response")
 
         response?.let {
             updateConversation(response.conversation)
@@ -190,8 +194,13 @@ class ChatPage(ctx: Ctx<Props>) : Component<ChatPage.Props>(ctx) {
     }
 
     private fun FlowContent.renderInputs() {
-        ui.form {
+        ui.form Form {
             key = "message-input"
+
+            onSubmit { evt ->
+                evt.preventDefault()
+                evt.stopPropagation()
+            }
 
             UiTextArea(value = input, onChange = { input = it }) {
                 name("message")

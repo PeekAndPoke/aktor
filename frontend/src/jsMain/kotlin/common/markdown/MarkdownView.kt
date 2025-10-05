@@ -85,7 +85,7 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
 
         rendered = renderCache.getOrPut(props.markdown) {
 
-            console.log("rendering markdown for ", props.markdown.take(100))
+//            console.log("rendering markdown for ", props.markdown.take(100))
 
             // Modify markdown for remarkMath
             val cleaned = props.markdown
@@ -99,7 +99,7 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
                 .replace("\\)", "$")
 
             try {
-                pipeline!!(cleaned).await().value
+                pipeline!!(cleaned).await()
             } catch (e: Exception) {
                 console.error("Failed to render markdown", e)
                 props.markdown
