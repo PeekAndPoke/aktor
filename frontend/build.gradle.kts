@@ -58,6 +58,18 @@ kotlin {
                 implementation(Deps.KotlinLibs.Kraft.addons_pdfjs)
                 implementation(Deps.KotlinLibs.Kraft.addons_signaturepad)
                 implementation(Deps.KotlinLibs.Kraft.addons_sourcemappedstacktrace)
+
+                // JS deps
+                implementation(Deps.Npm { unified() })
+                implementation(Deps.Npm { remarkParse() })
+                implementation(Deps.Npm { remarkGfm() })
+                implementation(Deps.Npm { remarkMath() })
+                implementation(Deps.Npm { remarkRehype() })
+                implementation(Deps.Npm { rehypeMermaid() })
+                implementation(Deps.Npm { rehypeHighlight() })
+                implementation(Deps.Npm { rehypeKatex() })
+                implementation(Deps.Npm { rehypeSanitize() })
+                implementation(Deps.Npm { rehypeStringify() })
             }
         }
 

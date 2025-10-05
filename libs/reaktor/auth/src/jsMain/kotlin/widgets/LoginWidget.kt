@@ -129,6 +129,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
         if (result.isLoggedIn) {
             val uri = router.strategy.render(props.onLoginSuccessUri)
+            console.log("Login success. Redirecting to $uri")
             props.state.redirectAfterLogin(uri)
         } else {
             displayState = displayState.withMessage(message = Message.error("Login failed"))

@@ -1,11 +1,11 @@
 package de.peekandpoke.aktor.frontend.common.markdown
 
-import de.peekandpoke.kraft.utils.ScriptLoader
 import de.peekandpoke.kraft.utils.SimpleAsyncQueue
 import kotlinext.js.js
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asDeferred
+import kotlin.js.Promise
 
 typealias MarkdownRenderer = (String) -> Deferred<UnifiedModule.UnifiedResult>
 
@@ -41,41 +41,20 @@ object MarkdownProcessor {
 
         pipelineCounter++
 
-        val unifiedLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<UnifiedModule>(src = "https://esm.sh/unified@11?bundle")
-        )
+        fun <T> load(block: () -> Promise<T>): Deferred<T> {
+            return block().asDeferred()
+        }
 
-        val remarkParseLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/remark-parse@11?bundle")
-        )
-
-        val remarkGfmLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/remark-gfm@4?bundle")
-        )
-
-        val remarkMathLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/remark-math@6?bundle")
-        )
-
-        val remarkRehypeLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/remark-rehype@11?bundle")
-        )
-
-        val rehypeMermaidLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/rehype-mermaid@3?bundle")
-        )
-
-        val rehypeHighlightLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/rehype-highlight@6?bundle")
-        )
-
-        val rehypeKatexLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/rehype-katex@7?bundle")
-        )
-
-        val rehypeStringifyLoader = ScriptLoader.load(
-            ScriptLoader.Javascript.Module<dynamic>(src = "https://esm.sh/rehype-stringify@10?bundle")
-        )
+        val unifiedLoader = load<dynamic> { js("import('unified')") }
+        val remarkParseLoader = load<dynamic> { js("import('remark-parse')") }
+        val remarkGfmLoader = load<dynamic> { js("import('remark-gfm')") }
+        val remarkMathLoader = load<dynamic> { js("import('remark-math')") }
+        val remarkRehypeLoader = load<dynamic> { js("import('remark-rehype')") }
+        val rehypeMermaidLoader = load<dynamic> { js("import('rehype-mermaid')") }
+        val rehypeHighlightLoader = load<dynamic> { js("import('rehype-highlight')") }
+        val rehypeKatexLoader = load<dynamic> { js("import('rehype-katex')") }
+        val rehypeSanitizeLoader = load<dynamic> { js("import('rehype-sanitize')") }
+        val rehypeStringifyLoader = load<dynamic> { js("import('rehype-stringify')") }
 
         val unified = unifiedLoader.await()
         val remarkParse = remarkParseLoader.await()
@@ -85,6 +64,7 @@ object MarkdownProcessor {
         val rehypeMermaid = rehypeMermaidLoader.await()
         val rehypeHighlight = rehypeHighlightLoader.await()
         val rehypeKatex = rehypeKatexLoader.await()
+        val rehypeSanitize = rehypeSanitizeLoader.await()
         val rehypeStringify = rehypeStringifyLoader.await()
 
 //        fun createSafePlugin(plugin: dynamic): dynamic {
@@ -125,13 +105,13 @@ object MarkdownProcessor {
 //        }
 //    )
 
-        val pipeline = unified.module.unified()
-            .use(remarkParse.module.default)
-            .use(remarkGfm.module.default)
-            .use(remarkMath.module.default)
-            .use(remarkRehype.module.default)
+        val pipeline = unified.unified()
+            .use(remarkParse.default)
+            .use(remarkGfm.default)
+            .use(remarkMath.default)
+            .use(remarkRehype.default)
             .use(
-                rehypeMermaid.module.default,
+                rehypeMermaid.default,
                 js {
                     // https://github.com/remcohaszing/rehype-mermaid/blob/main/README.md?plain=1#L226
                     strategy = "img-png"
@@ -145,9 +125,11 @@ object MarkdownProcessor {
                     }
                 }
             )
-            .use(rehypeHighlight.module.default, js { ignoreMissing = true })
-            .use(rehypeKatex.module.default)
-            .use(rehypeStringify.module.default)
+            .use(rehypeHighlight.default, js { ignoreMissing = true })
+            .use(rehypeKatex.default)
+            // IMPORTANT: sanitize is required to prevent XSS attacks BEFORE rehype-stringify
+            .use(rehypeSanitize.default)
+            .use(rehypeStringify.default)
 
         return pipeline
     }

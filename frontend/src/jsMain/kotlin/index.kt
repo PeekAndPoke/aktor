@@ -44,6 +44,8 @@ val kraft = kraftApp {
     }
 
     routing {
+        usePathStrategy()
+
         mountNav()
     }
 }

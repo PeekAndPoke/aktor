@@ -43,7 +43,7 @@ object Deps {
 
     object KotlinLibs {
         // https://central.sonatype.com/artifact/io.peekandpoke.ultra/common
-        private const val ultra_version = "0.94.2"
+        private const val ultra_version = "0.94.3"
 
         object Ultra {
             const val common = "io.peekandpoke.ultra:common:$ultra_version"
@@ -413,6 +413,36 @@ object Deps {
         operator fun <T> invoke(block: Npm.() -> T): T {
             return this.block()
         }
+
+        // https://www.npmjs.com/package/bowser
+        fun KotlinDependencyHandler.unified() = npm("unified", "11.0.5")
+
+        // https://www.npmjs.com/package/remark-parse
+        fun KotlinDependencyHandler.remarkParse() = npm("remark-parse", "11.0.0")
+
+        // https://www.npmjs.com/package/remark-gfm
+        fun KotlinDependencyHandler.remarkGfm() = npm("remark-gfm", "4.0.1")
+
+        // https://www.npmjs.com/package/remark-math
+        fun KotlinDependencyHandler.remarkMath() = npm("remark-math", "6.0.0")
+
+        // https://www.npmjs.com/package/remark-rehype
+        fun KotlinDependencyHandler.remarkRehype() = npm("remark-rehype", "11.1.2")
+
+        // https://www.npmjs.com/package/rehype-mermaid
+        fun KotlinDependencyHandler.rehypeMermaid() = npm("rehype-mermaid", "3.0.0")
+
+        // https://www.npmjs.com/package/rehype-highlight
+        fun KotlinDependencyHandler.rehypeHighlight() = npm("rehype-highlight", "7.0.2")
+
+        // https://www.npmjs.com/package/rehype-katex
+        fun KotlinDependencyHandler.rehypeKatex() = npm("rehype-katex", "7.0.1")
+
+        // https://www.npmjs.com/package/rehype-sanitize
+        fun KotlinDependencyHandler.rehypeSanitize() = npm("rehype-sanitize", "6.0.0")
+
+        // https://www.npmjs.com/package/rehype-stringify
+        fun KotlinDependencyHandler.rehypeStringify() = npm("rehype-stringify", "10.0.1")
     }
 
     // // Test dependencies ////////////////////////////////////////////////////////////////////////
