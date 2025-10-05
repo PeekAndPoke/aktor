@@ -1,15 +1,16 @@
 package de.peekandpoke.aktor.frontend.common
 
 import de.peekandpoke.aktor.frontend.common.markdown.MarkdownView
-import de.peekandpoke.aktor.frontend.kraft
-import de.peekandpoke.kraft.addons.popups.PopupsManager
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.components.onClick
-import de.peekandpoke.kraft.semanticui.*
+import de.peekandpoke.kraft.semanticui.popups
+import de.peekandpoke.kraft.semanticui.popups.PopupsManager
 import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.common.model.tuple
+import de.peekandpoke.ultra.html.css
+import de.peekandpoke.ultra.html.onClick
+import de.peekandpoke.ultra.semanticui.*
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import kotlinx.css.*
 import kotlinx.html.*
@@ -197,7 +198,7 @@ class AiConversationMessageView(ctx: Ctx<Props>) : Component<AiConversationMessa
     }
 
     private fun onClickIcon(evt: MouseEvent, pos: PopupsManager.Positioning) {
-        kraft.popups.showContextMenu(evt, pos) {
+        popups.showContextMenu(evt, pos) {
             ui.vertical.menu {
                 noui.item {
                     val options = listOf(

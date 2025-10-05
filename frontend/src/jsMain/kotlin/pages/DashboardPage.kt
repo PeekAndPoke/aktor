@@ -1,23 +1,23 @@
 package de.peekandpoke.aktor.frontend.pages
 
 import de.peekandpoke.aktor.frontend.Apis
-import de.peekandpoke.aktor.frontend.MainRouter
 import de.peekandpoke.aktor.frontend.Nav
 import de.peekandpoke.aktor.frontend.State
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.components.onClick
-import de.peekandpoke.kraft.semanticui.css
-import de.peekandpoke.kraft.semanticui.icon
-import de.peekandpoke.kraft.semanticui.noui
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.routing.router
 import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.common.datetime.formatDdMmmYyyyHhMm
 import de.peekandpoke.ultra.common.ellipsis
+import de.peekandpoke.ultra.html.css
+import de.peekandpoke.ultra.html.onClick
+import de.peekandpoke.ultra.semanticui.icon
+import de.peekandpoke.ultra.semanticui.noui
+import de.peekandpoke.ultra.semanticui.ui
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -58,10 +58,10 @@ class DashboardPage(ctx: NoProps) : PureComponent(ctx) {
     override fun VDom.render() {
         ui.segment {
             ui.basic.blue.givenNot(noDblClick.canRun) { loading }.button {
-                onClick {
+                onClick { evt ->
                     launch {
                         createChat()?.let {
-                            MainRouter.navToUri(Nav.chat(id = it.id))
+                            router.navToUri(evt, Nav.chat(id = it.id))
                         }
                     }
                 }
@@ -80,8 +80,8 @@ class DashboardPage(ctx: NoProps) : PureComponent(ctx) {
 
                         data.items.forEach { chat ->
                             noui.item A {
-                                onClick {
-                                    MainRouter.navToUri(Nav.chat(id = chat.id))
+                                onClick { evt ->
+                                    router.navToUri(evt, Nav.chat(id = chat.id))
                                 }
 
                                 noui.header {

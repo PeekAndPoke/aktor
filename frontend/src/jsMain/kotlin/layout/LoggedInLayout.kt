@@ -1,17 +1,17 @@
 package de.peekandpoke.aktor.frontend.layout
 
-import de.peekandpoke.aktor.frontend.MainRouter
 import de.peekandpoke.aktor.frontend.Nav
 import de.peekandpoke.aktor.frontend.State
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.components.onClick
-import de.peekandpoke.kraft.semanticui.css
-import de.peekandpoke.kraft.semanticui.icon
-import de.peekandpoke.kraft.semanticui.noui
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.routing.router
 import de.peekandpoke.kraft.vdom.VDom
+import de.peekandpoke.ultra.html.css
+import de.peekandpoke.ultra.html.onClick
+import de.peekandpoke.ultra.semanticui.icon
+import de.peekandpoke.ultra.semanticui.noui
+import de.peekandpoke.ultra.semanticui.ui
 import kotlinx.css.marginLeft
 import kotlinx.css.marginRight
 import kotlinx.css.px
@@ -47,20 +47,19 @@ class LoggedInLayout(ctx: Ctx<Props>) : Component<LoggedInLayout.Props>(ctx) {
         val u = user ?: return
 
         ui.sidebar.vertical.visible.menu {
-
             ui.basic.segment {
-                onClick { MainRouter.navToUri(Nav.profile()) }
+                onClick { evt -> router.navToUri(evt, Nav.profile()) }
                 +u.name
             }
 
             noui.item A {
-                onClick { MainRouter.navToUri(Nav.dashboard()) }
+                onClick { evt -> router.navToUri(evt, Nav.dashboard()) }
                 +"Dashboard"
             }
 
             noui.item A {
-                onClick {
-                    MainRouter.navToUri(Nav.login())
+                onClick { evt ->
+                    router.navToUri(evt, Nav.login())
                     State.auth.logout()
                 }
                 icon.sign_out_alternate()

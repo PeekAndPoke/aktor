@@ -84,6 +84,9 @@ class MarkdownView(ctx: Ctx<Props>) : Component<MarkdownView.Props>(ctx) {
 //        console.log("raw", props.markdown)
 
         rendered = renderCache.getOrPut(props.markdown) {
+
+            console.log("rendering markdown for ", props.markdown.take(100))
+
             // Modify markdown for remarkMath
             val cleaned = props.markdown
                 .replace("\\\\[", "$$")

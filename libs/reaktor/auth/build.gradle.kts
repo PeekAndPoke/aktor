@@ -16,11 +16,6 @@ val VERSION_NAME: String by project
 group = GROUP
 version = VERSION_NAME
 
-// Configure the Yarn plugin extension to use a custom lock file
-//rootProject.plugins.withType<YarnPlugin> {
-//    rootProject.extensions.getByType<YarnRootExtension>().lockFileName = "${project.name}.yarn.lock"
-//}
-
 kotlin {
     js {
         browser {
@@ -44,8 +39,6 @@ kotlin {
                 implementation(Deps.KotlinLibs.Ultra.security)
                 implementation(Deps.KotlinLibs.Ultra.slumber)
 
-                implementation(Deps.KotlinLibs.Kraft.core)
-
                 implementation(Deps.KotlinLibs.Karango.addons)
 
                 implementation(Deps.KotlinLibs.Funktor.messaging)
@@ -61,6 +54,8 @@ kotlin {
 
         jsMain {
             dependencies {
+                implementation(Deps.KotlinLibs.Kraft.semanticui)
+                implementation(Deps.KotlinLibs.Kraft.addons_jwtdecode)
             }
         }
 

@@ -1,12 +1,12 @@
 package de.peekandpoke.aktor.frontend.pages
 
-import de.peekandpoke.kraft.addons.routing.JoinedPageTitle
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.semanticui.css
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.routing.JoinedPageTitle
 import de.peekandpoke.kraft.vdom.VDom
+import de.peekandpoke.ultra.html.css
+import de.peekandpoke.ultra.semanticui.ui
 import kotlinx.css.marginTop
 import kotlinx.css.vh
 import kotlinx.html.Tag

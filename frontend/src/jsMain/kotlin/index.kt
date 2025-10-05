@@ -2,27 +2,16 @@ package de.peekandpoke.aktor.frontend
 
 import de.peekandpoke.aktor.frontend.state.AppState
 import de.peekandpoke.funktor.auth.authState
-import de.peekandpoke.kraft.addons.routing.Router
-import de.peekandpoke.kraft.addons.routing.router
-import de.peekandpoke.kraft.addons.toasts.ToastsStage
 import de.peekandpoke.kraft.kraftApp
-import de.peekandpoke.kraft.vdom.VDomEngine
+import de.peekandpoke.kraft.routing.Router
+import de.peekandpoke.kraft.semanticui.semanticUI
+import de.peekandpoke.kraft.semanticui.toasts
+import de.peekandpoke.kraft.semanticui.toasts.ToastsStage
 import de.peekandpoke.kraft.vdom.preact.PreactVDomEngine
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
-import kotlinx.browser.document
 import kotlinx.browser.window
-import org.w3c.dom.HTMLElement
 
 val win = window.asDynamic()
-
-// Initialize kraft and external dependencies like timezones //////////////////
-val kraft = kraftApp {
-    toasts {
-        stageOptions = ToastsStage.Options(
-            positioning = { top.right }
-        )
-    }
-}
 
 // Initialize config //////////////////////////////////////////////////////////
 
@@ -38,23 +27,29 @@ val Config = WebAppConfig().let {
 val Apis: WebAppApis = WebAppApis(Config) { State.auth().token?.token }
 
 val State: AppState = AppState(
-    auth = authState<AppUserModel>(api = Apis.auth, router = { MainRouter }),
+    auth = authState<AppUserModel>(
+        api = Apis.auth,
+        router = { kraft.appAttributes[Router.key]!! }
+    ),
 )
 
-val MainRouter: Router = createRouter()
+// Initialize kraft and external dependencies like timezones //////////////////
+val kraft = kraftApp {
+    semanticUI {
+        toasts {
+            stageOptions = ToastsStage.Options(
+                positioning = { top.right }
+            )
+        }
+    }
+
+    routing {
+        mountNav()
+    }
+}
 
 fun main() {
-    val mountPoint = document.getElementById("spa") as HTMLElement
-
-    PreactVDomEngine(mountPoint, vdomEngineOptions()) { FrontendAppComponent() }
-
-    MainRouter.navigateToWindowUri()
-}
-
-private fun vdomEngineOptions(): VDomEngine.Options {
-    return VDomEngine.Options.default
-}
-
-private fun createRouter() = router {
-    mountNav()
+    kraft.mount(selector = "#spa", engine = PreactVDomEngine()) {
+        FrontendAppComponent()
+    }
 }

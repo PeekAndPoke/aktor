@@ -3,18 +3,18 @@ import org.gradle.kotlin.dsl.TaskContainerScope
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 
-@Suppress("MemberVisibilityCanBePrivate", "ConstPropertyName")
+@Suppress("MemberVisibilityCanBePrivate")
 object Deps {
     operator fun invoke(block: Deps.() -> Unit) {
         this.block()
     }
 
     // Kotlin ////////////////////////////////////////////////////////////////////////////////////
-    const val kotlinVersion = "2.1.10"
+    const val kotlinVersion = "2.2.20"
 
     object Ksp {
         // https://github.com/google/ksp/releases
-        const val version = "2.1.10-1.0.31"
+        const val version = "2.2.20-2.0.3"
         const val symbol_processing = "com.google.devtools.ksp:symbol-processing-api:$version"
 
         // https://mvnrepository.com/artifact/com.github.tschuchortdev/kotlin-compile-testing
@@ -42,25 +42,29 @@ object Deps {
     // ///////////////////////////////////////////////////////////////////////////////////////////
 
     object KotlinLibs {
-        private const val ultra_version = "0.88.6"
+        // https://central.sonatype.com/artifact/io.peekandpoke.ultra/common
+        private const val ultra_version = "0.94.2"
 
         object Ultra {
-            // https://search.maven.org/search?q=g:io.peekandpoke.ultra%20AND%20a:commonmp
             const val common = "io.peekandpoke.ultra:common:$ultra_version"
-            const val kontainer = "io.peekandpoke.ultra:kontainer:$ultra_version"
+            const val html = "io.peekandpoke.ultra:html:$ultra_version"
             const val logging = "io.peekandpoke.ultra:logging:$ultra_version"
+            const val kontainer = "io.peekandpoke.ultra:kontainer:$ultra_version"
             const val meta = "io.peekandpoke.ultra:meta:$ultra_version"
             const val security = "io.peekandpoke.ultra:security:$ultra_version"
+            const val semanticui = "io.peekandpoke.ultra:semanticui:$ultra_version"
             const val slumber = "io.peekandpoke.ultra:slumber:$ultra_version"
+            const val streams = "io.peekandpoke.ultra:streams:$ultra_version"
             const val vault = "io.peekandpoke.ultra:vault:$ultra_version"
         }
 
         object Kraft {
-            // https://central.sonatype.com/search?q=g%3Aio.peekandpoke.kraft++a%3Acore&smo=true
             const val core = "io.peekandpoke.kraft:core:$ultra_version"
             const val semanticui = "io.peekandpoke.kraft:semanticui:$ultra_version"
+            const val testing = "io.peekandpoke.kraft:testing:$ultra_version"
 
             const val addons_chartjs = "io.peekandpoke.kraft:addons-chartjs:$ultra_version"
+            const val addons_jwtdecode = "io.peekandpoke.kraft:addons-jwtdecode:$ultra_version"
             const val addons_konva = "io.peekandpoke.kraft:addons-konva:$ultra_version"
             const val addons_marked = "io.peekandpoke.kraft:addons-marked:$ultra_version"
             const val addons_nxcompile = "io.peekandpoke.kraft:addons-nxcompile:$ultra_version"
@@ -106,7 +110,7 @@ object Deps {
         const val uuid = "com.benasher44:uuid:$uuid_version"
 
         // https://mvnrepository.com/artifact/io.github.g0dkar/qrcode-kotlin
-        private const val qrcode_version = "4.3.0"
+        private const val qrcode_version = "4.5.0"
         const val qrcode = "io.github.g0dkar:qrcode-kotlin:$qrcode_version"
 
         // https://mvnrepository.com/artifact/io.github.serpro69/kotlin-faker
@@ -409,10 +413,6 @@ object Deps {
         operator fun <T> invoke(block: Npm.() -> T): T {
             return this.block()
         }
-
-        fun KotlinDependencyHandler.katex() = npm("katex", "0.16.21")
-        fun KotlinDependencyHandler.markedKatexExtension() = npm("marked-katex-extension", "5.1.4")
-
     }
 
     // // Test dependencies ////////////////////////////////////////////////////////////////////////
@@ -424,13 +424,12 @@ object Deps {
         }
 
         // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-        const val logback_version = "1.5.17"
+        const val logback_version = "1.5.19"
         const val logback_classic = "ch.qos.logback:logback-classic:$logback_version"
 
         // https://mvnrepository.com/artifact/io.kotest/kotest-common
         const val kotest_plugin_version = "5.9.1"
         const val kotest_version = "5.9.1"
-//        const val kotest_version = "5.9.0.1440-SNAPSHOT"
 
         const val kotest_assertions_core = "io.kotest:kotest-assertions-core:$kotest_version"
         const val kotest_framework_api = "io.kotest:kotest-framework-api:$kotest_version"
@@ -475,8 +474,11 @@ object Deps {
         fun TaskContainerScope.configureJvmTests(
             configure: org.gradle.api.tasks.testing.Test.() -> Unit = {},
         ) {
-            withType(org.gradle.api.tasks.testing.Test::class.java).configureEach {
-                useJUnitPlatform()
+            listOfNotNull(
+                findByName("test") as? org.gradle.api.tasks.testing.Test,
+                findByName("jvmTest") as? org.gradle.api.tasks.testing.Test,
+            ).firstOrNull()?.apply {
+                useJUnitPlatform { }
 
                 filter {
                     isFailOnNoMatchingTests = false
@@ -505,5 +507,4 @@ object Deps {
 
     private fun DependencyHandlerScope.implementation(dep: String) =
         add("implementation", dep)
-
 }

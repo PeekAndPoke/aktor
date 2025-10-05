@@ -2,17 +2,23 @@ package de.peekandpoke.funktor.auth.widgets
 
 import de.peekandpoke.funktor.auth.AuthState
 import de.peekandpoke.funktor.auth.model.*
-import de.peekandpoke.kraft.addons.semanticui.forms.UiInputField
-import de.peekandpoke.kraft.addons.semanticui.forms.UiPasswordField
-import de.peekandpoke.kraft.components.*
-import de.peekandpoke.kraft.semanticui.icon
-import de.peekandpoke.kraft.semanticui.noui
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.components.Component
+import de.peekandpoke.kraft.components.Ctx
+import de.peekandpoke.kraft.components.comp
+import de.peekandpoke.kraft.routing.Route
+import de.peekandpoke.kraft.routing.router
+import de.peekandpoke.kraft.semanticui.forms.UiInputField
+import de.peekandpoke.kraft.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.common.model.Message
+import de.peekandpoke.ultra.html.onClick
+import de.peekandpoke.ultra.html.onSubmit
+import de.peekandpoke.ultra.semanticui.icon
+import de.peekandpoke.ultra.semanticui.noui
+import de.peekandpoke.ultra.semanticui.ui
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.map
 import kotlinx.html.FlowContent
@@ -25,7 +31,7 @@ import org.w3c.dom.url.URLSearchParams
 @Suppress("FunctionName")
 fun <USER> Tag.LoginWidget(
     state: AuthState<USER>,
-    onLoginSuccessUri: String,
+    onLoginSuccessUri: Route.Bound,
 ) = comp(
     LoginWidget.Props(
         state = state,
@@ -45,7 +51,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
     data class Props<USER>(
         val state: AuthState<USER>,
-        val onLoginSuccessUri: String,
+        val onLoginSuccessUri: Route.Bound,
     )
 
     private sealed interface DisplayState {
@@ -122,7 +128,8 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         val result = props.state.login(request)
 
         if (result.isLoggedIn) {
-            props.state.redirectAfterLogin(props.onLoginSuccessUri)
+            val uri = router.strategy.render(props.onLoginSuccessUri)
+            props.state.redirectAfterLogin(uri)
         } else {
             displayState = displayState.withMessage(message = Message.error("Login failed"))
         }
@@ -198,7 +205,6 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
                     else -> {
                         console.warn("LoginWidget: Unsupported login provider type: ${provider.type}")
-                        null
                     }
                 }
             }

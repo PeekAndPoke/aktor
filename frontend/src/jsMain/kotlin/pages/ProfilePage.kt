@@ -1,14 +1,14 @@
 package de.peekandpoke.aktor.frontend.pages
 
 import de.peekandpoke.aktor.frontend.State
-import de.peekandpoke.aktor.frontend.kraft
 import de.peekandpoke.funktor.auth.widgets.ChangePasswordWidget
 import de.peekandpoke.kraft.components.NoProps
 import de.peekandpoke.kraft.components.PureComponent
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.semanticui.noui
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.semanticui.toasts
 import de.peekandpoke.kraft.vdom.VDom
+import de.peekandpoke.ultra.semanticui.noui
+import de.peekandpoke.ultra.semanticui.ui
 import kotlinx.html.Tag
 
 @Suppress("FunctionName")
@@ -52,8 +52,8 @@ class ProfilePage(ctx: NoProps) : PureComponent(ctx) {
 
                         ChangePasswordWidget(State.auth) {
                             when (it) {
-                                true -> kraft.toasts.info("Password changed successfully")
-                                false -> kraft.toasts.error("Failed to change password")
+                                true -> toasts.info("Password changed successfully")
+                                false -> toasts.error("Failed to change password")
                             }
                         }
                     }

@@ -2,15 +2,16 @@ package de.peekandpoke.funktor.auth
 
 import de.peekandpoke.funktor.auth.api.AuthApiClient
 import de.peekandpoke.funktor.auth.model.*
-import de.peekandpoke.kraft.addons.routing.Router
-import de.peekandpoke.kraft.addons.routing.routerMiddleware
-import de.peekandpoke.kraft.jsbridges.decodeJwtAsMap
-import de.peekandpoke.kraft.streams.Stream
-import de.peekandpoke.kraft.streams.StreamSource
-import de.peekandpoke.kraft.streams.Unsubscribe
-import de.peekandpoke.kraft.streams.addons.persistInLocalStorage
+import de.peekandpoke.kraft.addons.decodeJwtAsMap
+import de.peekandpoke.kraft.routing.Route
+import de.peekandpoke.kraft.routing.Router
+import de.peekandpoke.kraft.routing.routerMiddleware
 import de.peekandpoke.ultra.security.user.UserPermissions
 import de.peekandpoke.ultra.slumber.JsonUtil.toJsonObject
+import de.peekandpoke.ultra.streams.Stream
+import de.peekandpoke.ultra.streams.StreamSource
+import de.peekandpoke.ultra.streams.Unsubscribe
+import de.peekandpoke.ultra.streams.ops.persistInLocalStorage
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -77,8 +78,10 @@ class AuthState<USER>(
         return streamSource().realm?.passwordPolicy ?: PasswordPolicy.default
     }
 
-    fun routerMiddleWare(loginUri: String) = routerMiddleware {
+    fun routerMiddleWare(loginRoute: Route.Bound) = routerMiddleware {
         val auth = invoke()
+
+        val loginUri = router().strategy.render(loginRoute)
 
         if (!auth.isLoggedIn) {
             redirectAfterLoginUri = uri.takeIf { it != loginUri }

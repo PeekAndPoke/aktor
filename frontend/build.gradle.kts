@@ -1,7 +1,5 @@
 @file:Suppress("PropertyName")
 
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
-
 
 plugins {
     kotlin("multiplatform")
@@ -15,22 +13,10 @@ val VERSION_NAME: String by project
 group = GROUP
 version = VERSION_NAME
 
-// Configure the Yarn plugin extension to use a custom lock file
-//rootProject.plugins.withType<YarnPlugin> {
-//    rootProject.extensions.getByType<YarnRootExtension>().lockFileName = "${project.name}.yarn.lock"
-//}
-
 kotlin {
     js {
         browser {
             binaries.executable()
-
-            // Add webpack configuration
-            commonWebpackConfig {
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).copy(
-                    port = 25867
-                )
-            }
         }
     }
 
@@ -47,7 +33,6 @@ kotlin {
 
                 implementation(Deps.KotlinLibs.uuid)
                 implementation(Deps.KotlinLibs.Ultra.security)
-                implementation(Deps.KotlinLibs.Kraft.core)
 
                 implementation(project(":libs:shared"))
                 implementation(project(":libs:reaktor:auth"))
@@ -68,6 +53,7 @@ kotlin {
                 implementation(Deps.Ktor.Client.content_negotiation)
                 implementation(Deps.Ktor.Common.serialization_kotlinx_json)
 
+                implementation(Deps.KotlinLibs.Kraft.semanticui)
                 implementation(Deps.KotlinLibs.Kraft.addons_marked)
                 implementation(Deps.KotlinLibs.Kraft.addons_pdfjs)
                 implementation(Deps.KotlinLibs.Kraft.addons_signaturepad)

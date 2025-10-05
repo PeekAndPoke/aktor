@@ -6,8 +6,8 @@ import de.peekandpoke.kraft.addons.styling.StyleSheets
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.semanticui.ui
 import de.peekandpoke.kraft.vdom.VDom
+import de.peekandpoke.ultra.semanticui.ui
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import kotlinx.html.HTMLTag
 import kotlinx.html.Tag
@@ -66,7 +66,6 @@ class AiConversationView(ctx: Ctx<Props>) : Component<AiConversationView.Props>(
 
     override fun VDom.render() {
         ui.grid.with(Style.conversation).then {
-
             style {
                 unsafeCss(
                     """

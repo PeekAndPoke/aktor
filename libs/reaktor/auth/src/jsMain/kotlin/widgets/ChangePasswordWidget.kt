@@ -3,18 +3,18 @@ package de.peekandpoke.funktor.auth.widgets
 import de.peekandpoke.funktor.auth.AuthState
 import de.peekandpoke.funktor.auth.model.AuthProviderModel
 import de.peekandpoke.funktor.auth.model.AuthUpdateRequest
-import de.peekandpoke.kraft.addons.forms.formController
-import de.peekandpoke.kraft.addons.forms.validation.given
-import de.peekandpoke.kraft.addons.forms.validation.strings.notEmpty
-import de.peekandpoke.kraft.addons.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.components.onSubmit
-import de.peekandpoke.kraft.semanticui.ui
+import de.peekandpoke.kraft.forms.formController
+import de.peekandpoke.kraft.forms.validation.given
+import de.peekandpoke.kraft.forms.validation.strings.notEmpty
+import de.peekandpoke.kraft.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
+import de.peekandpoke.ultra.html.onSubmit
+import de.peekandpoke.ultra.semanticui.ui
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 

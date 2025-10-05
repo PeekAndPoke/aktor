@@ -2,9 +2,9 @@ package de.peekandpoke.aktor.frontend
 
 import de.peekandpoke.aktor.frontend.layout.LoggedInLayout
 import de.peekandpoke.aktor.frontend.pages.*
-import de.peekandpoke.kraft.addons.routing.Route1
-import de.peekandpoke.kraft.addons.routing.RouterBuilder
-import de.peekandpoke.kraft.addons.routing.Static
+import de.peekandpoke.kraft.routing.Route1
+import de.peekandpoke.kraft.routing.RouterBuilder
+import de.peekandpoke.kraft.routing.Static
 
 object Nav {
     val login = Static("/login")
@@ -15,7 +15,7 @@ object Nav {
     val profile = Static("/profile")
 
     val chat = Route1("/chat/{id}")
-    fun chat(id: String) = chat.buildUri(id)
+    fun chat(id: String) = chat.bind(id)
 }
 
 fun RouterBuilder.mountNav() {
