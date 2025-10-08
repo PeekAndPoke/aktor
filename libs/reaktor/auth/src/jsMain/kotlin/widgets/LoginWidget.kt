@@ -178,34 +178,67 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
     private fun FlowContent.renderLoginState(state: DisplayState.Login, realm: AuthRealmModel) {
 
-        ui.header { +"Login" }
 
         renderMessage(state.message)
 
-        fun dividerIfNotLast(idx: Int) {
-            if (idx < realm.providers.size - 1) {
-                ui.hidden.divider {}
+        val signInProviders = realm.signInProviders
+        val signUpProviders = realm.signUpProviders
+
+        val numColumns = listOf(
+            signInProviders.isNotEmpty(),
+            signUpProviders.isNotEmpty(),
+        ).count { it }
+
+        ui.number(numColumns).column.stackable.divided.grid {
+            if (signInProviders.isNotEmpty()) {
+                noui.column {
+                    ui.header { +"Sign In" }
+                    ui.list {
+                        signInProviders.forEach { provider ->
+                            when (provider.type) {
+                                AuthProviderModel.TYPE_EMAIL_PASSWORD -> noui.item {
+                                    renderEmailPasswordForm(state, provider)
+                                }
+
+                                AuthProviderModel.TYPE_GOOGLE -> noui.item {
+                                    renderGoogleSso(provider)
+                                }
+
+                                AuthProviderModel.TYPE_GITHUB -> noui.item {
+                                    renderGithubSso(provider)
+                                }
+
+                                else -> {
+                                    console.warn("LoginWidget: Unsupported login provider type: ${provider.type}")
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        }
+            if (signUpProviders.isNotEmpty()) {
+                noui.column {
+                    ui.header { +"Sign Up" }
+                    ui.list {
+                        signUpProviders.forEach { provider ->
+                            when (provider.type) {
+                                AuthProviderModel.TYPE_EMAIL_PASSWORD -> noui.item {
+                                    ui.message { +"Sign up with email/password is available. (UI flow to be implemented)" }
+                                }
 
-        ui.list {
-            realm.providers.forEachIndexed { idx, provider ->
-                when (provider.type) {
-                    AuthProviderModel.TYPE_EMAIL_PASSWORD -> noui.item {
-                        renderEmailPasswordForm(state, provider)
-                        dividerIfNotLast(idx)
-                    }
+                                AuthProviderModel.TYPE_GOOGLE -> noui.item {
+                                    ui.message { +"Sign up with Google is available. (UI flow to be implemented)" }
+                                }
 
-                    AuthProviderModel.TYPE_GOOGLE -> noui.item {
-                        renderGoogleSso(provider)
-                    }
+                                AuthProviderModel.TYPE_GITHUB -> noui.item {
+                                    ui.message { +"Sign up with GitHub is available. (UI flow to be implemented)" }
+                                }
 
-                    AuthProviderModel.TYPE_GITHUB -> noui.item {
-                        renderGithubSso(provider)
-                    }
-
-                    else -> {
-                        console.warn("LoginWidget: Unsupported login provider type: ${provider.type}")
+                                else -> noui.item {
+                                    ui.message { +"Sign up available for provider ${provider.type}" }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -255,6 +288,8 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                 }
             }
         }
+
+        ui.hidden.divider()
     }
 
     private fun FlowContent.renderGoogleSso(provider: AuthProviderModel) {

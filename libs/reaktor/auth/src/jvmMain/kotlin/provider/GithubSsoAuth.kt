@@ -18,6 +18,7 @@ import kotlinx.serialization.json.put
 
 class GithubSsoAuth(
     override val id: String,
+    override val capabilities: Set<AuthProviderModel.Capability>,
     val githubClientId: String,
     val githubClientSecret: String,
 ) : AuthProvider {
@@ -27,10 +28,12 @@ class GithubSsoAuth(
             id: String = "github-sso",
             githubClientId: String,
             githubClientSecret: String,
+            capabilities: Set<AuthProviderModel.Capability> = setOf(AuthProviderModel.Capability.SignIn),
         ) = GithubSsoAuth(
             id = id,
             githubClientId = githubClientId,
             githubClientSecret = githubClientSecret,
+            capabilities = capabilities,
         )
     }
 
@@ -40,17 +43,20 @@ class GithubSsoAuth(
         }
     }
 
-    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER>? {
+    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER> {
         val typed = (request as? AuthLoginRequest.OAuth)
             ?: throw AuthError.invalidCredentials()
 
         // see https://medium.com/@r.sadatshokouhi/implementing-sso-in-react-with-github-oauth2-4d8dbf02e607
 
-        val ghAccessToken = getAccessToken(typed.token) ?: throw AuthError.invalidCredentials()
+        val ghAccessToken = getAccessToken(typed.token)
+            ?: throw AuthError.invalidCredentials()
 
-        val ghUser = getUser(ghAccessToken) ?: throw AuthError.invalidCredentials()
+        val ghUser = getUser(ghAccessToken)
+            ?: throw AuthError.invalidCredentials()
 
-        val email = ghUser["email"]?.jsonPrimitive?.content ?: throw AuthError.invalidCredentials()
+        val email = ghUser["email"]?.jsonPrimitive?.content
+            ?: throw AuthError.invalidCredentials()
 
         return realm.loadUserByEmail(email)
             ?: throw AuthError.invalidCredentials()
@@ -90,9 +96,10 @@ class GithubSsoAuth(
         return AuthProviderModel(
             id = id,
             type = AuthProviderModel.TYPE_GITHUB,
+            capabilities = capabilities,
             config = buildJsonObject {
                 put("client-id", githubClientId)
-            }
+            },
         )
     }
 }

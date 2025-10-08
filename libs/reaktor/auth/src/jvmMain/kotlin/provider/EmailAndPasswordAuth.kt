@@ -22,6 +22,7 @@ import de.peekandpoke.ultra.vault.Stored
  */
 class EmailAndPasswordAuth(
     override val id: String,
+    override val capabilities: Set<AuthProviderModel.Capability> = setOf(AuthProviderModel.Capability.SignIn),
     private val log: Log,
     deps: Lazy<AuthSystem.Deps>,
 ) : AuthProvider {
@@ -38,10 +39,14 @@ class EmailAndPasswordAuth(
         private val deps: Lazy<AuthSystem.Deps>,
         private val log: Log,
     ) {
-        operator fun invoke(id: String = "email-password") = EmailAndPasswordAuth(
+        operator fun invoke(
+            id: String = "email-password",
+            capabilities: Set<AuthProviderModel.Capability> = setOf(AuthProviderModel.Capability.SignIn),
+        ) = EmailAndPasswordAuth(
             id = id,
             deps = deps,
             log = log,
+            capabilities = capabilities,
         )
     }
 
@@ -52,7 +57,7 @@ class EmailAndPasswordAuth(
      */
     override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER> {
 
-        var typed: AuthLoginRequest.EmailAndPassword = (request as? AuthLoginRequest.EmailAndPassword)
+        val typed: AuthLoginRequest.EmailAndPassword = (request as? AuthLoginRequest.EmailAndPassword)
             ?: throw AuthError.invalidCredentials()
 
         val email = typed.email.takeIf { it.isNotBlank() }
@@ -97,7 +102,7 @@ class EmailAndPasswordAuth(
 
                 val emailResult = realm.messaging.sendPasswordChangedEmail(user)
 
-                if (emailResult.success == false) {
+                if (emailResult.success.not()) {
                     log.warning("Sending 'Password Changed' failed for user ${user._id} ${realm.getUserEmail(user)}")
                 }
 
@@ -155,6 +160,7 @@ class EmailAndPasswordAuth(
     override fun asApiModel(): AuthProviderModel {
         return AuthProviderModel(
             id = id,
+            capabilities = capabilities,
             type = AuthProviderModel.TYPE_EMAIL_PASSWORD,
         )
     }

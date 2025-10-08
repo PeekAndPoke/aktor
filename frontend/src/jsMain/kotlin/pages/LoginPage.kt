@@ -76,23 +76,15 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
                     alignItems = Align.center
                 }
 
-                ui.stackable.grid {
+                ui.segment {
                     css {
-                        width = 100.pct
+                        opacity = 0.95
                     }
 
-                    ui.six.wide.centered.column {
-                        ui.padded.segment {
-                            css {
-                                opacity = 0.95
-                            }
-
-                            LoginWidget(
-                                state = State.auth,
-                                onLoginSuccessUri = Nav.dashboard(),
-                            )
-                        }
-                    }
+                    LoginWidget(
+                        state = State.auth,
+                        onLoginSuccessUri = Nav.dashboard(),
+                    )
                 }
             }
         }

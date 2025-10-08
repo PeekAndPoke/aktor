@@ -3,6 +3,7 @@ package io.peekandpoke.aktor.backend.appuser
 import de.peekandpoke.funktor.auth.AuthRealm
 import de.peekandpoke.funktor.auth.AuthSystem
 import de.peekandpoke.funktor.auth.model.AuthLoginResponse
+import de.peekandpoke.funktor.auth.model.AuthProviderModel
 import de.peekandpoke.funktor.auth.provider.EmailAndPasswordAuth
 import de.peekandpoke.funktor.auth.provider.GithubSsoAuth
 import de.peekandpoke.funktor.auth.provider.GoogleSsoAuth
@@ -82,13 +83,33 @@ class AppUserRealm(
 
     override val providers = listOfNotNull(
         // Email / Password
-        this.emailAndPassword(),
+        this.emailAndPassword(
+            capabilities = setOf(
+                AuthProviderModel.Capability.SignIn,
+                AuthProviderModel.Capability.SignUp,
+            )
+        ),
         // Google SSO
-        this.keys.config.tryGetString("GOOGLE_SSO_CLIENT_ID")?.let { googleSso(googleClientId = it) },
+        this.keys.config.tryGetString("GOOGLE_SSO_CLIENT_ID")?.let { clientId ->
+            googleSso(
+                googleClientId = clientId,
+                capabilities = setOf(
+                    AuthProviderModel.Capability.SignIn,
+                    AuthProviderModel.Capability.SignUp,
+                )
+            )
+        },
         // Github SSO
         this.keys.config.tryGetString("GITHUB_SSO_CLIENT_ID")?.let { clientId ->
             this.keys.config.tryGetString("GITHUB_SSO_CLIENT_SECRET")?.let { secret ->
-                githubSso(githubClientId = clientId, githubClientSecret = secret)
+                githubSso(
+                    githubClientId = clientId,
+                    githubClientSecret = secret,
+                    capabilities = setOf(
+                        AuthProviderModel.Capability.SignIn,
+                        AuthProviderModel.Capability.SignUp,
+                    )
+                )
             }
         },
     )

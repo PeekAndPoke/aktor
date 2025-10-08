@@ -16,6 +16,7 @@ import java.util.*
 
 class GoogleSsoAuth(
     override val id: String,
+    override val capabilities: Set<AuthProviderModel.Capability>,
     val googleClientId: String,
 ) : AuthProvider {
 
@@ -23,13 +24,15 @@ class GoogleSsoAuth(
         operator fun invoke(
             id: String = "google-sso",
             googleClientId: String,
+            capabilities: Set<AuthProviderModel.Capability> = setOf(AuthProviderModel.Capability.SignIn),
         ) = GoogleSsoAuth(
             id = id,
             googleClientId = googleClientId,
+            capabilities = capabilities,
         )
     }
 
-    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER>? {
+    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER> {
         val typed = (request as? AuthLoginRequest.OAuth)
             ?: throw AuthError.invalidCredentials()
 
@@ -54,9 +57,10 @@ class GoogleSsoAuth(
         return AuthProviderModel(
             id = id,
             type = AuthProviderModel.TYPE_GOOGLE,
+            capabilities = capabilities,
             config = buildJsonObject {
                 put("client-id", googleClientId)
-            }
+            },
         )
     }
 }

@@ -12,6 +12,11 @@ interface AuthProvider {
     val id: String
 
     /**
+     * Capabilities of the provider
+     */
+    val capabilities: Set<AuthProviderModel.Capability>
+
+    /**
      * Tries to log in the user for the given [request].
      *
      * The user will be returned, when it is found and the request was validated successfully.
@@ -21,7 +26,7 @@ interface AuthProvider {
     suspend fun <USER> login(
         realm: AuthRealm<USER>,
         request: AuthLoginRequest,
-    ): Stored<USER>?
+    ): Stored<USER>
 
     /**
      * Updates specific things about the authentication setup of the user
