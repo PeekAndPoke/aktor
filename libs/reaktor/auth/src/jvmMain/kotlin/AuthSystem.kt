@@ -5,6 +5,12 @@ import de.peekandpoke.funktor.messaging.MessagingServices
 import de.peekandpoke.ultra.security.jwt.JwtGenerator
 import de.peekandpoke.ultra.security.password.PasswordHasher
 
+/**
+ * AuthSystem manages and provides access to multiple authentication realms.
+ *
+ * @property realms A list of authentication realms that this system handles.
+ *                  Realms must have unique identifiers to avoid duplication.
+ */
 class AuthSystem(
     private val realms: List<AuthRealm<Any>>,
 ) {
@@ -26,34 +32,39 @@ class AuthSystem(
         }
     }
 
-    fun getRealmOrNull(id: String): AuthRealm<*>? {
-        return realms.firstOrNull { it.id == id }
+    /** Get realm by [realm] or null if not present */
+    fun getRealmOrNull(realm: String): AuthRealm<*>? {
+        return realms.firstOrNull { it.id == realm }
     }
 
-    fun getRealm(id: String): AuthRealm<*> {
-        return getRealmOrNull(id) ?: throw AuthError("Realm not found: $id")
+    /** Get realm by [realm] or throw [AuthError] if not present */
+    fun getRealm(realm: String): AuthRealm<*> {
+        return getRealmOrNull(realm) ?: throw AuthError("Realm not found: $realm")
     }
 
-    suspend fun login(realm: String, request: AuthLoginRequest): AuthLoginResponse {
+    /** Get realm by [realm] or throw [AuthError] if not present */
+    suspend fun signIn(realm: String, request: AuthSignInRequest): AuthSignInResponse {
         return getRealm(realm).signIn(request)
     }
 
+    /** Get realm by [realm] or throw [AuthError] if not present */
     suspend fun update(realm: String, request: AuthUpdateRequest): AuthUpdateResponse {
         return getRealm(realm).update(request)
     }
 
+    /** Get realm by [realm] or throw [AuthError] if not present */
     suspend fun recover(realm: String, request: AuthRecoveryRequest): AuthRecoveryResponse {
         return getRealm(realm).recover(request)
     }
 
-    // --- Signup / Activate (stubs for now, wired to API) ---
-    suspend fun signup(realm: String, request: AuthSignupRequest): AuthSignupResponse {
-        // Minimal placeholder; real implementation will be added next
-        return AuthSignupResponse.failed
+    /** Get realm by [realm] or throw [AuthError] if not present */
+    suspend fun signUp(realm: String, request: AuthSignUpRequest): AuthSignUpResponse {
+        return getRealm(realm).signUp(request)
     }
 
+    /** Activate a user account by [realm] and [request] */
     suspend fun activate(realm: String, request: AuthActivateRequest): AuthActivateResponse {
-        // Minimal placeholder; real implementation will be added next
+        // Activation not yet implemented
         return AuthActivateResponse(success = false)
     }
 }

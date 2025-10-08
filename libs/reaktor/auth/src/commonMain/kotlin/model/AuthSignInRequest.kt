@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface AuthLoginRequest {
+sealed interface AuthSignInRequest {
 
     @Serializable
     @SerialName("email_and_password")
@@ -12,14 +12,14 @@ sealed interface AuthLoginRequest {
         override val provider: String,
         val email: String,
         val password: String,
-    ) : AuthLoginRequest
+    ) : AuthSignInRequest
 
     @Serializable
     @SerialName("oauth")
     data class OAuth(
         override val provider: String,
         val token: String,
-    ) : AuthLoginRequest
+    ) : AuthSignInRequest
 
     val provider: String
 }

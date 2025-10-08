@@ -6,6 +6,12 @@ import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.ultra.vault.Stored
 
 interface AuthProvider {
+
+    data class SignUpResult<USER>(
+        val user: Stored<USER>,
+        val requiresActivation: Boolean,
+    )
+
     /**
      * Unique id of the provider with the realm
      */
@@ -19,14 +25,13 @@ interface AuthProvider {
     /**
      * Tries to log in the user for the given [request].
      *
-     * The user will be returned, when it is found and the request was validated successfully.
+     * The user will be returned when it is found, and the request was validated successfully.
      *
      * Otherwise [AuthError] will be thrown.
      */
-    suspend fun <USER> login(
-        realm: AuthRealm<USER>,
-        request: AuthLoginRequest,
-    ): Stored<USER>
+    suspend fun <USER> signIn(realm: AuthRealm<USER>, request: AuthSignInRequest): Stored<USER> {
+        throw AuthError.notSupported()
+    }
 
     /**
      * Updates specific things about the authentication setup of the user
@@ -44,13 +49,17 @@ interface AuthProvider {
     /**
      * Account recovery
      */
-    suspend fun <USER> recover(
-        realm: AuthRealm<USER>,
-        request: AuthRecoveryRequest,
-    ): AuthRecoveryResponse {
+    suspend fun <USER> recover(realm: AuthRealm<USER>, request: AuthRecoveryRequest): AuthRecoveryResponse {
         return AuthRecoveryResponse(
             success = false,
         )
+    }
+
+    /**
+     * Sign up a new account for the given request. Providers should check their SignUp capability internally.
+     */
+    suspend fun <USER> signUp(realm: AuthRealm<USER>, request: AuthSignUpRequest): SignUpResult<USER> {
+        throw AuthError.notSupported()
     }
 
     /**

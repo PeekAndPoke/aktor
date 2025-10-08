@@ -23,6 +23,7 @@ import de.peekandpoke.ultra.semanticui.icon
 import de.peekandpoke.ultra.semanticui.noui
 import de.peekandpoke.ultra.semanticui.ui
 import kotlinx.browser.window
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.html.FlowContent
@@ -112,7 +113,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                         AuthProviderModel.TYPE_GITHUB -> {
                             params.get("code")?.let { code ->
                                 login(
-                                    AuthLoginRequest.OAuth(provider = provider.id, token = code)
+                                    AuthSignInRequest.OAuth(provider = provider.id, token = code)
                                 )
                             }
                         }
@@ -131,13 +132,13 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         }
     }
 
-    private fun login(request: AuthLoginRequest) {
+    private fun login(request: AuthSignInRequest) {
         launch {
             doLogin(request)
         }
     }
 
-    private suspend fun doLogin(request: AuthLoginRequest) = noDblClick.runBlocking {
+    private suspend fun doLogin(request: AuthSignInRequest) = noDblClick.runBlocking {
         displayState = displayState.withMessage(message = null)
 
         val result = props.state.login(request)
@@ -157,18 +158,19 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         }
     }
 
-    private fun signup(request: AuthSignupRequest.EmailAndPassword) {
+    private fun signup(request: AuthSignUpRequest.EmailAndPassword) {
         launch {
             doSignup(request)
         }
     }
 
-    private suspend fun doSignup(request: AuthSignupRequest.EmailAndPassword) = noDblClick.runBlocking {
+    private suspend fun doSignup(request: AuthSignUpRequest.EmailAndPassword) = noDblClick.runBlocking {
         // Clear any previous message
         displayState = displayState.withMessage(message = null)
 
         val response = props.state.api
-            .signup(request)
+            .signUp(request)
+            .catch { /* noop */ }
             .map { it }
             .firstOrNull()
 
@@ -317,7 +319,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                 ui.orange.fluid.givenNot(noDblClick.canRun) { loading }.button Submit {
                     onClick {
                         login(
-                            AuthLoginRequest.EmailAndPassword(
+                            AuthSignInRequest.EmailAndPassword(
                                 provider = provider.id,
                                 email = state.email,
                                 password = state.password,
@@ -352,7 +354,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
         GoogleSignInButton(clientId = clientId) { token ->
             login(
-                AuthLoginRequest.OAuth(provider = provider.id, token = token)
+                AuthSignInRequest.OAuth(provider = provider.id, token = token)
             )
         }
     }
@@ -376,7 +378,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             callbackUrl = callbackUrl,
         ) { token ->
             login(
-                AuthLoginRequest.OAuth(provider = provider.id, token = token)
+                AuthSignInRequest.OAuth(provider = provider.id, token = token)
             )
         }
     }
@@ -445,7 +447,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             onSubmit { evt ->
                 evt.preventDefault()
                 if (formCtrl.validate()) {
-                    val req = AuthSignupRequest.EmailAndPassword(
+                    val req = AuthSignUpRequest.EmailAndPassword(
                         provider = state.provider.id,
                         email = state.email,
                         displayName = state.displayName.ifBlank { null },

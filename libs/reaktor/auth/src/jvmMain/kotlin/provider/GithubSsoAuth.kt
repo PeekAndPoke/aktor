@@ -2,8 +2,9 @@ package de.peekandpoke.funktor.auth.provider
 
 import de.peekandpoke.funktor.auth.AuthError
 import de.peekandpoke.funktor.auth.AuthRealm
-import de.peekandpoke.funktor.auth.model.AuthLoginRequest
 import de.peekandpoke.funktor.auth.model.AuthProviderModel
+import de.peekandpoke.funktor.auth.model.AuthSignInRequest
+import de.peekandpoke.funktor.auth.model.AuthSignUpRequest
 import de.peekandpoke.ultra.vault.Stored
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -43,8 +44,8 @@ class GithubSsoAuth(
         }
     }
 
-    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER> {
-        val typed = (request as? AuthLoginRequest.OAuth)
+    override suspend fun <USER> signIn(realm: AuthRealm<USER>, request: AuthSignInRequest): Stored<USER> {
+        val typed = (request as? AuthSignInRequest.OAuth)
             ?: throw AuthError.invalidCredentials()
 
         // see https://medium.com/@r.sadatshokouhi/implementing-sso-in-react-with-github-oauth2-4d8dbf02e607
@@ -79,6 +80,7 @@ class GithubSsoAuth(
     }
 
     private suspend fun getUser(access: JsonObject): JsonObject? {
+
         val tokenType = access["token_type"]?.jsonPrimitive?.content
         val accessToken = access["access_token"]?.jsonPrimitive?.content
 
@@ -90,6 +92,34 @@ class GithubSsoAuth(
         if (!response.status.isSuccess()) return null
 
         return response.body<JsonObject?>()
+    }
+
+    override suspend fun <USER> signUp(
+        realm: AuthRealm<USER>,
+        request: AuthSignUpRequest,
+    ): AuthProvider.SignUpResult<USER> {
+
+        val typed = (request as? AuthSignUpRequest.OAuth)
+            ?: throw AuthError("Invalid sign-up request for GitHub")
+
+        val ghAccessToken = getAccessToken(typed.token)
+            ?: throw AuthError.invalidCredentials()
+
+        val ghUser = getUser(ghAccessToken)
+            ?: throw AuthError.invalidCredentials()
+
+        val email = ghUser["email"]?.jsonPrimitive?.content
+            ?: throw AuthError.invalidCredentials()
+
+        val name = ghUser["name"]?.jsonPrimitive?.content
+
+        val existing = realm.loadUserByEmail(email)
+        val user = existing ?: realm.createUserForSignup(email = email, displayName = name)
+
+        return AuthProvider.SignUpResult(
+            user = user,
+            requiresActivation = false,
+        )
     }
 
     override fun asApiModel(): AuthProviderModel {

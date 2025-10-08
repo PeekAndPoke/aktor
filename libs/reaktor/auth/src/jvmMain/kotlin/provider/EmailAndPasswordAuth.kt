@@ -55,9 +55,9 @@ class EmailAndPasswordAuth(
     /**
      * {@inheritDoc}
      */
-    override suspend fun <USER> login(realm: AuthRealm<USER>, request: AuthLoginRequest): Stored<USER> {
+    override suspend fun <USER> signIn(realm: AuthRealm<USER>, request: AuthSignInRequest): Stored<USER> {
 
-        val typed: AuthLoginRequest.EmailAndPassword = (request as? AuthLoginRequest.EmailAndPassword)
+        val typed: AuthSignInRequest.EmailAndPassword = (request as? AuthSignInRequest.EmailAndPassword)
             ?: throw AuthError.invalidCredentials()
 
         val email = typed.email.takeIf { it.isNotBlank() }
@@ -89,7 +89,7 @@ class EmailAndPasswordAuth(
             is AuthUpdateRequest.SetPassword -> {
                 // 1. Check for new password to meet the password policy
                 realm.passwordPolicy.matches(request.newPassword).takeIf { it == true }
-                    ?: throw AuthError.weekPassword()
+                    ?: throw AuthError.weakPassword()
 
                 // 3. Write new password entry into database
                 deps.storage.createRecord {
@@ -140,7 +140,45 @@ class EmailAndPasswordAuth(
 
             else -> AuthRecoveryResponse.failed
         }
+    }
 
+    override suspend fun <USER> signUp(
+        realm: AuthRealm<USER>,
+        request: AuthSignUpRequest,
+    ): AuthProvider.SignUpResult<USER> {
+
+        val typed = request as? AuthSignUpRequest.EmailAndPassword
+            ?: throw AuthError("Invalid sign-up request for email/password")
+
+        val email = typed.email.trim().lowercase()
+
+        if (email.isBlank()) throw AuthError("Invalid email")
+
+        // Enforce the password policy
+        if (!realm.passwordPolicy.matches(typed.password)) throw AuthError.weakPassword()
+
+        // Ensure no existing user
+        if (realm.loadUserByEmail(email) != null) throw AuthError("User already exists")
+
+        // Create user via realm hook
+        val user = realm.createUserForSignup(
+            email = email,
+            displayName = typed.displayName?.trim(),
+        )
+
+        // Store password record
+        deps.storage.createRecord {
+            AuthRecord.Password(
+                realm = realm.id,
+                ownerId = user._id,
+                hash = deps.passwordHasher.hash(typed.password),
+            )
+        }
+
+        return AuthProvider.SignUpResult(
+            user = user,
+            requiresActivation = true,
+        )
     }
 
     private suspend fun <USER> validateCurrentPassword(

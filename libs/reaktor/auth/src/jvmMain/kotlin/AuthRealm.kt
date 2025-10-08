@@ -27,17 +27,30 @@ interface AuthRealm<USER> {
     /** The password policy for this realm */
     val passwordPolicy: PasswordPolicy get() = PasswordPolicy.default
 
+    /** Loads a user by its id. */
     suspend fun loadUserById(id: String): Stored<USER>?
 
+    /** Loads a user by its email. */
     suspend fun loadUserByEmail(email: String): Stored<USER>?
 
-    suspend fun generateJwt(user: Stored<USER>): AuthLoginResponse.Token
+    /** Generates a JWT for the given user */
+    suspend fun generateJwt(user: Stored<USER>): AuthSignInResponse.Token
 
+    /** Loads the user email from the given user */
     suspend fun getUserEmail(user: Stored<USER>): String
 
+    /** Serializes the given user */
     suspend fun serializeUser(user: Stored<USER>): JsonObject
 
-    suspend fun signIn(request: AuthLoginRequest): AuthLoginResponse {
+    /**
+     * Creates a new user during sign-up. Providers call this to create a user for the given email/displayName.
+     */
+    suspend fun createUserForSignup(email: String, displayName: String?): Stored<USER>
+
+    /**
+     * Signs in a user. Providers should check their SignIn capability internally.
+     */
+    suspend fun signIn(request: AuthSignInRequest): AuthSignInResponse {
         val provider = providers.firstOrNull { it.id == request.provider }
             ?: throw AuthError("Provider not found: ${request.provider}")
 
@@ -45,13 +58,9 @@ interface AuthRealm<USER> {
             throw AuthError("Provider does not support sign in: ${request.provider}")
         }
 
-        val user = provider.login<USER>(realm = this, request = request)
+        val user = provider.signIn<USER>(realm = this, request = request)
 
-        val response = AuthLoginResponse(
-            token = generateJwt(user),
-            realm = asApiModel(),
-            user = serializeUser(user),
-        )
+        val response = user.toSignInResponse()
 
         return response
     }
@@ -76,6 +85,33 @@ interface AuthRealm<USER> {
 
         return result
     }
+
+    /**
+     * Signs up a new user. Providers should check their SignUp capability internally.
+     */
+    suspend fun signUp(request: AuthSignUpRequest): AuthSignUpResponse {
+        val provider = providers.firstOrNull { it.id == request.provider }
+            ?: throw AuthError("Provider not found: ${request.provider}")
+
+        if (AuthProviderModel.Capability.SignUp !in provider.capabilities) {
+            throw AuthError("Provider does not support sign up: ${request.provider}")
+        }
+
+        val result = provider.signUp(realm = this, request = request)
+
+        val response = AuthSignUpResponse(
+            signIn = result.user.toSignInResponse(),
+            requiresActivation = result.requiresActivation,
+        )
+
+        return response
+    }
+
+    suspend fun Stored<USER>.toSignInResponse() = AuthSignInResponse(
+        token = generateJwt(this),
+        realm = asApiModel(),
+        user = serializeUser(this),
+    )
 
     fun asApiModel(): AuthRealmModel = AuthRealmModel(
         id = id,

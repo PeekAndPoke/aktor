@@ -38,7 +38,7 @@ class AuthState<USER>(
 
     @Serializable
     data class Data<USER>(
-        val token: AuthLoginResponse.Token?,
+        val token: AuthSignInResponse.Token?,
         val realm: AuthRealmModel?,
         val tokenUserId: String?,
         val tokenExpires: String?,
@@ -97,9 +97,9 @@ class AuthState<USER>(
         redirectAfterLoginUri = null
     }
 
-    suspend fun login(request: AuthLoginRequest): Data<USER> {
+    suspend fun login(request: AuthSignInRequest): Data<USER> {
         val response = api
-            .login(request)
+            .signIn(request)
             .map { it.data }
             .catch { streamSource(Data.empty()) }
             .firstOrNull()
@@ -141,7 +141,7 @@ class AuthState<USER>(
         return result?.success == true
     }
 
-    private fun readJwt(response: AuthLoginResponse, user: USER): Data<USER> {
+    private fun readJwt(response: AuthSignInResponse, user: USER): Data<USER> {
         val claims = decodeJwtAsMap(response.token.token)
 
         // extract the permission from the token

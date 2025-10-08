@@ -14,10 +14,10 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
             response = AuthRealmModel.serializer().api(),
         )
 
-        val Login = TypedApiEndpoint.Post(
-            uri = "$base/{realm}/login",
-            body = AuthLoginRequest.serializer(),
-            response = AuthLoginResponse.serializer().api(),
+        val SignIn = TypedApiEndpoint.Post(
+            uri = "$base/{realm}/signin",
+            body = AuthSignInRequest.serializer(),
+            response = AuthSignInResponse.serializer().api(),
         )
 
         val Update = TypedApiEndpoint.Put(
@@ -32,14 +32,12 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
             response = AuthRecoveryResponse.serializer().api(),
         )
 
-        // Signup
-        val Signup = TypedApiEndpoint.Post(
+        val SignUp = TypedApiEndpoint.Post(
             uri = "$base/{realm}/signup",
-            body = AuthSignupRequest.serializer(),
-            response = AuthSignupResponse.serializer().api(),
+            body = AuthSignUpRequest.serializer(),
+            response = AuthSignUpResponse.serializer().api(),
         )
 
-        // Activate
         val Activate = TypedApiEndpoint.Post(
             uri = "$base/{realm}/activate",
             body = AuthActivateRequest.serializer(),
@@ -53,8 +51,8 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
         )
     )
 
-    fun login(request: AuthLoginRequest): Flow<ApiResponse<AuthLoginResponse>> = call(
-        Login(
+    fun signIn(request: AuthSignInRequest): Flow<ApiResponse<AuthSignInResponse>> = call(
+        SignIn(
             "realm" to realm,
             body = request,
         )
@@ -74,8 +72,8 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
         )
     )
 
-    fun signup(request: AuthSignupRequest): Flow<ApiResponse<AuthSignupResponse>> = call(
-        Signup(
+    fun signUp(request: AuthSignUpRequest): Flow<ApiResponse<AuthSignUpResponse>> = call(
+        SignUp(
             "realm" to realm,
             body = request,
         )

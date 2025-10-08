@@ -2,8 +2,8 @@ package io.peekandpoke.aktor.backend.appuser
 
 import de.peekandpoke.funktor.auth.AuthRealm
 import de.peekandpoke.funktor.auth.AuthSystem
-import de.peekandpoke.funktor.auth.model.AuthLoginResponse
 import de.peekandpoke.funktor.auth.model.AuthProviderModel
+import de.peekandpoke.funktor.auth.model.AuthSignInResponse
 import de.peekandpoke.funktor.auth.provider.EmailAndPasswordAuth
 import de.peekandpoke.funktor.auth.provider.GithubSsoAuth
 import de.peekandpoke.funktor.auth.provider.GoogleSsoAuth
@@ -118,7 +118,7 @@ class AppUserRealm(
 
     override suspend fun loadUserByEmail(email: String) = appUserRepo.findByEmail(email)
 
-    override suspend fun generateJwt(user: Stored<AppUser>): AuthLoginResponse.Token {
+    override suspend fun generateJwt(user: Stored<AppUser>): AuthSignInResponse.Token {
         val gen = deps.jwtGenerator
 
         val token = gen.createJwt(
@@ -137,7 +137,7 @@ class AppUserRealm(
             withExpiresAt(Kronos.systemUtc.instantNow().plus(1.hours).jvm)
         }
 
-        return AuthLoginResponse.Token(
+        return AuthSignInResponse.Token(
             token = token,
             permissionsNs = gen.config.permissionsNs,
             userNs = gen.config.userNs,
@@ -152,5 +152,15 @@ class AppUserRealm(
         return Json.encodeToJsonElement(
             AppUserModel.serializer(), user.asApiModel()
         ).jsonObject
+    }
+
+    override suspend fun createUserForSignup(email: String, displayName: String?): Stored<AppUser> {
+        val name = (displayName ?: "").trim()
+        return appUserRepo.insert(
+            AppUser(
+                name = name,
+                email = email.trim(),
+            )
+        )
     }
 }

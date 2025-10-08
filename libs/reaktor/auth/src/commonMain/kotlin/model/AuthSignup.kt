@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface AuthSignupRequest {
+sealed interface AuthSignUpRequest {
     val provider: String
 
     @Serializable
@@ -14,25 +14,26 @@ sealed interface AuthSignupRequest {
         val email: String,
         val displayName: String? = null,
         val password: String,
-    ) : AuthSignupRequest
+    ) : AuthSignUpRequest
 
     @Serializable
     @SerialName("oauth")
     data class OAuth(
         override val provider: String,
         val token: String,
-    ) : AuthSignupRequest
+    ) : AuthSignUpRequest
 }
 
 @Serializable
-data class AuthSignupResponse(
-    val success: Boolean,
-    val userId: String? = null,
+data class AuthSignUpResponse(
+    val signIn: AuthSignInResponse? = null,
     val requiresActivation: Boolean = false,
 ) {
     companion object {
-        val failed = AuthSignupResponse(success = false)
+        val failed = AuthSignUpResponse(signIn = null, requiresActivation = false)
     }
+
+    val success: Boolean = signIn != null
 }
 
 @Serializable

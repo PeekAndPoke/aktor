@@ -31,11 +31,11 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
         }
     }
 
-    val login = AuthApiClient.Login.mount(AuthApiFeature.RealmParam::class) {
+    val signIn = AuthApiClient.SignIn.mount(AuthApiFeature.RealmParam::class) {
         docs {
-            name = "Login"
+            name = "Sign in"
         }.codeGen {
-            funcName = "login"
+            funcName = "signIn"
         }.authorize {
             public()
         }.handle { params, body ->
@@ -44,10 +44,10 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
 
             try {
                 reaktorAuth
-                    .login(params.realm, body)
+                    .signIn(params.realm, body)
                     .let { ApiResponse.ok(it) }
             } catch (e: AuthError) {
-                ApiResponse.forbidden<AuthLoginResponse>()
+                ApiResponse.forbidden<AuthSignInResponse>()
                     .withInfo(e.message ?: "")
             }
         }
@@ -102,21 +102,22 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
         }
     }
 
-    val signup = AuthApiClient.Signup.mount(AuthApiFeature.RealmParam::class) {
+    val signUp = AuthApiClient.SignUp.mount(AuthApiFeature.RealmParam::class) {
         docs {
-            name = "Signup"
+            name = "Sign up"
         }.codeGen {
-            funcName = "signup"
+            funcName = "signUp"
         }.authorize {
             public()
         }.handle { params, body ->
             letTheBotsWait()
+
             try {
                 reaktorAuth
-                    .signup(params.realm, body)
+                    .signUp(params.realm, body)
                     .let { ApiResponse.ok(it) }
             } catch (e: AuthError) {
-                ApiResponse.badRequest(AuthSignupResponse.failed)
+                ApiResponse.badRequest(AuthSignUpResponse.failed)
                     .withInfo(e.message ?: "")
             }
         }
@@ -131,6 +132,7 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
             public()
         }.handle { params, body ->
             letTheBotsWait()
+
             try {
                 reaktorAuth
                     .activate(params.realm, body)
