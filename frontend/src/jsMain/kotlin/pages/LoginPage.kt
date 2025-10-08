@@ -78,6 +78,7 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
 
                 ui.segment {
                     css {
+                        width = 100.pct
                         opacity = 0.95
                     }
 

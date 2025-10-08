@@ -1,10 +1,13 @@
 package de.peekandpoke.funktor.auth.widgets
 
 import de.peekandpoke.funktor.auth.AuthState
+import de.peekandpoke.funktor.auth.asFormRule
 import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
+import de.peekandpoke.kraft.forms.formController
+import de.peekandpoke.kraft.forms.validation.strings.notEmpty
 import de.peekandpoke.kraft.routing.Route
 import de.peekandpoke.kraft.routing.router
 import de.peekandpoke.kraft.semanticui.forms.UiInputField
@@ -67,9 +70,19 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             val message: Message? = null,
         ) : DisplayState
 
+        // Sign-Up state holds all input data for the sign-up form
+        data class SignUp(
+            val provider: AuthProviderModel,
+            val email: String = "",
+            val displayName: String = "",
+            val password: String = "",
+            val message: Message? = null,
+        ) : DisplayState
+
         fun withMessage(message: Message?) = when (this) {
             is Login -> copy(message = message)
             is RecoverPassword -> copy(message = message)
+            is SignUp -> copy(message = message)
         }
     }
 
@@ -81,6 +94,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         props.state.api.getRealm().map { it.data!! }
     }
 
+    private val formCtrl = formController()
     private val noDblClick = doubleClickProtection()
 
     init {
@@ -144,7 +158,6 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     override fun VDom.render() {
 
         realmLoader(this) {
@@ -164,6 +177,7 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                 when (val s = displayState) {
                     is DisplayState.Login -> renderLoginState(s, realm)
                     is DisplayState.RecoverPassword -> renderRecoverPasswordState(s)
+                    is DisplayState.SignUp -> renderSignUpState(s, realm)
                 }
             }
         }
@@ -223,7 +237,10 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                         signUpProviders.forEach { provider ->
                             when (provider.type) {
                                 AuthProviderModel.TYPE_EMAIL_PASSWORD -> noui.item {
-                                    ui.message { +"Sign up with email/password is available. (UI flow to be implemented)" }
+                                    ui.basic.fluid.green.button {
+                                        onClick { displayState = DisplayState.SignUp(provider = provider) }
+                                        +"Create account with Email"
+                                    }
                                 }
 
                                 AuthProviderModel.TYPE_GOOGLE -> noui.item {
@@ -377,6 +394,65 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                         }
                     }
                     +"Recover Password"
+                }
+            }
+        }
+    }
+
+    // NEW: render sign-up state with validators and a single password field
+    private fun FlowContent.renderSignUpState(state: DisplayState.SignUp, realm: AuthRealmModel) {
+        renderMessage(state.message)
+
+        ui.header { +"Create your account" }
+
+        ui.form Form {
+            onSubmit { evt ->
+                evt.preventDefault()
+                if (formCtrl.validate()) {
+                    displayState = state.withMessage(
+                        Message.info("Sign-up UI ready. Backend endpoint not connected yet.")
+                    )
+                }
+            }
+
+            UiInputField(state.email, { displayState = state.copy(email = it) }) {
+                placeholder("Email")
+                accepts(
+                    notEmpty(),
+                )
+            }
+
+            UiInputField(state.displayName, { displayState = state.copy(displayName = it) }) {
+                placeholder("Display name (optional)")
+                accepts(
+                    notEmpty(),
+                )
+            }
+
+            UiPasswordField(state.password, { displayState = state.copy(password = it) }) {
+                placeholder("Password")
+                revealPasswordIcon()
+                accepts(
+                    realm.passwordPolicy.asFormRule()
+                )
+            }
+
+            ui.field {
+                ui.green.fluid
+                    .givenNot(noDblClick.canRun) { loading }
+                    .givenNot(formCtrl.isValid) { disabled }
+                    .button Submit {
+                    +"Create account"
+                }
+            }
+
+            ui.field {
+                a {
+                    onClick { evt ->
+                        evt.preventDefault()
+                        displayState = DisplayState.Login()
+                    }
+                    +"Back to sign in"
                 }
             }
         }

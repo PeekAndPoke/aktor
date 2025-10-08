@@ -1,14 +1,13 @@
 package de.peekandpoke.funktor.auth.widgets
 
 import de.peekandpoke.funktor.auth.AuthState
+import de.peekandpoke.funktor.auth.asFormRule
 import de.peekandpoke.funktor.auth.model.AuthProviderModel
 import de.peekandpoke.funktor.auth.model.AuthUpdateRequest
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
 import de.peekandpoke.kraft.forms.formController
-import de.peekandpoke.kraft.forms.validation.given
-import de.peekandpoke.kraft.forms.validation.strings.notEmpty
 import de.peekandpoke.kraft.semanticui.forms.UiPasswordField
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
@@ -121,11 +120,7 @@ class ChangePasswordWidget<USER>(ctx: Ctx<Props<USER>>) : Component<ChangePasswo
                 revealPasswordIcon()
 
                 accepts(
-                    notEmpty(),
-                    given(
-                        check = { policy.matches(it) },
-                        message = { policy.description },
-                    )
+                    policy.asFormRule(),
                 )
             }
 
