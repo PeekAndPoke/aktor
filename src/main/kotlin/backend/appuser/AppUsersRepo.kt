@@ -45,7 +45,7 @@ class AppUsersRepo(
         private val passwordHasher: PasswordHasher,
     ) : RepoFixtureLoader<AppUser>(repo = repo) {
 
-        private val commonPassword = "s3cret"
+        private val commonPassword = "S3cret123!"
 
         private suspend fun Stored<AppUser>.createPassword(password: String = commonPassword) {
             authStorage.createRecord {
