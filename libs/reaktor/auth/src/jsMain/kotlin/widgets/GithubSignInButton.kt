@@ -14,11 +14,13 @@ import kotlinx.html.div
 @Suppress("FunctionName")
 fun Tag.GithubSignInButton(
     clientId: String,
+    label: String,
     callbackUrl: String,
     onToken: (token: String) -> Unit,
 ) = comp(
     GithubSignInButton.Props(
         clientId = clientId,
+        label = label,
         callbackUrl = callbackUrl,
         onToken = onToken,
     )
@@ -34,6 +36,7 @@ class GithubSignInButton(ctx: Ctx<Props>) : Component<GithubSignInButton.Props>(
 
     data class Props(
         val clientId: String,
+        val label: String,
         val callbackUrl: String,
         val onToken: (token: String) -> Unit,
     )
@@ -56,7 +59,7 @@ class GithubSignInButton(ctx: Ctx<Props>) : Component<GithubSignInButton.Props>(
                 }
 
                 icon.github()
-                +"Sign in with GitHub"
+                +props.label
             }
         }
     }

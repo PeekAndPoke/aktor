@@ -108,13 +108,20 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                 if (params.has(authCallbackParam)) {
                     val providerId = params.get(authCallbackParam)
                     val provider = realm.providers.find { it.id == providerId }
+                    val action = params.get("auth-action")
 
                     when (provider?.type) {
                         AuthProviderModel.TYPE_GITHUB -> {
                             params.get("code")?.let { code ->
-                                login(
-                                    AuthSignInRequest.OAuth(provider = provider.id, token = code)
-                                )
+                                if (action == "signup") {
+                                    signup(
+                                        AuthSignUpRequest.OAuth(provider = provider.id, token = code)
+                                    )
+                                } else {
+                                    login(
+                                        AuthSignInRequest.OAuth(provider = provider.id, token = code)
+                                    )
+                                }
                             }
                         }
                     }
@@ -158,13 +165,13 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         }
     }
 
-    private fun signup(request: AuthSignUpRequest.EmailAndPassword) {
+    private fun signup(request: AuthSignUpRequest) {
         launch {
             doSignup(request)
         }
     }
 
-    private suspend fun doSignup(request: AuthSignUpRequest.EmailAndPassword) = noDblClick.runBlocking {
+    private suspend fun doSignup(request: AuthSignUpRequest) = noDblClick.runBlocking {
         // Clear any previous message
         displayState = displayState.withMessage(message = null)
 
@@ -178,8 +185,12 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
         displayState = when {
             data?.success == true -> {
+                val emailPrefill = when (request) {
+                    is AuthSignUpRequest.EmailAndPassword -> request.email
+                    else -> ""
+                }
                 DisplayState.Login(
-                    email = request.email,
+                    email = emailPrefill,
                     message = if (data.requiresActivation) {
                         Message.info("Account created. Please check your email to activate your account.")
                     } else {
@@ -230,7 +241,6 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
     private fun FlowContent.renderLoginState(state: DisplayState.Login, realm: AuthRealmModel) {
 
-
         renderMessage(state.message)
 
         val signInProviders = realm.signInProviders
@@ -253,11 +263,11 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                                 }
 
                                 AuthProviderModel.TYPE_GOOGLE -> noui.item {
-                                    renderGoogleSso(provider)
+                                    renderGoogleSignInButton(provider)
                                 }
 
                                 AuthProviderModel.TYPE_GITHUB -> noui.item {
-                                    renderGithubSso(provider)
+                                    renderGithubSignInButton(provider)
                                 }
 
                                 else -> {
@@ -275,18 +285,19 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                         signUpProviders.forEach { provider ->
                             when (provider.type) {
                                 AuthProviderModel.TYPE_EMAIL_PASSWORD -> noui.item {
-                                    ui.basic.fluid.green.button {
+                                    ui.basic.fluid.button {
                                         onClick { displayState = DisplayState.SignUp(provider = provider) }
-                                        +"Create account with Email"
+                                        icon.mail()
+                                        +"Sign up with Email & Password"
                                     }
                                 }
 
                                 AuthProviderModel.TYPE_GOOGLE -> noui.item {
-                                    ui.message { +"Sign up with Google is available. (UI flow to be implemented)" }
+                                    renderGoogleSignUpButton(provider)
                                 }
 
                                 AuthProviderModel.TYPE_GITHUB -> noui.item {
-                                    ui.message { +"Sign up with GitHub is available. (UI flow to be implemented)" }
+                                    renderGithubSignUpButton(provider)
                                 }
 
                                 else -> noui.item {
@@ -347,10 +358,8 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         ui.hidden.divider()
     }
 
-    private fun FlowContent.renderGoogleSso(provider: AuthProviderModel) {
+    private fun FlowContent.renderGoogleSignInButton(provider: AuthProviderModel) {
         val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
-
-//        console.log("Google client id", clientId)
 
         GoogleSignInButton(clientId = clientId) { token ->
             login(
@@ -359,10 +368,18 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         }
     }
 
-    private fun FlowContent.renderGithubSso(provider: AuthProviderModel) {
+    private fun FlowContent.renderGoogleSignUpButton(provider: AuthProviderModel) {
         val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
 
-//        console.log("Google client id", clientId)
+        GoogleSignInButton(clientId = clientId) { token ->
+            signup(
+                AuthSignUpRequest.OAuth(provider = provider.id, token = token)
+            )
+        }
+    }
+
+    private fun FlowContent.renderGithubSignInButton(provider: AuthProviderModel) {
+        val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
 
         val parts = listOf(
             window.location.origin,
@@ -375,10 +392,34 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
         GithubSignInButton(
             clientId = clientId,
+            label = "Sign in with GitHub",
             callbackUrl = callbackUrl,
         ) { token ->
             login(
                 AuthSignInRequest.OAuth(provider = provider.id, token = token)
+            )
+        }
+    }
+
+    private fun FlowContent.renderGithubSignUpButton(provider: AuthProviderModel) {
+        val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
+
+        val parts = listOf(
+            window.location.origin,
+            window.location.pathname,
+            "?${authCallbackParam}=${provider.id}&auth-action=signup",
+            window.location.hash,
+        )
+
+        val callbackUrl = parts.joinToString("")
+
+        GithubSignInButton(
+            clientId = clientId,
+            label = "Sign up with GitHub",
+            callbackUrl = callbackUrl,
+        ) { token ->
+            signup(
+                AuthSignUpRequest.OAuth(provider = provider.id, token = token)
             )
         }
     }
