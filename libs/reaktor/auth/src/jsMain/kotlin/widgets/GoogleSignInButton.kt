@@ -13,9 +13,25 @@ import kotlinx.html.*
 @Suppress("FunctionName")
 fun Tag.GoogleSignInButton(
     clientId: String,
+    // Customization options (optional)
+    text: String = "signin_with",          // signin_with | signup_with | continue_with | signin
+    theme: String = "outline",             // outline | filled_blue | filled_black
+    shape: String = "rectangular",         // rectangular | pill | circle | square
+    size: String = "large",               // large | medium | small
+    logoAlignment: String = "center",     // left | center
+    fullWidth: Boolean = true,
     onToken: (token: String) -> Unit,
 ) = comp(
-    GoogleSignInButton.Props(clientId = clientId, onToken = onToken)
+    GoogleSignInButton.Props(
+        clientId = clientId,
+        text = text,
+        theme = theme,
+        shape = shape,
+        size = size,
+        logoAlignment = logoAlignment,
+        fullWidth = fullWidth,
+        onToken = onToken,
+    )
 ) {
     GoogleSignInButton(it)
 }
@@ -29,6 +45,12 @@ class GoogleSignInButton(ctx: Ctx<Props>) : Component<GoogleSignInButton.Props>(
     data class Props(
         val clientId: String,
         val onToken: (token: String) -> Unit,
+        val text: String,
+        val theme: String,
+        val shape: String,
+        val size: String,
+        val logoAlignment: String,
+        val fullWidth: Boolean,
     )
 
     //  STATE  //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,9 +58,16 @@ class GoogleSignInButton(ctx: Ctx<Props>) : Component<GoogleSignInButton.Props>(
     private val cbName = "_google_sso_${uuid4().toString().replace("-", "")}"
 
     private var mounted by value(false)
+    private var widthPx by value<Int?>(null)
 
     private fun handleGoogleSsoResponse(googleResponse: dynamic) {
         props.onToken(googleResponse.credential as String)
+    }
+
+    private fun recomputeWidth() {
+        if (!props.fullWidth) return
+        val w = dom?.offsetWidth ?: return
+        widthPx = w
     }
 
     //  IMPL  ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,10 +78,17 @@ class GoogleSignInButton(ctx: Ctx<Props>) : Component<GoogleSignInButton.Props>(
                 window.asDynamic()[cbName] = ::handleGoogleSsoResponse
 
                 mounted = true
-            }
+                // compute initial width after mount
+                recomputeWidth()
 
-            onUnmount {
-                window.asDynamic()[cbName] = undefined
+                // update on resize
+                val listener: (dynamic) -> Unit = { _ -> recomputeWidth() }
+                window.addEventListener("resize", listener)
+
+                onUnmount {
+                    window.removeEventListener("resize", listener)
+                    window.asDynamic()[cbName] = undefined
+                }
             }
         }
     }
@@ -77,10 +113,19 @@ class GoogleSignInButton(ctx: Ctx<Props>) : Component<GoogleSignInButton.Props>(
                     id = "g_id_signin"
                     classes = setOf("g_id_signin")
                     data("type", "standard")
-                    data("theme", "outline")
-                    data("text", "sign_in_with")
-                    data("shape", "rectangular")
-                    data("width", dom?.offsetWidth?.toString() ?: "")
+                    data("theme", props.theme)
+                    data("text", props.text)
+                    data("shape", props.shape)
+                    data("size", props.size)
+                    data("logo_alignment", props.logoAlignment)
+
+                    val w = if (props.fullWidth) {
+                        (widthPx?.toString() ?: (dom?.offsetWidth?.toString() ?: ""))
+                    } else {
+                        ""
+                    }
+
+                    if (w.isNotBlank()) data("width", w)
                 }
             }
         }

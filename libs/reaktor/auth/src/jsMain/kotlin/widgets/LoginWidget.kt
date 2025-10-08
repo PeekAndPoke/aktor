@@ -17,6 +17,7 @@ import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.common.model.Message
+import de.peekandpoke.ultra.html.css
 import de.peekandpoke.ultra.html.onClick
 import de.peekandpoke.ultra.html.onSubmit
 import de.peekandpoke.ultra.semanticui.icon
@@ -26,6 +27,10 @@ import kotlinx.browser.window
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.css.Cursor
+import kotlinx.css.cursor
+import kotlinx.css.maxWidth
+import kotlinx.css.px
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 import kotlinx.html.a
@@ -254,7 +259,12 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
         ui.number(numColumns).column.stackable.divided.grid {
             if (signInProviders.isNotEmpty()) {
                 noui.column {
+                    css {
+                        maxWidth = 400.px
+                    }
+
                     ui.header { +"Sign In" }
+
                     ui.list {
                         signInProviders.forEach { provider ->
                             when (provider.type) {
@@ -280,7 +290,12 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             }
             if (signUpProviders.isNotEmpty()) {
                 noui.column {
+                    css {
+                        maxWidth = 400.px
+                    }
+
                     ui.header { +"Sign Up" }
+
                     ui.list {
                         signUpProviders.forEach { provider ->
                             when (provider.type) {
@@ -371,7 +386,15 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
     private fun FlowContent.renderGoogleSignUpButton(provider: AuthProviderModel) {
         val clientId = provider.config?.get("client-id")?.jsonPrimitive?.content ?: ""
 
-        GoogleSignInButton(clientId = clientId) { token ->
+        GoogleSignInButton(
+            clientId = clientId,
+            text = "signup_with",
+            theme = "outline",
+            shape = "rectangular",
+            size = "large",
+            logoAlignment = "center",
+            fullWidth = true,
+        ) { token ->
             signup(
                 AuthSignUpRequest.OAuth(provider = provider.id, token = token)
             )
@@ -426,16 +449,6 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
     private fun FlowContent.renderRecoverPasswordState(state: DisplayState.RecoverPassword) {
 
-        div {
-            onClick {
-                displayState = DisplayState.Login(email = state.email)
-            }
-            icon.angle_left {}
-            +"Back"
-        }
-
-        ui.hidden.divider {}
-
         renderMessage(state.message)
 
         ui.form Form {
@@ -476,6 +489,10 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                 }
             }
         }
+
+        ui.hidden.divider {}
+
+        renderBack(DisplayState.Login(email = state.email))
     }
 
     // NEW: render sign-up state with validators and a single password field
@@ -526,14 +543,26 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
                 }
             }
 
-            ui.field {
-                a {
-                    onClick { evt ->
-                        evt.preventDefault()
-                        displayState = DisplayState.Login()
-                    }
-                    +"Back to sign in"
+            ui.hidden.divider()
+
+            renderBack(DisplayState.Login(email = state.email))
+        }
+    }
+
+    private fun FlowContent.renderBack(state: DisplayState) {
+        div {
+            a {
+                css {
+                    cursor = Cursor.pointer
                 }
+
+                onClick { evt ->
+                    evt.preventDefault()
+                    displayState = state
+                }
+
+                icon.angle_left()
+                +"Back"
             }
         }
     }

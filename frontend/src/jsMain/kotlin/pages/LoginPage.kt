@@ -74,11 +74,13 @@ class LoginPage(ctx: NoProps) : PureComponent(ctx) {
                     height = 100.vh
                     display = Display.flex
                     alignItems = Align.center
+                    justifyContent = JustifyContent.center
                 }
 
                 ui.segment {
                     css {
                         width = 100.pct
+                        maxWidth = 800.px
                         opacity = 0.95
                     }
 
