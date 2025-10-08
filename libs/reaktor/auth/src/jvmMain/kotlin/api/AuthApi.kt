@@ -1,9 +1,7 @@
 package de.peekandpoke.funktor.auth.api
 
 import de.peekandpoke.funktor.auth.AuthError
-import de.peekandpoke.funktor.auth.model.AuthLoginResponse
-import de.peekandpoke.funktor.auth.model.AuthRecoveryResponse
-import de.peekandpoke.funktor.auth.model.AuthUpdateResponse
+import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.funktor.auth.reaktorAuth
 import de.peekandpoke.funktor.core.broker.OutgoingConverter
 import de.peekandpoke.funktor.core.user
@@ -49,7 +47,8 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
                     .login(params.realm, body)
                     .let { ApiResponse.ok(it) }
             } catch (e: AuthError) {
-                ApiResponse.forbidden<AuthLoginResponse>().withInfo(e.message ?: "")
+                ApiResponse.forbidden<AuthLoginResponse>()
+                    .withInfo(e.message ?: "")
             }
         }
     }
@@ -67,7 +66,7 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
 
             // Check if the current user is able to do the update
             if (user.record.userId != body.userId) {
-                return@handle ApiResponse.forbidden<AuthUpdateResponse>()
+                return@handle ApiResponse.forbidden()
             }
 
             try {
@@ -75,9 +74,8 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
                     .update(params.realm, body)
                     .let { ApiResponse.ok(it) }
             } catch (e: AuthError) {
-                ApiResponse.badRequest<AuthUpdateResponse>(
-                    AuthUpdateResponse.failed
-                ).withInfo(e.message ?: "")
+                ApiResponse.badRequest(AuthUpdateResponse.failed)
+                    .withInfo(e.message ?: "")
             }
         }
     }
@@ -98,9 +96,48 @@ class AuthApi(converter: OutgoingConverter) : ApiRoutes("login", converter) {
                     .recover(params.realm, body)
                     .let { ApiResponse.ok(it) }
             } catch (e: AuthError) {
-                ApiResponse.badRequest<AuthRecoveryResponse>(
-                    AuthRecoveryResponse.failed
-                ).withInfo(e.message ?: "")
+                ApiResponse.badRequest(AuthRecoveryResponse.failed)
+                    .withInfo(e.message ?: "")
+            }
+        }
+    }
+
+    val signup = AuthApiClient.Signup.mount(AuthApiFeature.RealmParam::class) {
+        docs {
+            name = "Signup"
+        }.codeGen {
+            funcName = "signup"
+        }.authorize {
+            public()
+        }.handle { params, body ->
+            letTheBotsWait()
+            try {
+                reaktorAuth
+                    .signup(params.realm, body)
+                    .let { ApiResponse.ok(it) }
+            } catch (e: AuthError) {
+                ApiResponse.badRequest(AuthSignupResponse.failed)
+                    .withInfo(e.message ?: "")
+            }
+        }
+    }
+
+    val activate = AuthApiClient.Activate.mount(AuthApiFeature.RealmParam::class) {
+        docs {
+            name = "Activate"
+        }.codeGen {
+            funcName = "activate"
+        }.authorize {
+            public()
+        }.handle { params, body ->
+            letTheBotsWait()
+            try {
+                reaktorAuth
+                    .activate(params.realm, body)
+                    .let { ApiResponse.ok(it) }
+            } catch (e: AuthError) {
+                ApiResponse.badRequest(AuthActivateResponse(success = false))
+                    .withInfo(e.message ?: "")
             }
         }
     }

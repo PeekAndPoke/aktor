@@ -31,6 +31,20 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
             body = AuthRecoveryRequest.serializer(),
             response = AuthRecoveryResponse.serializer().api(),
         )
+
+        // Signup
+        val Signup = TypedApiEndpoint.Post(
+            uri = "$base/{realm}/signup",
+            body = AuthSignupRequest.serializer(),
+            response = AuthSignupResponse.serializer().api(),
+        )
+
+        // Activate
+        val Activate = TypedApiEndpoint.Post(
+            uri = "$base/{realm}/activate",
+            body = AuthActivateRequest.serializer(),
+            response = AuthActivateResponse.serializer().api(),
+        )
     }
 
     fun getRealm(): Flow<ApiResponse<AuthRealmModel>> = call(
@@ -55,6 +69,20 @@ class AuthApiClient(private val realm: String, config: Config) : ApiClient(confi
 
     fun recover(request: AuthRecoveryRequest): Flow<ApiResponse<AuthRecoveryResponse>> = call(
         Recover(
+            "realm" to realm,
+            body = request,
+        )
+    )
+
+    fun signup(request: AuthSignupRequest): Flow<ApiResponse<AuthSignupResponse>> = call(
+        Signup(
+            "realm" to realm,
+            body = request,
+        )
+    )
+
+    fun activate(request: AuthActivateRequest): Flow<ApiResponse<AuthActivateResponse>> = call(
+        Activate(
             "realm" to realm,
             body = request,
         )

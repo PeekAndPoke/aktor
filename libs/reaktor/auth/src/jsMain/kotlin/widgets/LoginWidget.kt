@@ -23,6 +23,7 @@ import de.peekandpoke.ultra.semanticui.icon
 import de.peekandpoke.ultra.semanticui.noui
 import de.peekandpoke.ultra.semanticui.ui
 import kotlinx.browser.window
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
@@ -153,6 +154,41 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
     private suspend fun recover(request: AuthRecoveryRequest): AuthRecoveryResponse? {
         return noDblClick.runBlocking {
             props.state.recover(request)
+        }
+    }
+
+    private fun signup(request: AuthSignupRequest.EmailAndPassword) {
+        launch {
+            doSignup(request)
+        }
+    }
+
+    private suspend fun doSignup(request: AuthSignupRequest.EmailAndPassword) = noDblClick.runBlocking {
+        // Clear any previous message
+        displayState = displayState.withMessage(message = null)
+
+        val response = props.state.api
+            .signup(request)
+            .map { it }
+            .firstOrNull()
+
+        val data = response?.data
+
+        displayState = when {
+            data?.success == true -> {
+                DisplayState.Login(
+                    email = request.email,
+                    message = if (data.requiresActivation) {
+                        Message.info("Account created. Please check your email to activate your account.")
+                    } else {
+                        Message.info("Account created. You can now sign in.")
+                    }
+                )
+            }
+
+            else -> {
+                displayState.withMessage(Message.error("Sign-up failed"))
+            }
         }
     }
 
@@ -409,9 +445,13 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
             onSubmit { evt ->
                 evt.preventDefault()
                 if (formCtrl.validate()) {
-                    displayState = state.withMessage(
-                        Message.info("Sign-up UI ready. Backend endpoint not connected yet.")
+                    val req = AuthSignupRequest.EmailAndPassword(
+                        provider = state.provider.id,
+                        email = state.email,
+                        displayName = state.displayName.ifBlank { null },
+                        password = state.password,
                     )
+                    signup(req)
                 }
             }
 
@@ -424,9 +464,6 @@ class LoginWidget<USER>(ctx: Ctx<Props<USER>>) : Component<LoginWidget.Props<USE
 
             UiInputField(state.displayName, { displayState = state.copy(displayName = it) }) {
                 placeholder("Display name (optional)")
-                accepts(
-                    notEmpty(),
-                )
             }
 
             UiPasswordField(state.password, { displayState = state.copy(password = it) }) {

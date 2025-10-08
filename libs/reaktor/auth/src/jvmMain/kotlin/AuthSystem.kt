@@ -45,4 +45,15 @@ class AuthSystem(
     suspend fun recover(realm: String, request: AuthRecoveryRequest): AuthRecoveryResponse {
         return getRealm(realm).recover(request)
     }
+
+    // --- Signup / Activate (stubs for now, wired to API) ---
+    suspend fun signup(realm: String, request: AuthSignupRequest): AuthSignupResponse {
+        // Minimal placeholder; real implementation will be added next
+        return AuthSignupResponse.failed
+    }
+
+    suspend fun activate(realm: String, request: AuthActivateRequest): AuthActivateResponse {
+        // Minimal placeholder; real implementation will be added next
+        return AuthActivateResponse(success = false)
+    }
 }
