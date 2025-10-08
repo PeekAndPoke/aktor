@@ -58,3 +58,19 @@ interface AuthProvider {
      */
     fun asApiModel(): AuthProviderModel
 }
+
+/**
+ * Checks if the provider has the given capability
+ */
+fun AuthProvider.hasCapability(capability: AuthProviderModel.Capability): Boolean = capability in capabilities
+
+/**
+ * Checks if the provider supports sign-in
+ */
+fun AuthProvider.supportsSignIn(): Boolean = hasCapability(AuthProviderModel.Capability.SignIn)
+
+/**
+ * Checks if the provider supports sign-up
+ */
+fun AuthProvider.supportsSignUp(): Boolean = hasCapability(AuthProviderModel.Capability.SignUp)
+

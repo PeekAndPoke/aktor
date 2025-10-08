@@ -35,7 +35,7 @@ class AuthSystem(
     }
 
     suspend fun login(realm: String, request: AuthLoginRequest): AuthLoginResponse {
-        return getRealm(realm).login(request)
+        return getRealm(realm).signIn(request)
     }
 
     suspend fun update(realm: String, request: AuthUpdateRequest): AuthUpdateResponse {

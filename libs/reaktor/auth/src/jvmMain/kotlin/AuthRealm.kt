@@ -2,6 +2,7 @@ package de.peekandpoke.funktor.auth
 
 import de.peekandpoke.funktor.auth.model.*
 import de.peekandpoke.funktor.auth.provider.AuthProvider
+import de.peekandpoke.funktor.auth.provider.supportsSignIn
 import de.peekandpoke.funktor.messaging.api.EmailResult
 import de.peekandpoke.ultra.vault.Stored
 import kotlinx.serialization.json.JsonObject
@@ -36,12 +37,15 @@ interface AuthRealm<USER> {
 
     suspend fun serializeUser(user: Stored<USER>): JsonObject
 
-    suspend fun login(request: AuthLoginRequest): AuthLoginResponse {
+    suspend fun signIn(request: AuthLoginRequest): AuthLoginResponse {
         val provider = providers.firstOrNull { it.id == request.provider }
             ?: throw AuthError("Provider not found: ${request.provider}")
 
+        if (provider.supportsSignIn().not()) {
+            throw AuthError("Provider does not support sign in: ${request.provider}")
+        }
+
         val user = provider.login<USER>(realm = this, request = request)
-            ?: throw AuthError("User not found")
 
         val response = AuthLoginResponse(
             token = generateJwt(user),
