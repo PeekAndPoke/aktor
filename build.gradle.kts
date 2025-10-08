@@ -104,7 +104,6 @@ kotlin {
 
         implementation(project(":libs:reaktor:auth"))
 
-
         // TEST /////////////////////////////////////////////////////////
         testImplementation(Deps.Ktor.Server.Test.host)
         jvmTestDeps()
