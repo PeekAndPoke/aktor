@@ -18,39 +18,39 @@ val LlmsModule = module {
 
     singleton(LlmRegistry::class) { keys: KeysConfig ->
         val default = LlmRegistry.RegisteredLlm(
-            id = "openai/gpt-5-mini",
-            description = "OpenAI GPT-5 mini",
+            id = "openai/gpt-4o-mini",
+            description = "OpenAI GPT-4o mini",
             llm = OpenAiLlm(
-                model = "gpt-5-mini",
+                model = "gpt-4o-mini",
                 authToken = keys.config.getString("OPENAI_API_KEY"),
             )
         )
 
         LlmRegistry(default = default)
-            .plus(
-                id = "openai/gpt-5",
-                description = "OpenAI GPT-5",
-                llm = OpenAiLlm(
-                    model = "gpt-5",
-                    authToken = keys.config.getString("OPENAI_API_KEY"),
-                )
-            )
-            .plus(
-                id = "openai/gpt-5-mini",
-                description = "OpenAI GPT-5 mini",
-                llm = OpenAiLlm(
-                    model = "gpt-5-mini",
-                    authToken = keys.config.getString("OPENAI_API_KEY"),
-                )
-            )
-            .plus(
-                id = "openai/gpt-5-nano",
-                description = "OpenAI GPT-5 nano",
-                llm = OpenAiLlm(
-                    model = "gpt-5-nano",
-                    authToken = keys.config.getString("OPENAI_API_KEY"),
-                )
-            )
+//            .plus(
+//                id = "openai/gpt-5",
+//                description = "OpenAI GPT-5",
+//                llm = OpenAiLlm(
+//                    model = "gpt-5",
+//                    authToken = keys.config.getString("OPENAI_API_KEY"),
+//                )
+//            )
+//            .plus(
+//                id = "openai/gpt-5-mini",
+//                description = "OpenAI GPT-5 mini",
+//                llm = OpenAiLlm(
+//                    model = "gpt-5-mini",
+//                    authToken = keys.config.getString("OPENAI_API_KEY"),
+//                )
+//            )
+//            .plus(
+//                id = "openai/gpt-5-nano",
+//                description = "OpenAI GPT-5 nano",
+//                llm = OpenAiLlm(
+//                    model = "gpt-5-nano",
+//                    authToken = keys.config.getString("OPENAI_API_KEY"),
+//                )
+//            )
             .plus(
                 id = "openai/gpt-4o-mini",
                 description = "OpenAI GPT-4o mini",

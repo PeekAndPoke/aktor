@@ -1,6 +1,6 @@
 package io.peekandpoke.aktor
 
-import com.fasterxml.jackson.annotation.JsonIgnore
+import de.peekandpoke.funktor.auth.AuthConfig
 import de.peekandpoke.funktor.core.config.AppConfig
 import de.peekandpoke.funktor.core.config.funktor.FunktorConfig
 import de.peekandpoke.funktor.core.config.ktor.KtorConfig
@@ -16,13 +16,6 @@ data class AktorConfig(
     val api: ApiConfig,
     val aws: AwsConfig,
 ) : AppConfig {
-
-    data class AuthConfig(
-        @JsonIgnore
-        val apiJwtSigningKey: String,
-        val apiJwtPermissionsNs: String = "permissions",
-        val apiJwtUserNs: String = "user",
-    )
 
     data class ApiConfig(
         val baseUrl: String,

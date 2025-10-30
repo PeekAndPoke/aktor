@@ -10,7 +10,6 @@ import de.peekandpoke.ultra.vault.Database
 import de.peekandpoke.ultra.vault.Repository
 import de.peekandpoke.ultra.vault.Storable
 import de.peekandpoke.ultra.vault.hooks.TimestampedHook
-import de.peekandpoke.ultra.vault.slumber.ts
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 
 inline val Database.aiConversations get() = getRepository(AiConversationsRepo::class)

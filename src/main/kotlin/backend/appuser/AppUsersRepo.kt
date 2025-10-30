@@ -1,6 +1,6 @@
 package io.peekandpoke.aktor.backend.appuser
 
-import de.peekandpoke.funktor.auth.AuthStorage
+import de.peekandpoke.funktor.auth.AuthRecordStorage
 import de.peekandpoke.funktor.auth.domain.AuthRecord
 import de.peekandpoke.funktor.core.fixtures.RepoFixtureLoader
 import de.peekandpoke.karango.aql.EQ
@@ -41,14 +41,14 @@ class AppUsersRepo(
 
     class Fixtures(
         repo: AppUsersRepo,
-        private val authStorage: AuthStorage,
+        private val authRecords: AuthRecordStorage,
         private val passwordHasher: PasswordHasher,
     ) : RepoFixtureLoader<AppUser>(repo = repo) {
 
         private val commonPassword = "S3cret123!"
 
         private suspend fun Stored<AppUser>.createPassword(password: String = commonPassword) {
-            authStorage.createRecord {
+            authRecords.createRecord {
                 AuthRecord.Password(
                     realm = AppUserRealm.realm,
                     ownerId = _id,

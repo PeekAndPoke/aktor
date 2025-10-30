@@ -3,7 +3,10 @@ package de.peekandpoke.aktor.frontend.pages
 import de.peekandpoke.aktor.frontend.Apis
 import de.peekandpoke.aktor.frontend.State
 import de.peekandpoke.aktor.frontend.common.AiConversationView
-import de.peekandpoke.kraft.components.*
+import de.peekandpoke.kraft.components.Component
+import de.peekandpoke.kraft.components.ComponentRef
+import de.peekandpoke.kraft.components.Ctx
+import de.peekandpoke.kraft.components.comp
 import de.peekandpoke.kraft.routing.JoinedPageTitle
 import de.peekandpoke.kraft.semanticui.forms.UiCheckboxField
 import de.peekandpoke.kraft.semanticui.forms.UiTextArea
@@ -13,10 +16,7 @@ import de.peekandpoke.kraft.utils.dataLoader
 import de.peekandpoke.kraft.utils.doubleClickProtection
 import de.peekandpoke.kraft.utils.launch
 import de.peekandpoke.kraft.vdom.VDom
-import de.peekandpoke.ultra.html.css
-import de.peekandpoke.ultra.html.onClick
-import de.peekandpoke.ultra.html.onKeyDown
-import de.peekandpoke.ultra.html.onSubmit
+import de.peekandpoke.ultra.html.*
 import de.peekandpoke.ultra.semanticui.noui
 import de.peekandpoke.ultra.semanticui.ui
 import io.ktor.client.plugins.sse.*

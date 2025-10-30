@@ -17,5 +17,3 @@ include(":libs:shared")
 
 include(":utils:crawl4ai")
 include(":utils:geo")
-
-include(":libs:reaktor:auth")

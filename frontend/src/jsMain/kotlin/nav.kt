@@ -23,11 +23,13 @@ fun RouterBuilder.mountNav() {
 
     mount(Nav.login) { LoginPage() }
 
-    using(authMiddleware) {
-        mount(Nav.dashboard) { LoggedInLayout { DashboardPage() } }
-        mount(Nav.dashboardSlash) { LoggedInLayout { DashboardPage() } }
-        mount(Nav.profile) { LoggedInLayout { ProfilePage() } }
-        mount(Nav.chat) { LoggedInLayout { ChatPage(it["id"]) } }
+    middleware(authMiddleware) {
+        layout({ LoggedInLayout { it() } }) {
+            mount(Nav.dashboard) { DashboardPage() }
+            mount(Nav.dashboardSlash) { DashboardPage() }
+            mount(Nav.profile) { ProfilePage() }
+            mount(Nav.chat) { ChatPage(it["id"]) }
+        }
     }
 
     catchAll {

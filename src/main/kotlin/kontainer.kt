@@ -2,15 +2,12 @@ package io.peekandpoke.aktor
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import de.peekandpoke.funktor.auth.AuthStorage
-import de.peekandpoke.funktor.auth.ReaktorAuth
-import de.peekandpoke.funktor.auth.db.karango.KarangoAuthRecordsRepo
-import de.peekandpoke.funktor.auth.db.karango.KarangoAuthStorage
 import de.peekandpoke.funktor.core.App
 import de.peekandpoke.funktor.core.installKontainer
 import de.peekandpoke.funktor.core.kontainer
 import de.peekandpoke.funktor.core.model.InsightsConfig
 import de.peekandpoke.funktor.funktor
+import de.peekandpoke.funktor.insights.instrumentWithInsights
 import de.peekandpoke.funktor.messaging.EmailSender
 import de.peekandpoke.funktor.messaging.senders.ExampleDomainsIgnoringEmailSender
 import de.peekandpoke.funktor.messaging.senders.aws.AwsSesSender
@@ -19,8 +16,6 @@ import de.peekandpoke.karango.karango
 import de.peekandpoke.ultra.common.datetime.Kronos
 import de.peekandpoke.ultra.kontainer.KontainerAware
 import de.peekandpoke.ultra.kontainer.kontainer
-import de.peekandpoke.ultra.security.jwt.JwtConfig
-import de.peekandpoke.ultra.vault.profiling.DefaultQueryProfiler
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.peekandpoke.aktor.api.ApiApp
@@ -42,19 +37,17 @@ inline val KontainerAware.llms: LlmServices get() = kontainer.get()
 inline val ApplicationCall.llms: LlmServices get() = kontainer.llms
 inline val RoutingContext.llms: LlmServices get() = call.llms
 
-fun Route.installApiKontainer(app: App<AktorConfig>, insights: InsightsConfig?) = installKontainer { call ->
-    app.kontainers.create {
-        // user record provider
-        with { call.jwtUserProvider() }
-        // Insights config
-        insights?.let { with { insights } }
-        // Database query profile
-        if (app.config.arangodb.flags.enableProfiler) {
-            with {
-                DefaultQueryProfiler(explainQueries = app.config.arangodb.flags.enableExplain)
-            }
+fun Route.installApiKontainer(app: App<AktorConfig>, insights: InsightsConfig?) {
+    installKontainer { call ->
+        app.kontainers.create {
+            // user record provider
+            with { call.jwtUserProvider() }
+            // Insights config
+            insights?.let { with { insights } }
         }
     }
+
+    instrumentWithInsights(insights)
 }
 
 fun createBlueprint(config: AktorConfig) = kontainer {
@@ -62,15 +55,7 @@ fun createBlueprint(config: AktorConfig) = kontainer {
     funktor(
         config = config,
         rest = {
-            jwt(
-                JwtConfig(
-                    singingKey = config.auth.apiJwtSigningKey,
-                    permissionsNs = "permissions",
-                    userNs = "user",
-                    issuer = "https://api.aktor.io",
-                    audience = "api.aktor.io",
-                )
-            )
+            jwt(config.auth.jwt)
         },
         logging = {
             useKarango()
@@ -80,7 +65,20 @@ fun createBlueprint(config: AktorConfig) = kontainer {
         },
         messaging = {
             useKarango()
+        },
+        auth = {
+            useKarango()
         }
+    )
+
+    // Mount Karango
+    karango(config = config.arangodb)
+
+    // Keys config
+    instance(
+        KeysConfig(
+            ConfigFactory.parseFile(File("./config/keys.env.conf"))
+        )
     )
 
     // Mailing
@@ -93,22 +91,6 @@ fun createBlueprint(config: AktorConfig) = kontainer {
             wrapped = awsSender,
         )
     }
-
-    module(ReaktorAuth)
-    // TODO: add config builder to ReaktorAuth() to enable karango storage
-    dynamic(AuthStorage::class, KarangoAuthStorage::class)
-    dynamic(KarangoAuthRecordsRepo::class)
-    dynamic(KarangoAuthRecordsRepo.Fixtures::class)
-
-    // Mount Karango
-    karango(config = config.arangodb)
-
-    // Keys config
-    instance(
-        KeysConfig(
-            ConfigFactory.parseFile(File("./config/keys.env.conf"))
-        )
-    )
 
     // Apps
     singleton(ApiApp::class)

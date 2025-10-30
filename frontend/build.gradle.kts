@@ -35,7 +35,6 @@ kotlin {
                 implementation(Deps.KotlinLibs.Ultra.security)
 
                 implementation(project(":libs:shared"))
-                implementation(project(":libs:reaktor:auth"))
             }
         }
 
@@ -52,6 +51,8 @@ kotlin {
                 implementation(Deps.Ktor.Client.core)
                 implementation(Deps.Ktor.Client.content_negotiation)
                 implementation(Deps.Ktor.Common.serialization_kotlinx_json)
+
+                implementation(Deps.KotlinLibs.Funktor.auth)
 
                 implementation(Deps.KotlinLibs.Kraft.semanticui)
                 implementation(Deps.KotlinLibs.Kraft.addons_marked)

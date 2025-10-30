@@ -3,7 +3,6 @@ package io.peekandpoke.aktor
 import ch.qos.logback.classic.Level
 import de.peekandpoke.funktor.cluster.workers.launchWorkers
 import de.peekandpoke.funktor.core.lifecycle.lifeCycle
-import de.peekandpoke.funktor.insights.instrumentWithInsights
 import de.peekandpoke.funktor.logging.karango.addKarangoAppender
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -97,8 +96,6 @@ fun Application.module() = app.module(this) { app, config, init ->
         host("api.*".toRegex()) {
             // Install Kontainer into ApplicationCall
             installApiKontainer(app, config.api.insights)
-            // Instrument the pipeline with insights collectors
-            instrumentWithInsights()
             // Mount the app
             init.get(ApiApp::class).apply { mountApiAppModule() }
         }

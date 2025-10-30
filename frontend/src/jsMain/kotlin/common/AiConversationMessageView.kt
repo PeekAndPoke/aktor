@@ -4,8 +4,8 @@ import de.peekandpoke.aktor.frontend.common.markdown.MarkdownView
 import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
-import de.peekandpoke.kraft.semanticui.popups
-import de.peekandpoke.kraft.semanticui.popups.PopupsManager
+import de.peekandpoke.kraft.popups.PopupsManager
+import de.peekandpoke.kraft.popups.PopupsManager.Companion.popups
 import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.common.model.tuple
 import de.peekandpoke.ultra.html.css

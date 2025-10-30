@@ -96,13 +96,14 @@ kotlin {
         implementation(Deps.KotlinLibs.Karango.addons)
         ksp(Deps.KotlinLibs.Karango.ksp)
 
+        implementation(Deps.KotlinLibs.Monko.core)
+        ksp(Deps.KotlinLibs.Monko.ksp)
+
         implementation(project(":libs:shared"))
         implementation(project(":utils:crawl4ai"))
         implementation(project(":utils:geo"))
 
         implementation(Deps.KotlinLibs.Funktor.all)
-
-        implementation(project(":libs:reaktor:auth"))
 
         // TEST /////////////////////////////////////////////////////////
         testImplementation(Deps.Ktor.Server.Test.host)
@@ -112,8 +113,4 @@ kotlin {
 
 tasks {
     configureJvmTests()
-
-    named<JavaExec>("run") {
-        standardInput = System.`in`
-    }
 }

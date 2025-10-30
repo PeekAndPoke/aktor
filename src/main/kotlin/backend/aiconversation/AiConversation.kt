@@ -1,9 +1,9 @@
 package io.peekandpoke.aktor.backend.aiconversation
 
 import com.benasher44.uuid.uuid4
-import de.peekandpoke.karango.Karango
 import de.peekandpoke.ultra.common.datetime.MpInstant
 import de.peekandpoke.ultra.common.replaceFirstByOrAdd
+import de.peekandpoke.ultra.vault.Vault
 import de.peekandpoke.ultra.vault.hooks.Timestamped
 import io.peekandpoke.aktor.shared.aiconversation.model.AiConversationModel
 import io.peekandpoke.aktor.utils.toJsonObject
@@ -14,7 +14,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
-@Karango
+@Vault
 data class AiConversation(
     val ownerId: String,
     val messages: List<Message>,

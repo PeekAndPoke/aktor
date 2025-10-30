@@ -22,8 +22,6 @@
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/frontend" />
             <option value="$PROJECT_DIR$/libs" />
-            <option value="$PROJECT_DIR$/libs/reaktor" />
-            <option value="$PROJECT_DIR$/libs/reaktor/auth" />
             <option value="$PROJECT_DIR$/libs/shared" />
             <option value="$PROJECT_DIR$/utils" />
             <option value="$PROJECT_DIR$/utils/crawl4ai" />

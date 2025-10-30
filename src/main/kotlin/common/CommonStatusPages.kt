@@ -3,8 +3,8 @@ package io.peekandpoke.aktor.common
 import de.peekandpoke.funktor.core.broker.CouldNotConvertException
 import de.peekandpoke.funktor.core.config.AppConfig
 import de.peekandpoke.funktor.core.kontainerOrNull
-import de.peekandpoke.funktor.logging.logInternalError
-import de.peekandpoke.funktor.logging.logNotFound
+import de.peekandpoke.funktor.core.logInternalError
+import de.peekandpoke.funktor.core.logNotFound
 import de.peekandpoke.funktor.rest.apiRespond
 import de.peekandpoke.ultra.common.remote.ApiResponse
 import io.ktor.http.*

@@ -18,9 +18,8 @@ object Deps {
         const val symbol_processing = "com.google.devtools.ksp:symbol-processing-api:$version"
 
         // https://mvnrepository.com/artifact/com.github.tschuchortdev/kotlin-compile-testing
-        private const val compiletesting_version = "1.6.0"
-        const val compiletesting = "com.github.tschuchortdev:kotlin-compile-testing:$compiletesting_version"
-        const val compiletesting_ksp = "com.github.tschuchortdev:kotlin-compile-testing-ksp:$compiletesting_version"
+        private const val compiletesting_version = "0.11.0"
+        const val compiletesting_ksp = "dev.zacsweers.kctfork:ksp:$compiletesting_version"
     }
 
     // ///////////////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +42,7 @@ object Deps {
 
     object KotlinLibs {
         // https://central.sonatype.com/artifact/io.peekandpoke.ultra/common
-        private const val ultra_version = "0.94.3"
+        private const val ultra_version = "0.96.2"
 
         object Ultra {
             const val common = "io.peekandpoke.ultra:common:$ultra_version"
@@ -77,6 +76,7 @@ object Deps {
 
         object Funktor {
             const val all = "io.peekandpoke.funktor:all:$ultra_version"
+            const val auth = "io.peekandpoke.funktor:auth:$ultra_version"
             const val core = "io.peekandpoke.funktor:core:$ultra_version"
             const val cluster = "io.peekandpoke.funktor:cluster:$ultra_version"
             const val logging = "io.peekandpoke.funktor:logging:$ultra_version"
@@ -91,6 +91,11 @@ object Deps {
             const val core = "io.peekandpoke.karango:core:$ultra_version"
             const val addons = "io.peekandpoke.karango:addons:$ultra_version"
             const val ksp = "io.peekandpoke.karango:ksp:$ultra_version"
+        }
+
+        object Monko {
+            const val core = "io.peekandpoke.monko:core:$ultra_version"
+            const val ksp = "io.peekandpoke.monko:ksp:$ultra_version"
         }
 
         // https://mvnrepository.com/artifact/com.github.ajalt.clikt/clikt

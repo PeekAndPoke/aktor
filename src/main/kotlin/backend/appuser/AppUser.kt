@@ -1,10 +1,10 @@
 package io.peekandpoke.aktor.backend.appuser
 
-import de.peekandpoke.karango.Karango
 import de.peekandpoke.ultra.common.datetime.MpInstant
+import de.peekandpoke.ultra.vault.Vault
 import de.peekandpoke.ultra.vault.hooks.Timestamped
 
-@Karango
+@Vault
 data class AppUser(
     val name: String,
     val email: String,
