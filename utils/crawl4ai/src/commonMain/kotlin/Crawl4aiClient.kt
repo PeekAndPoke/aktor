@@ -7,13 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.serialization.json.*
 
 class Crawl4aiClient(
     apiKey: String,
@@ -29,6 +23,12 @@ class Crawl4aiClient(
         }
     },
 ) {
+    companion object {
+        private val json = Json {
+            ignoreUnknownKeys = true // optional but usually helpful
+        }
+    }
+
     private val bearerToken = "Bearer $apiKey"
 
     suspend fun healthCheck(): Crawl4aiModels.HealthCheckResponse {
@@ -42,15 +42,12 @@ class Crawl4aiClient(
         return response.body()
     }
 
-    suspend fun crawlAsync(
+    suspend fun crawlSync(
         url: String,
         config: JsonObject? = null,
-        timeout: Duration = 60.seconds,
-    ): Deferred<Crawl4aiModels.CrawlTaskStatus> {
+    ): Crawl4aiModels.CrawlSyncResponse {
         val uri = buildUri("/crawl")
         val requestUrl = "$baseUrl$uri"
-
-        val result = CompletableDeferred<Crawl4aiModels.CrawlTaskStatus>()
 
         val response = httpClient.post(requestUrl) {
             configureHeaders()
@@ -58,55 +55,25 @@ class Crawl4aiClient(
             contentType(ContentType.Application.Json)
 
             val body = buildJsonObject {
-                put("urls", url)
+                putJsonArray("urls") {
+                    add(url)
+                }
                 put("priority", 10)
             }.plus(config ?: buildJsonObject { })
 
             setBody(body)
         }
 
-        val task = response.body<Crawl4aiModels.CrawlAsyncResponse>()
+        val responseRawData = response.body<JsonObject>()
 
-        println("crawlAsync: response: $task")
+        // println(responseRawData)
 
-        try {
-            withTimeout(timeout) {
-                while (true) {
-                    val taskStatus = getTask(task.task_id)
+        val responseData: Crawl4aiModels.CrawlSyncResponse = json.decodeFromJsonElement(responseRawData)
 
-                    if (taskStatus.status == "completed") {
-                        result.complete(taskStatus)
-                        break
-                    }
-
-                    delay(200)
-                }
-            }
-        } catch (e: TimeoutCancellationException) {
-            println("crawlAsync: timeout: $e")
-            result.completeExceptionally(e)
-            return result
-        }
-
-        return result
-    }
-
-    suspend fun getTask(taskId: String): Crawl4aiModels.CrawlTaskStatus {
-        val uri = buildUri("/task/{task}") {
-            set("task", taskId)
-        }
-
-        val url = "$baseUrl$uri"
-
-        val response = httpClient.get(url) {
-            configureHeaders()
-        }
-
-        return response.body()
+        return responseData
     }
 
     private fun HttpRequestBuilder.configureHeaders() {
         headers.append(HttpHeaders.Authorization, bearerToken)
     }
-
 }

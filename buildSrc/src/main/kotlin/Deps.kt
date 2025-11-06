@@ -42,7 +42,7 @@ object Deps {
 
     object KotlinLibs {
         // https://central.sonatype.com/artifact/io.peekandpoke.ultra/common
-        private const val ultra_version = "0.96.2"
+        private const val ultra_version = "0.97.0"
 
         object Ultra {
             const val common = "io.peekandpoke.ultra:common:$ultra_version"
@@ -89,7 +89,6 @@ object Deps {
 
         object Karango {
             const val core = "io.peekandpoke.karango:core:$ultra_version"
-            const val addons = "io.peekandpoke.karango:addons:$ultra_version"
             const val ksp = "io.peekandpoke.karango:ksp:$ultra_version"
         }
 

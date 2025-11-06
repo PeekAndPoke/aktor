@@ -1,6 +1,7 @@
 @file:Suppress("PropertyName")
 
 import Deps.Test.configureJvmTests
+import Deps.Test.jvmTestDeps
 
 
 plugins {
@@ -38,8 +39,6 @@ kotlin {
                 implementation(Deps.KotlinLibs.Ultra.common)
                 implementation(Deps.KotlinLibs.Ultra.security)
                 implementation(Deps.KotlinLibs.Ultra.slumber)
-
-                implementation(Deps.KotlinLibs.Karango.addons)
 
                 implementation(Deps.KotlinLibs.Funktor.messaging)
                 implementation(Deps.KotlinLibs.Funktor.rest)

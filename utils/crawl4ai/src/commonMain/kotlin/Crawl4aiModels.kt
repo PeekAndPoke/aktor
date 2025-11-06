@@ -20,6 +20,15 @@ object Crawl4aiModels {
     )
 
     @Serializable
+    data class CrawlSyncResponse(
+        val success: Boolean,
+        val results: List<WebpageCrawlResult>,
+        val server_processing_time_s: Double?,
+        val server_memory_delta_mb: Double?,
+        val server_peak_memory_mb: Double?,
+    )
+
+    @Serializable
     data class CrawlAsyncResponse(
         val task_id: String,
     )
@@ -43,30 +52,17 @@ object Crawl4aiModels {
     }
 
     @Serializable
-    data class CrawlTaskStatus(
-        val status: String,
-        val created_at: Double,
-        val result: JsonObject? = null,
-    ) {
-        val resultAsObj by lazy {
-            result?.let { x.decodeFromJsonElement(WebpageCrawlResult.serializer(), it) }
-        }
-    }
-
-    @Serializable
     data class WebpageCrawlResult(
         val url: String,
         val html: String,
+        val fit_html: String,
         val success: Boolean,
         val cleaned_html: String,
         val media: Media? = null,
         val links: Links? = null,
         val downloaded_files: String? = null,
         val screenshot: String? = null,
-        val markdown: String,
-        val markdown_v2: MarkdownV2?,
-        val fit_markdown: String,
-        val fit_html: String,
+        val markdown: MarkdownV2?,
         val extracted_content: String? = null,
         val metadata: JsonObject? = null,
         val error_message: String? = null,

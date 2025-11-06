@@ -75,25 +75,26 @@ class RausgegangenDe(
 
         val page = 1
 
-        val uri = buildUri("/{city}/eventsearch/") {
+        val uri = buildUri("/{city}/eventsbydate/") {
             set("city", city.lowercase())
-            set("start_date__gte", period.from.format("yyyy-MM-dd"))
-            set("start_date__lte", period.from.format("yyyy-MM-dd"))
+            set("active_city_name", city.lowercase())
+            set("start_date", period.from.format("yyyy-MM-dd"))
+            set("end_date", period.to.format("yyyy-MM-dd"))
             set("category", "")
             set("page", page)
         }
 
         val url = "https://rausgegangen.de$uri"
 
-        val result = crawler.crawlAsync(
+        val result = crawler.crawlSync(
             url = url,
             config = buildJsonObject {
-                put("css_selector", ".event-search-result-list")
+                put("css_selector", ".site")
                 put("cache_mode", Crawl4aiModels.CacheMode.enabled.name)
             }
-        ).await()
+        )
 
-        return result.resultAsObj?.markdown
+        return result.results.firstOrNull()?.markdown?.markdown_with_citations
             ?: "Error: no result found for city '$city' and period '$period'"
     }
 }

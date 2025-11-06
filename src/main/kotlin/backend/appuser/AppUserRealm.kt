@@ -11,20 +11,20 @@ import de.peekandpoke.funktor.messaging.Email
 import de.peekandpoke.funktor.messaging.api.EmailBody
 import de.peekandpoke.funktor.messaging.api.EmailDestination
 import de.peekandpoke.funktor.messaging.api.EmailResult
+import de.peekandpoke.funktor.messaging.storage.EmailStoring
+import de.peekandpoke.funktor.messaging.storage.EmailStoring.Companion.store
 import de.peekandpoke.ultra.common.datetime.Kronos
 import de.peekandpoke.ultra.common.datetime.jvm
 import de.peekandpoke.ultra.security.jwt.JwtUserData
 import de.peekandpoke.ultra.security.user.UserPermissions
 import de.peekandpoke.ultra.vault.Stored
+import io.ktor.http.*
 import io.ktor.server.config.*
 import io.peekandpoke.aktor.KeysConfig
 import io.peekandpoke.aktor.backend.appuser.AppUsersRepo.Companion.asApiModel
 import io.peekandpoke.aktor.shared.appuser.model.AppUserModel
 import io.peekandpoke.aktor.shared.appuser.model.AppUserRoles
-import kotlinx.html.body
-import kotlinx.html.br
-import kotlinx.html.h1
-import kotlinx.html.p
+import kotlinx.html.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -43,11 +43,14 @@ class AppUserRealm(
     }
 
     private inner class MessagingImpl : AuthRealm.Messaging<AppUser> {
+
+        val sender = "dev@jointhebase.co"
+
         override suspend fun sendPasswordChangedEmail(user: Stored<AppUser>): EmailResult {
             return deps.messaging.mailing.send(
                 Email(
                     // TODO: configure default sender
-                    source = "treore@jointhebase.co",
+                    source = sender,
                     destination = EmailDestination.to(getUserEmail(user)),
                     subject = "Password changed",
                     body = EmailBody.Html {
@@ -61,10 +64,46 @@ class AppUserRealm(
                             p {
                                 +"Yours sincerely,"
                                 br()
-                                +"Treore Xnefgra"
+                                +"The Team"
                             }
                         }
                     }
+                )
+            )
+        }
+
+        override suspend fun sendPasswordResetEmil(user: Stored<AppUser>, resetUrl: Url): EmailResult {
+            return deps.messaging.mailing.send(
+                Email(
+                    source = sender,
+                    destination = EmailDestination.to(getUserEmail(user)),
+                    subject = "Recover Account",
+                    body = EmailBody.Html {
+                        body {
+                            h1 { +"Heads up!" }
+
+                            p {
+                                +"Click the link below to recover your account and set a new password."
+                            }
+
+                            p {
+                                a(href = resetUrl.toString()) {
+                                    +"Recover account"
+                                }
+                            }
+
+                            p {
+                                +"Yours sincerely,"
+                                br()
+                                +"The Team"
+                            }
+                        }
+                    }
+                ).store(
+                    EmailStoring.withAnonymizedContent(
+                        refs = setOf(user._id, user.value.email),
+                        tags = setOf("password-reset"),
+                    )
                 )
             )
         }

@@ -93,7 +93,6 @@ kotlin {
         implementation(Deps.JavaLibs.logback_classic)
 
         implementation(Deps.KotlinLibs.Karango.core)
-        implementation(Deps.KotlinLibs.Karango.addons)
         ksp(Deps.KotlinLibs.Karango.ksp)
 
         implementation(Deps.KotlinLibs.Monko.core)
