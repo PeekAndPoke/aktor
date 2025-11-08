@@ -291,6 +291,10 @@ object Deps {
             private const val api_client_version = "2.7.2"
             const val api_client = "com.google.api-client:google-api-client:$api_client_version"
 
+            // https://central.sonatype.com/artifact/com.google.apis/google-api-services-calendar
+            private const val calendar_version = "v3-rev20251028-2.0.0"
+            const val calendar = "com.google.apis:google-api-services-calendar:$calendar_version"
+
             // https://mvnrepository.com/artifact/com.google.firebase/firebase-admin
             private const val firebase_admin_version = "9.2.0"
             const val firebase_admin = "com.google.firebase:firebase-admin:$firebase_admin_version"

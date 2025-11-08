@@ -41,7 +41,7 @@ object LlmCommons {
             else -> try {
                 tool.call(fnArgs)
             } catch (t: Throwable) {
-                "Error! Calling the tool $fnName failed: ${t.message}."
+                "Error! Calling the tool $fnName failed: ${t.stackTraceToString()}."
             }
         }
 

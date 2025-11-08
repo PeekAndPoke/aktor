@@ -70,6 +70,12 @@ kotlin {
                 Deps.Test { jsTestDeps() }
             }
         }
+
+        jvmMain {
+            dependencies {
+                implementation(Deps.KotlinLibs.Ultra.kontainer)
+            }
+        }
     }
 }
 

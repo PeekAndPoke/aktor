@@ -6,6 +6,7 @@ import de.peekandpoke.kraft.components.Component
 import de.peekandpoke.kraft.components.Ctx
 import de.peekandpoke.kraft.components.comp
 import de.peekandpoke.kraft.routing.Router.Companion.router
+import de.peekandpoke.kraft.routing.href
 import de.peekandpoke.kraft.vdom.VDom
 import de.peekandpoke.ultra.html.css
 import de.peekandpoke.ultra.html.onClick
@@ -53,8 +54,13 @@ class LoggedInLayout(ctx: Ctx<Props>) : Component<LoggedInLayout.Props>(ctx) {
             }
 
             noui.item A {
-                onClick { evt -> router.navToUri(evt, Nav.dashboard()) }
+                href(Nav.dashboard())
                 +"Dashboard"
+            }
+
+            noui.item A {
+                href(Nav.Credentials.view())
+                +"Credentials"
             }
 
             noui.item A {

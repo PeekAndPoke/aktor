@@ -70,7 +70,9 @@ kotlin {
         implementation(Deps.Ktor.Common.serialization_kotlinx_json)
         implementation(Deps.Ktor.Common.serialization_jackson)
 
-        implementation("com.typesafe:config:1.4.3")
+        // Google apis and oauth
+        implementation(Deps.JavaLibs.Google.api_client)
+        implementation(Deps.JavaLibs.Google.calendar)
 
         // OpenAI-Client
         // https://central.sonatype.com/artifact/com.aallam.openai/openai-client

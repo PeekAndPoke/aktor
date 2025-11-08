@@ -21,12 +21,15 @@ import io.ktor.server.routing.*
 import io.peekandpoke.aktor.api.ApiApp
 import io.peekandpoke.aktor.backend.aiconversation.AiConversationsRepo
 import io.peekandpoke.aktor.backend.appuser.AppUserModule
+import io.peekandpoke.aktor.backend.credentials.CredentialsConfig
+import io.peekandpoke.aktor.backend.credentials.CredentialsModule
 import io.peekandpoke.aktor.backend.llms.LlmServices
 import io.peekandpoke.aktor.cli.CommandLineChatCli
 import io.peekandpoke.aktor.examples.ExampleBots
 import io.peekandpoke.aktor.llms.LlmsModule
 import io.peekandpoke.aktor.llms.tools.*
-import io.peekandpoke.crawl4ai.Crawl4aiClient
+import io.peekandpoke.crawl4ai.Crawl4AiConfig
+import io.peekandpoke.crawl4ai.Crawl4AiModule
 import io.peekandpoke.geo.GeoModule
 import io.peekandpoke.geo.TimeShape
 import java.io.File
@@ -75,11 +78,11 @@ fun createBlueprint(config: AktorConfig) = kontainer {
     karango(config = config.arangodb)
 
     // Keys config
-    instance(
-        KeysConfig(
-            ConfigFactory.parseFile(File("./config/keys.env.conf"))
-        )
+    val keys = KeysConfig(
+        ConfigFactory.parseFile(File("./config/keys.env.conf"))
     )
+
+    instance(keys)
 
     // Mailing
     val awsSender: AwsSesSender by lazy {
@@ -97,6 +100,12 @@ fun createBlueprint(config: AktorConfig) = kontainer {
 
     // Modules
     module(AppUserModule)
+    module(
+        CredentialsModule, CredentialsConfig(
+            googleClientId = keys.config.getString("GOOGLE_SSO_CLIENT_ID"),
+            googleClientSecret = keys.config.getString("GOOGLE_SSO_CLIENT_SECRET")
+        )
+    )
     module(LlmsModule)
 
     // AppUser services
@@ -105,14 +114,7 @@ fun createBlueprint(config: AktorConfig) = kontainer {
     singleton(AiConversationsRepo.Fixtures::class)
 
     // Llm Services
-
-    // TODO: create kontainer module
-    dynamic(Crawl4aiClient::class) { keys: KeysConfig ->
-        Crawl4aiClient(
-            apiKey = keys.config.getString("CRAWL4AI_API_KEY")
-        )
-    }
-
+    module(Crawl4AiModule, Crawl4AiConfig(apiKey = keys.config.getString("CRAWL4AI_API_KEY")))
     module(GeoModule)
 
     // LLM Tools
