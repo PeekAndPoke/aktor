@@ -86,9 +86,10 @@ class OpenAiLlm(
                 return client.chatCompletions(request)
             }
 
+            var round = 0
             var done = false
 
-            while (!done) {
+            while (!done && round++ < 1000) {
                 val merger = OpenAiProgressiveChunkMerger()
 
                 // Collect all chunks

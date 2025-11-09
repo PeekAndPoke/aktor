@@ -1,5 +1,6 @@
 package io.peekandpoke.aktor.backend.aiconversation.api
 
+import com.google.api.client.auth.oauth2.BearerToken
 import com.google.api.client.auth.oauth2.ClientParametersAuthentication
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
@@ -335,7 +336,7 @@ class GoogleCalendarTools(
         val clientAuth = ClientParametersAuthentication(clientId, clientSecret)
 
         val credential =
-            Credential.Builder(com.google.api.client.auth.oauth2.BearerToken.authorizationHeaderAccessMethod())
+            Credential.Builder(BearerToken.authorizationHeaderAccessMethod())
                 .setTransport(httpTransport)
                 .setJsonFactory(jsonFactory)
                 .setTokenServerUrl(tokenServerUrl)

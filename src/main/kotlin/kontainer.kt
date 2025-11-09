@@ -103,7 +103,8 @@ fun createBlueprint(config: AktorConfig) = kontainer {
     module(
         CredentialsModule, CredentialsConfig(
             googleClientId = keys.config.getString("GOOGLE_SSO_CLIENT_ID"),
-            googleClientSecret = keys.config.getString("GOOGLE_SSO_CLIENT_SECRET")
+            googleClientSecret = keys.config.getString("GOOGLE_SSO_CLIENT_SECRET"),
+            googleClientAppName = "Aktor",
         )
     )
     module(LlmsModule)

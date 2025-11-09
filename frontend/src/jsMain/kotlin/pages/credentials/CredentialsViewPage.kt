@@ -28,6 +28,7 @@ import kotlinx.css.marginTop
 import kotlinx.html.FlowContent
 import kotlinx.html.Tag
 import kotlinx.html.div
+import kotlinx.html.title
 
 @Suppress("FunctionName")
 fun Tag.CredentialsViewPage() = comp {
@@ -52,14 +53,14 @@ class CredentialsViewPage(ctx: NoProps) : PureComponent(ctx) {
         data object View : States
 
         sealed interface GoogleFlow : States {
-            data class Init(val scopes: List<String>) : GoogleFlow
+            data class Init(val scopes: Set<String>) : GoogleFlow
             data class Running(val url: String) : GoogleFlow
         }
     }
 
     private var state: States by value(States.View)
 
-    private suspend fun startGoogleFlow(scopes: List<String>) = noDblClick.runBlocking {
+    private suspend fun startGoogleFlow(scopes: Set<String>) = noDblClick.runBlocking {
         state = States.GoogleFlow.Init(scopes)
 
         // Get the current host url
@@ -121,7 +122,7 @@ class CredentialsViewPage(ctx: NoProps) : PureComponent(ctx) {
                     onClick {
                         launch {
                             startGoogleFlow(
-                                scopes = listOf(
+                                scopes = setOf(
                                     "https://www.googleapis.com/auth/calendar",
                                     "https://www.googleapis.com/auth/calendar.events",
                                 )
@@ -142,18 +143,42 @@ class CredentialsViewPage(ctx: NoProps) : PureComponent(ctx) {
                 if (credentials.isEmpty()) {
                     ui.message { +"No credentials yet" }
                 } else {
-                    ui.four.cards {
+                    ui.three.doubling.stackable.cards {
                         credentials.forEach { c ->
                             noui.card {
                                 noui.content {
                                     noui.header {
-                                        +(c::class.simpleName ?: "n/a")
+                                        when (c) {
+                                            is UserCredentialsModel.GoogleOAuth2 -> +"Google OAuth2"
+                                        }
+                                    }
+                                }
+                                noui.content {
+                                    title = "Account ID: ${c.userInfos.accountId}"
+
+                                    ui.list {
+                                        noui.item {
+                                            c.userInfos.pictureUrl?.let { pic ->
+                                                ui.avatar.image Img {
+                                                    src = pic
+                                                    attributes["referrerpolicy"] = "no-referrer"
+                                                }
+                                            }
+                                            noui.content {
+                                                noui.header { +(c.userInfos.name ?: "n/a") }
+                                                noui.description { +(c.userInfos.email ?: "n/a") }
+                                            }
+                                        }
                                     }
                                 }
                                 noui.content {
                                     when (c) {
                                         is UserCredentialsModel.GoogleOAuth2 -> {
-                                            +c.scopes.joinToString(", ")
+                                            ui.small.compact.list {
+                                                c.scopes.sorted().forEach { s ->
+                                                    noui.item { +s }
+                                                }
+                                            }
                                         }
                                     }
                                 }

@@ -22,7 +22,7 @@ allprojects {
     repositories {
         mavenCentral()
         maven { setUrl("https://jitpack.io") }
-        mavenLocal()
+//        mavenLocal()
     }
 }
 
@@ -64,7 +64,7 @@ kotlin {
         implementation(Deps.Ktor.Client.okhttp)
         implementation(Deps.Ktor.Client.cio)
         implementation(Deps.Ktor.Client.content_negotiation)
-        implementation(Deps.Ktor.Client.plugins)
+//        implementation(Deps.Ktor.Client.plugins)
         implementation(Deps.Ktor.Client.logging)
 
         implementation(Deps.Ktor.Common.serialization_kotlinx_json)
@@ -72,6 +72,7 @@ kotlin {
 
         // Google apis and oauth
         implementation(Deps.JavaLibs.Google.api_client)
+        implementation(Deps.JavaLibs.Google.oauth_services)
         implementation(Deps.JavaLibs.Google.calendar)
 
         // OpenAI-Client

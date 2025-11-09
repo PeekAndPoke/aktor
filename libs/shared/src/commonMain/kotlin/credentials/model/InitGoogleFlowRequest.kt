@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 interface GoogleOAuthFlow {
     @Serializable
     data class InitRequest(
-        val scopes: List<String>,
+        val scopes: Set<String>,
         val redirectUri: String,
     )
 

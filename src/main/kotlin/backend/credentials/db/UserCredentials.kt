@@ -10,13 +10,16 @@ import kotlinx.serialization.SerialName
 @Vault
 sealed interface UserCredentials : Timestamped {
 
+
     @SerialName("google_oauth2")
     data class GoogleOAuth2(
         override val userId: String,
+        override val userInfos: UserCredentialsModel.UserInfos,
+        val tokenType: String,
         val accessToken: String,
         val refreshToken: String,
         val expiresAt: MpInstant,
-        val scopes: List<String>,
+        val scopes: Set<String>,
         override val createdAt: MpInstant = MpInstant.Epoch,
         override val updatedAt: MpInstant = createdAt,
     ) : UserCredentials {
@@ -26,13 +29,19 @@ sealed interface UserCredentials : Timestamped {
         override fun asApiModel(storable: Storable<UserCredentials>) = UserCredentialsModel.GoogleOAuth2(
             id = storable._id,
             userId = userId,
+            userInfos = userInfos,
             expiresAt = expiresAt,
             scopes = scopes,
         )
     }
 
+    /** User id in local system */
     @Vault.Field
     val userId: String
+
+    /** User infos in the remote system */
+    @Vault.Field
+    val userInfos: UserCredentialsModel.UserInfos
 
     fun asApiModel(storable: Storable<UserCredentials>): UserCredentialsModel
 }

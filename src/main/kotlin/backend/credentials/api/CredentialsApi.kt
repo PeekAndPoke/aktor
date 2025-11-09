@@ -46,7 +46,7 @@ class CredentialsApi(converter: OutgoingConverter) : ApiRoutes("credentials", co
             val userId: String,
             val createdAt: MpInstant,
             override val expiresAtMs: Long = createdAt.plus(5.minutes).toEpochMillis(),
-            val scopes: List<String>,
+            val scopes: Set<String>,
         ) : CredentialsOAuthState
 
         val state: String
@@ -69,7 +69,7 @@ class CredentialsApi(converter: OutgoingConverter) : ApiRoutes("credentials", co
         fun generateState(
             userId: String,
             redirectUri: String,
-            scopes: List<String>,
+            scopes: Set<String>,
         ): String {
             val bytes = ByteArray(24)
             rnd.nextBytes(bytes)

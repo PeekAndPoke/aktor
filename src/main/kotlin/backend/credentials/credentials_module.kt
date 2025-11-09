@@ -16,6 +16,7 @@ inline val RoutingContext.credentials: CredentialsServices get() = call.credenti
 data class CredentialsConfig(
     val googleClientId: String? = null,
     val googleClientSecret: String? = null,
+    val googleClientAppName: String? = null,
 )
 
 val CredentialsModule = module { config: CredentialsConfig ->
@@ -25,12 +26,16 @@ val CredentialsModule = module { config: CredentialsConfig ->
     // Services
     config.googleClientId?.let { clientId ->
         config.googleClientSecret?.let { clientSecret ->
-            singleton(GoogleOAuthService::class) { userCredentialsRepo: Lazy<UserCredentialsRepo> ->
-                GoogleOAuthService(
-                    clientId = clientId,
-                    clientSecret = clientSecret,
-                    userCredentialsRepo = userCredentialsRepo,
-                )
+            config.googleClientAppName?.let { appName ->
+
+                singleton(GoogleOAuthService::class) { userCredentialsRepo: Lazy<UserCredentialsRepo> ->
+                    GoogleOAuthService(
+                        clientId = clientId,
+                        clientSecret = clientSecret,
+                        appName = appName,
+                        userCredentialsRepo = userCredentialsRepo,
+                    )
+                }
             }
         }
     }

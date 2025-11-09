@@ -157,7 +157,7 @@ object Deps {
     object Ktor {
         // https://kotlinlang.org/docs/releases.html
         // https://github.com/ktorio/ktor/releases
-        const val ktor_version = "3.1.1"
+        const val ktor_version = "3.3.1"
 
         object Server {
             object Test {
@@ -221,7 +221,8 @@ object Deps {
             const val content_negotiation = "io.ktor:ktor-client-content-negotiation:$ktor_version"
 
             const val sse = "io.ktor:ktor-client-sse:$ktor_version"
-            const val plugins = "io.ktor:ktor-client-plugins:$ktor_version"
+
+            //            const val plugins = "io.ktor:ktor-client-plugins:$ktor_version"
             const val logging = "io.ktor:ktor-client-logging:$ktor_version"
             const val websockets = "io.ktor:ktor-client-websockets:$ktor_version"
         }
@@ -288,8 +289,14 @@ object Deps {
             const val auto_service = "com.google.auto.service:auto-service:$auto_service_version"
 
             // https://mvnrepository.com/artifact/com.google.api-client/google-api-client
-            private const val api_client_version = "2.7.2"
+            private const val api_client_version = "2.8.1"
+
+            //            private const val api_client_version = "1.35.2"
             const val api_client = "com.google.api-client:google-api-client:$api_client_version"
+
+            // https://central.sonatype.com/artifact/com.google.apis/google-api-services-oauth2
+            private const val oauth_services_version = "v2-rev20200213-2.0.0"
+            const val oauth_services = "com.google.apis:google-api-services-oauth2:$oauth_services_version"
 
             // https://central.sonatype.com/artifact/com.google.apis/google-api-services-calendar
             private const val calendar_version = "v3-rev20251028-2.0.0"

@@ -33,7 +33,7 @@ class CredentialsApiClient(config: Config) : ApiClient(config) {
         )
     )
 
-    fun initGoogleFlow(user: String, scopes: List<String>, redirectUri: String) = call(
+    fun initGoogleFlow(user: String, scopes: Set<String>, redirectUri: String) = call(
         InitGoogleFlow(
             "user" to user,
             body = GoogleOAuthFlow.InitRequest(
